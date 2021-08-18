@@ -6,7 +6,7 @@
         <Version>0.1.0</Version>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Core" Version="0.2.0" />
+      <PackageReference Include="JKMP.Core" Version="0.3.0" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
