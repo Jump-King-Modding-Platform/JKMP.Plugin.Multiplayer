@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net452</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>9</LangVersion>
+        <Version>0.1.0</Version>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="JKMP.Core" Version="0.2.0" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
+
+    <!-- Copy files to game directory if this is not a CI build and GameDirectory is defined -->
+    <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == '' And $(GameDirectory) != ''">
+        <ItemGroup>
+            <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
+            <CoreFiles Include="$(TargetDir)RestSharp.dll" />
+            <CoreFiles Include="$(ProjectDir)plugin.json" />
+        </ItemGroup>
+
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)\JKMP\Loaders" />
+        <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(GameDirectory)\JKMP\Plugins\Multiplayer" SkipUnchangedFiles="true" />
+    </Target>
+</Project>
