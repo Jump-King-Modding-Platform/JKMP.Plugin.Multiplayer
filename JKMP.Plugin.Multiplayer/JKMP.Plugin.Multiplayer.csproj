@@ -14,7 +14,6 @@
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == '' And $(GameDirectory) != ''">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
-            <CoreFiles Include="$(TargetDir)RestSharp.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
         </ItemGroup>
 
