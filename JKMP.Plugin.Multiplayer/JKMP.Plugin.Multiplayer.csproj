@@ -1,12 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net452</TargetFramework>
+        <TargetFramework>net45</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
         <Version>0.1.0</Version>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Core" Version="0.3.0" />
+      <PackageReference Include="JKMP.Core" Version="0.3.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="JumpKing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <HintPath>$(GameDirectory)\JumpKing.exe</HintPath>
+      </Reference>
+      <Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, PublicKeyToken=null">
+        <HintPath>$(GameDirectory)\MonoGame.Framework.dll</HintPath>
+      </Reference>
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
