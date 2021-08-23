@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using JKMP.Plugin.Multiplayer.Game.Events;
+using JKMP.Plugin.Multiplayer.Steam;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer
@@ -19,16 +20,7 @@ namespace JKMP.Plugin.Multiplayer
             {
                 if (args.Success)
                 {
-                    try
-                    {
-                        SteamClient.Init(1061090);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"SteamClient.Init failed: {e}");
-                        args.Success = false;
-                        return;
-                    }
+                    args.Success = SteamManager.InitializeSteam();
                 }
             };
 
