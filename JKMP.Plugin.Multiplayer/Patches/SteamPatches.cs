@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using HarmonyLib;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JumpKing;
@@ -23,8 +24,6 @@ namespace JKMP.Plugin.Multiplayer.Patches
     {
         private static void Postfix()
         {
-            Console.WriteLine("Shutting down");
-
             if (SteamClient.IsValid)
                 SteamClient.Shutdown();
         }

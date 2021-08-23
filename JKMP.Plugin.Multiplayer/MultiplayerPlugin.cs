@@ -10,10 +10,6 @@ namespace JKMP.Plugin.Multiplayer
     public class MultiplayerPlugin : Core.Plugins.Plugin
     {
         private readonly Harmony harmony = new("com.jkmp.plugin.multiplayer");
-        
-        public MultiplayerPlugin()
-        {
-        }
 
         public override void Initialize()
         {
