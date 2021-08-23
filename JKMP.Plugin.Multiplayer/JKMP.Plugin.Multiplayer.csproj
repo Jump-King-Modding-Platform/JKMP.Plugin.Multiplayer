@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net462</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
         <Version>0.1.0</Version>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Core" Version="0.3.1" />
+      <PackageReference Include="Facepunch.Steamworks.win32" Version="2.3.4" />
+      <PackageReference Include="JKMP.Core" Version="0.4.0" />
     </ItemGroup>
     <ItemGroup>
       <Reference Include="JumpKing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
@@ -23,9 +24,10 @@
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
+            <CoreFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
         </ItemGroup>
 
-        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)\JKMP\Loaders" />
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)\JKMP\Plugins\Multiplayer" />
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(GameDirectory)\JKMP\Plugins\Multiplayer" SkipUnchangedFiles="true" />
     </Target>
 </Project>
