@@ -1,6 +1,6 @@
 using System;
 
-namespace JKMP.Plugin.Multiplayer.Game.Events
+namespace JKMP.Plugin.Multiplayer.Steam.Events
 {
     public static class SteamEvents
     {

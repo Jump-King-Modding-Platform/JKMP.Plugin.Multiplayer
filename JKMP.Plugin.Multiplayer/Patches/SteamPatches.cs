@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using HarmonyLib;
 using JKMP.Plugin.Multiplayer.Game.Events;
+using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing;
 using Steamworks;
 

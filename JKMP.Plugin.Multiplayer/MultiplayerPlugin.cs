@@ -4,6 +4,7 @@ using HarmonyLib;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Steam;
+using JKMP.Plugin.Multiplayer.Steam.Events;
 using Serilog;
 using Steamworks;
 
