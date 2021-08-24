@@ -1,8 +1,10 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
+using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Steam;
+using Serilog;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer
@@ -11,6 +13,8 @@ namespace JKMP.Plugin.Multiplayer
     public class MultiplayerPlugin : Core.Plugins.Plugin
     {
         private readonly Harmony harmony = new("com.jkmp.plugin.multiplayer");
+
+        private static readonly ILogger Logger = LogManager.CreateLogger<MultiplayerPlugin>();
 
         public override void Initialize()
         {
@@ -26,12 +30,12 @@ namespace JKMP.Plugin.Multiplayer
 
             GameEvents.RunStarted += args =>
             {
-                Console.WriteLine("Run started");
+                Logger.Verbose("Run started");
             };
 
             GameEvents.SceneChanged += args =>
             {
-                Console.WriteLine($"Scene changed to {args.SceneType}");
+                Logger.Verbose("Scene changed to {sceneType}", args.SceneType);
             };
         }
     }
