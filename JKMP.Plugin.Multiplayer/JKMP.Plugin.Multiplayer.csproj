@@ -17,6 +17,9 @@
         <HintPath>$(MainGameDirectory)\MonoGame.Framework.dll</HintPath>
       </Reference>
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" />
+    </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
     <!-- Copy files to game directories if this is not a CI build -->
@@ -25,6 +28,7 @@
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
             <CoreFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
+            <CoreFiles Include="$(TargetDir)Matchmaking.Client.dll" />
         </ItemGroup>
 
         <PropertyGroup>

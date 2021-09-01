@@ -1,0 +1,107 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Matchmaking.Client.Networking
+{
+    /// <summary>
+    /// Somewhat of a reimplementation of the tokio_util Framed/Codec interface 
+    /// </summary>
+    internal class Framed<TStream, TCodec, TData> where TStream : Stream where TCodec : CodecSink<TData>
+    {
+        public TStream Stream { get; }
+        public TCodec Codec { get; }
+
+        private readonly byte[] recvBuffer = new byte[4096];
+        private readonly byte[] sendBuffer = new byte[4096];
+        
+        public Framed(TStream stream, TCodec sink)
+        {
+            Stream = stream ?? throw new ArgumentNullException(nameof(stream));
+            Codec = sink ?? throw new ArgumentNullException(nameof(sink));
+        }
+
+        public async Task<TData?> Next(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (!Stream.CanRead)
+                    return default;
+
+                int numBytes;
+
+                try
+                {
+                    numBytes = await Stream.ReadAsync(recvBuffer, 0, recvBuffer.Length, cancellationToken);
+                }
+                catch (ObjectDisposedException) // Socket was closed
+                {
+                    return default;
+                }
+                catch (TaskCanceledException)
+                {
+                    return default;
+                }
+
+                if (numBytes == 0) // EOF/Disconnected
+                    return default;
+
+                // tfw no span
+                byte[] bytes = new byte[numBytes];
+                Array.Copy(recvBuffer, bytes, numBytes);
+
+                using var memoryStream = new MemoryStream(bytes);
+                using var reader = new BinaryReader(memoryStream);
+
+                // todo: support reading multiple messages in a packet
+                
+                return await Codec.Decode(reader);
+            }
+            catch (SocketException ex)
+            {
+                return default;
+            }
+        }
+
+        public async Task<bool> Send(TData data)
+        {
+            if (!Stream.CanWrite)
+                return false;
+
+            try
+            {
+                using var memoryStream = new MemoryStream(sendBuffer, true);
+                var writer = new BinaryWriter(memoryStream);
+                await Codec.Encode(data, writer);
+                await Stream.WriteAsync(sendBuffer, 0, (int)memoryStream.Position);
+                return true;
+            }
+            catch (SocketException)
+            {
+                return false;
+            }
+        }
+    }
+
+    public abstract class CodecSink<T>
+    {
+        public abstract Task Encode(T data, BinaryWriter writer);
+        public abstract Task<T> Decode(BinaryReader reader);
+
+        internal async Task Write(Stream stream, T data)
+        {
+            using var writer = new BinaryWriter(new MemoryStream());
+            await Encode(data, writer);
+        }
+
+        internal async Task<T> Read(byte[] bytes)
+        {
+            using var reader = new BinaryReader(new MemoryStream(bytes));
+            return await Decode(reader);
+        }
+    }
+}
