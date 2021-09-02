@@ -12,7 +12,7 @@ namespace Matchmaking.Client.Messages
             if (AuthSessionTicket == null)
                 throw new InvalidOperationException("AuthSessionTicket is null");
 
-            writer.Write((ulong)AuthSessionTicket.Length);
+            writer.WriteVarInt((ulong)AuthSessionTicket.Length);
             writer.Write(AuthSessionTicket);
         }
 

@@ -22,15 +22,23 @@ namespace Matchmaking.Client.Networking
         {
             byte[] bytes = BinarySerializer.Serialize(data);
 
-            writer.Write((uint)(bytes.Length + 4));
-            writer.Write((uint)MessageTypesReversed[data.GetType()]);
+            ulong messageType = (ulong)MessageTypesReversed[data.GetType()];
+            writer.WriteVarInt((ulong)(bytes.Length + EncodingUtility.GetVarIntLength(messageType)));
+            writer.WriteVarInt(messageType);
             writer.Write(bytes);
         }
 
         public override async Task<Message> Decode(BinaryReader reader)
         {
-            uint length = reader.ReadUInt32();
-            MessageType messageType = (MessageType)reader.ReadUInt32();
+            ulong length = reader.ReadVarInt();
+            ulong available = (ulong)(reader.BaseStream.Length - reader.BaseStream.Position);
+            
+            if (length > available)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), $"Length ({length} > Available ({available}");
+            }
+            
+            MessageType messageType = (MessageType)reader.ReadVarInt();
 
             if (!MessageTypes.TryGetValue(messageType, out var clrType))
             {
@@ -39,6 +47,9 @@ namespace Matchmaking.Client.Networking
 
             Message message = (Message)Activator.CreateInstance(clrType);
             message.Deserialize(reader);
+
+            if (reader.BaseStream.Position != reader.BaseStream.Length - 1)
+                throw new FormatException("Deserialized message did not consume the full length of the message");
 
             return message;
         }
