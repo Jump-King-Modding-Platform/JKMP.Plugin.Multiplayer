@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 
 namespace Matchmaking.Client
 {
@@ -61,6 +62,26 @@ namespace Matchmaking.Client
                 <= uint.MaxValue => 5,
                 <= ulong.MaxValue => 9
             };
+        }
+
+        public static void WriteUtf8(this BinaryWriter writer, string value)
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            var bytes = Encoding.UTF8.GetBytes(value);
+            writer.WriteVarInt((ulong)bytes.Length);
+            writer.Write(bytes);
+        }
+
+        public static string ReadUtf8(this BinaryReader reader)
+        {
+            var length = reader.ReadVarInt();
+
+            if (length > int.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(reader), "Length > Int32.MaxValue");
+
+            var bytes = reader.ReadBytes((int)length);
+            return Encoding.UTF8.GetString(bytes);
         }
     }
 }

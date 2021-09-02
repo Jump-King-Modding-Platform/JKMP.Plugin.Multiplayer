@@ -18,7 +18,7 @@ namespace Matchmaking.Client
         /// Connects to the endpoint and waits until we're disconnected.
         /// </summary>
         /// <exception cref="HostnameNotFoundException">Thrown when the hostname was not able to be resolved to an ip address.</exception>
-        public async Task Connect(string hostname, int port, byte[] sessionTicket, CancellationToken cancellationToken = default)
+        public async Task Connect(string hostname, int port, byte[] sessionTicket, string name, CancellationToken cancellationToken = default)
         {
             if (!IPAddress.TryParse(hostname, out IPAddress? ipAddress))
             {
@@ -28,13 +28,13 @@ namespace Matchmaking.Client
                     throw new HostnameNotFoundException(hostname);
             }
 
-            await Connect(ipAddress, port, sessionTicket, cancellationToken);
+            await Connect(ipAddress, port, sessionTicket, name, cancellationToken);
         }
 
         /// <summary>
         /// Connects to the endpoint and waits until we're disconnected.
         /// </summary>
-        public async Task Connect(IPAddress ipAddress, int port, byte[] sessionTicket, CancellationToken cancellationToken = default)
+        public async Task Connect(IPAddress ipAddress, int port, byte[] sessionTicket, string name, CancellationToken cancellationToken = default)
         {
             if (client?.Connected == true)
                 throw new InvalidOperationException("Client is already connected");
@@ -44,7 +44,7 @@ namespace Matchmaking.Client
             try
             {
                 await client.ConnectAsync(ipAddress, port);
-                await HandleConnection(sessionTicket, cancellationToken);
+                await HandleConnection(sessionTicket, name, cancellationToken);
                 Disconnect();
             }
             catch (Exception)
@@ -62,26 +62,30 @@ namespace Matchmaking.Client
             client.Close();
         }
 
-        private async Task HandleConnection(byte[] sessionTicket, CancellationToken cancellationToken)
+        private async Task HandleConnection(byte[] sessionTicket, string name, CancellationToken cancellationToken)
         {
             messages = new Framed<NetworkStream, MessagesCodec, Message>(client!.GetStream(), new MessagesCodec());
 
+            Console.WriteLine($"Connected! Sending handshake...");
+            
             if (!await messages.Send(new HandshakeRequest
             {
-                AuthSessionTicket = sessionTicket
+                AuthSessionTicket = sessionTicket,
+                Name = name
             }))
             {
                 return;
             }
-
-            Console.WriteLine("Connected! Sending handshake...");
 
             if (await messages.Next(cancellationToken) is HandshakeResponse response)
             {
                 Console.WriteLine($"Got handshake response! Success = {response.Success}");
 
                 if (!response.Success)
+                {
+                    Console.WriteLine($"Error message: {response.ErrorMessage}");
                     return;
+                }
             }
             else
             {
