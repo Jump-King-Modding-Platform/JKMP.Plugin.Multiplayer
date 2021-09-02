@@ -8,6 +8,7 @@ using HarmonyLib;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
+using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing;
@@ -27,9 +28,6 @@ namespace JKMP.Plugin.Multiplayer
 
         private GameEntity? mpEntity;
         private TitleScreenEntity? titleScreenEntity;
-        private MatchmakingClient matchmakingClient = new();
-        private CancellationTokenSource? matchmakingCancellationSource;
-        private AuthTicket? currentSessionTicket;
 
         public override void Initialize()
         {
@@ -47,7 +45,7 @@ namespace JKMP.Plugin.Multiplayer
             {
                 Logger.Verbose("Run started");
 
-                var _ = StartMatchmaking();
+                MatchmakingManager.Start();
                 mpEntity = new();
             };
 
@@ -58,8 +56,7 @@ namespace JKMP.Plugin.Multiplayer
                 if (args.SceneType == SceneType.TitleScreen)
                 {
                     mpEntity = null;
-                    matchmakingClient.Disconnect();
-                    matchmakingCancellationSource?.Cancel();
+                    MatchmakingManager.Stop();
                     titleScreenEntity = new();
                 }
                 else if (args.SceneType == SceneType.Game)
@@ -68,70 +65,6 @@ namespace JKMP.Plugin.Multiplayer
                     // game entity is created in the RunStarted event above
                 }
             };
-        }
-
-        private async Task StartMatchmaking()
-        {
-            try
-            {
-                matchmakingCancellationSource = new();
-                matchmakingClient = new();
-
-                var jobTask = Task.Run(async () =>
-                {
-                    while (true)
-                    {
-                        try
-                        {
-                            Logger.Debug("Acquiring steam auth session ticket...");
-                            currentSessionTicket = await SteamUser.GetAuthSessionTicketAsync();
-
-                            if (matchmakingCancellationSource.IsCancellationRequested)
-                                break;
-
-                            if (currentSessionTicket == null)
-                            {
-                                Logger.Error("Failed to retrieve steam auth session ticket, retrying...");
-                                continue;
-                            }
-                            
-                            Logger.Debug("Connecting to matchmaking server...");
-                            await matchmakingClient.Connect("127.0.0.1", 16000, currentSessionTicket.Data, matchmakingCancellationSource.Token);
-                        }
-                        catch (SocketException ex)
-                        {
-                            Logger.Warning("Failed to connect to matchmaking server: {errorMessage}", ex.Message);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            break;
-                        }
-
-                        if (matchmakingCancellationSource.IsCancellationRequested)
-                            break;
-
-                        Logger.Warning("Reconnecting to matchmaking server in 5 seconds...");
-
-                        try
-                        {
-                            await Task.Delay(millisecondsDelay: 5000, matchmakingCancellationSource.Token);
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            break;
-                        }
-                    }
-                });
-
-                await jobTask;
-                currentSessionTicket?.Dispose();
-                currentSessionTicket = null;
-                Logger.Debug("Disconnected from matchmaking server");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Matchmaking task raised an unhandled exception");
-            }
         }
     }
 }
