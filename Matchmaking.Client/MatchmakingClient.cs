@@ -45,8 +45,9 @@ namespace Matchmaking.Client
             {
                 await client.ConnectAsync(ipAddress, port);
                 await HandleConnection(sessionTicket, cancellationToken);
+                Disconnect();
             }
-            catch (TaskCanceledException)
+            catch (Exception)
             {
                 Disconnect();
                 throw;
