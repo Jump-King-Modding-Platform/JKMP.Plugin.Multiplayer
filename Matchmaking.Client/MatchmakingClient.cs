@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Matchmaking.Client.Messages;
 using Matchmaking.Client.Networking;
+using Serilog;
+using Serilog.Events;
 
 namespace Matchmaking.Client
 {
@@ -13,6 +15,8 @@ namespace Matchmaking.Client
     {
         private TcpClient? client;
         private Framed<NetworkStream, MessagesCodec, Message>? messages;
+
+        private static readonly ILogger Logger = Log.ForContext(typeof(MatchmakingClient));
         
         /// <summary>
         /// Connects to the endpoint and waits until we're disconnected.
@@ -66,7 +70,7 @@ namespace Matchmaking.Client
         {
             messages = new Framed<NetworkStream, MessagesCodec, Message>(client!.GetStream(), new MessagesCodec());
 
-            Console.WriteLine($"Connected! Sending handshake...");
+            Logger.Debug("Connected! Sending handshake...");
             
             if (!await messages.Send(new HandshakeRequest
             {
@@ -79,24 +83,24 @@ namespace Matchmaking.Client
 
             if (await messages.Next(cancellationToken) is HandshakeResponse response)
             {
-                Console.WriteLine($"Got handshake response! Success = {response.Success}");
+                Logger.Write(response.Success ? LogEventLevel.Verbose : LogEventLevel.Warning, "Got handshake response, success = {successful}", response.Success);
 
                 if (!response.Success)
                 {
-                    Console.WriteLine($"Error message: {response.ErrorMessage}");
+                    Logger.Warning("Error message {message}", response.ErrorMessage);
                     return;
                 }
             }
             else
             {
-                Console.WriteLine("Failed to get handshake response");
+                Logger.Warning("Failed to get handshake response");
                 return;
             }
             
             // {} basically means not null
             while (await messages.Next(cancellationToken) is {} message)
             {
-                Console.WriteLine($"New message received: {message.GetType().Name}");
+                Logger.Verbose("New message received: {messageType}", message.GetType().Name);
             }
         }
     }
