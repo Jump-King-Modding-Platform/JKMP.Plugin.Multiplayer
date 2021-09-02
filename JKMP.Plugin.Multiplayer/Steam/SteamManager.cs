@@ -23,6 +23,7 @@ namespace JKMP.Plugin.Multiplayer.Steam
             }
 
             SteamNetworkingUtils.InitRelayNetworkAccess();
+            SteamUtil.Initialize();
 
             return true;
         }
