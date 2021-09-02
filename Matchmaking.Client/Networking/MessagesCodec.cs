@@ -48,8 +48,10 @@ namespace Matchmaking.Client.Networking
             Message message = (Message)Activator.CreateInstance(clrType);
             message.Deserialize(reader);
 
-            if (reader.BaseStream.Position != reader.BaseStream.Length - 1)
-                throw new FormatException("Deserialized message did not consume the full length of the message");
+            available = (ulong)(reader.BaseStream.Position - reader.BaseStream.Length);
+            
+            if (available > 0)
+                throw new FormatException($"Deserialized message did not consume the full length of the message (remaining bytes: {available}");
 
             return message;
         }
