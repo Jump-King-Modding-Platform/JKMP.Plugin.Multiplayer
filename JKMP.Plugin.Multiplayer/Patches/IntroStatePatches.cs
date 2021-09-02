@@ -11,7 +11,6 @@ namespace JKMP.Plugin.Multiplayer.Patches
         // ReSharper disable once InconsistentNaming
         private static void Postfix(IntroState __instance)
         {
-            Console.WriteLine("IntroState.OnNewRun called");
             GameEvents.OnSceneChanged(new GameEvents.SceneChangedEventArgs(SceneType.Game));
         }
     }

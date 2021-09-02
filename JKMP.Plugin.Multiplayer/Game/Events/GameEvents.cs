@@ -34,24 +34,25 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
         
         #region GameStarted
 
-        public delegate void GameStartedEventHandler(GameStartedEventArgs args);
+        public delegate void RunStartedEventHandler(RunStartedEventArgs args);
 
         /// <summary>
         /// Called when the game is started and the player has gained control of the character and is able to move/jump.
+        /// It's called for both new and continued games.
         /// </summary>
-        public static event GameStartedEventHandler? GameStarted;
+        public static event RunStartedEventHandler? RunStarted;
 
-        public class GameStartedEventArgs : EventArgs
+        public class RunStartedEventArgs : EventArgs
         {
-            internal GameStartedEventArgs()
+            internal RunStartedEventArgs()
             {
             }
         }
 
-        internal static void OnGameStarted(GameStartedEventArgs args)
+        internal static void OnRunStarted(RunStartedEventArgs args)
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
-            GameStarted?.Invoke(args);
+            RunStarted?.Invoke(args);
         }
         
         #endregion

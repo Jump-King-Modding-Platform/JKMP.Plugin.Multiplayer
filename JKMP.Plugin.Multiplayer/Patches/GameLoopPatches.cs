@@ -11,8 +11,7 @@ namespace JKMP.Plugin.Multiplayer.Patches
         // ReSharper disable once InconsistentNaming
         private static void Postfix(GameLoop __instance)
         {
-            Console.WriteLine("GameLoop.OnNewRun called");
-            GameEvents.OnGameStarted(new GameEvents.GameStartedEventArgs());
+            GameEvents.OnRunStarted(new GameEvents.RunStartedEventArgs());
         }
     }
 }

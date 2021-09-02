@@ -11,8 +11,7 @@ namespace JKMP.Plugin.Multiplayer.Patches
         // ReSharper disable once InconsistentNaming
         private static void Postfix(GameTitleScreen __instance)
         {
-            Console.WriteLine("GameTitleScreen.OnNewRun called");
-            GameEvents.OnSceneChanged(new GameEvents.SceneChangedEventArgs(SceneType.Game));
+            GameEvents.OnSceneChanged(new GameEvents.SceneChangedEventArgs(SceneType.TitleScreen));
         }
     }
 }
