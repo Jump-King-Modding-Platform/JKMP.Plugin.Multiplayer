@@ -35,7 +35,7 @@ namespace Matchmaking.Client.Networking
             
             if (length > available)
             {
-                throw new ArgumentOutOfRangeException(nameof(length), $"Length ({length} > Available ({available}");
+                throw new ArgumentOutOfRangeException(nameof(length), $"Length ({length} > Available ({available})");
             }
             
             MessageType messageType = (MessageType)reader.ReadVarInt();
