@@ -59,7 +59,7 @@ namespace Matchmaking.Client.Networking
 
                 // todo: support reading multiple messages in a packet
                 
-                return await Codec.Decode(reader);
+                return Codec.Decode(reader);
             }
             catch (SocketException ex)
             {
@@ -76,7 +76,7 @@ namespace Matchmaking.Client.Networking
             {
                 using var memoryStream = new MemoryStream(sendBuffer, true);
                 var writer = new BinaryWriter(memoryStream);
-                await Codec.Encode(data, writer);
+                Codec.Encode(data, writer);
                 await Stream.WriteAsync(sendBuffer, 0, (int)memoryStream.Position);
                 return true;
             }
@@ -89,19 +89,19 @@ namespace Matchmaking.Client.Networking
 
     public abstract class CodecSink<T>
     {
-        public abstract Task Encode(T data, BinaryWriter writer);
-        public abstract Task<T> Decode(BinaryReader reader);
+        public abstract void Encode(T data, BinaryWriter writer);
+        public abstract T Decode(BinaryReader reader);
 
-        internal async Task Write(Stream stream, T data)
+        internal void Write(Stream stream, T data)
         {
             using var writer = new BinaryWriter(new MemoryStream());
-            await Encode(data, writer);
+            Encode(data, writer);
         }
 
-        internal async Task<T> Read(byte[] bytes)
+        internal T Read(byte[] bytes)
         {
             using var reader = new BinaryReader(new MemoryStream(bytes));
-            return await Decode(reader);
+            return Decode(reader);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Matchmaking.Client.Networking
 
         private static readonly Dictionary<Type, MessageType> MessageTypesReversed = MessageTypes.ToDictionary(kv => kv.Value, kv => kv.Key);
 
-        public override async Task Encode(Message data, BinaryWriter writer)
+        public override void Encode(Message data, BinaryWriter writer)
         {
             byte[] bytes = BinarySerializer.Serialize(data);
 
@@ -28,7 +28,7 @@ namespace Matchmaking.Client.Networking
             writer.Write(bytes);
         }
 
-        public override async Task<Message> Decode(BinaryReader reader)
+        public override Message Decode(BinaryReader reader)
         {
             ulong length = reader.ReadVarInt();
             ulong available = (ulong)(reader.BaseStream.Length - reader.BaseStream.Position);
