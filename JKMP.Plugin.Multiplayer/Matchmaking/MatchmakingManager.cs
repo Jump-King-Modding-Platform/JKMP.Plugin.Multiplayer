@@ -4,23 +4,31 @@ using System.Threading;
 using System.Threading.Tasks;
 using JKMP.Core.Logging;
 using Matchmaking.Client;
+using Microsoft.Xna.Framework;
 using Serilog;
-using Serilog.Core;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Matchmaking
 {
     internal static class MatchmakingManager
     {
+        public static MatchmakingClient Instance => Client;
+        
+        public static string Password
+        {
+            get => Client.Password;
+            set => Client.SetPassword(value);
+        }
+
         private static readonly MatchmakingClient Client = new();
         private static CancellationTokenSource? matchmakingCancellationSource;
         private static AuthTicket? currentSessionTicket;
 
         private static readonly ILogger Logger = LogManager.CreateLogger(typeof(MatchmakingManager));
 
-        public static void Start()
+        public static void Start(Vector2 position)
         {
-            var _ = StartMatchmaking();
+            var _ = StartMatchmaking(position);
         }
 
         public static void Stop()
@@ -29,7 +37,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
             matchmakingCancellationSource?.Cancel();
         }
         
-        private static async Task StartMatchmaking()
+        private static async Task StartMatchmaking(Vector2 position)
         {
             try
             {
@@ -54,7 +62,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                             }
                             
                             Logger.Debug("Connecting to matchmaking server...");
-                            await Client.Connect("127.0.0.1", 16000, currentSessionTicket.Data, SteamClient.Name, matchmakingCancellationSource.Token);
+                            await Client.Connect("127.0.0.1", 16000, currentSessionTicket.Data, SteamClient.Name, Password, position, matchmakingCancellationSource.Token);
                         }
                         catch (SocketException ex)
                         {

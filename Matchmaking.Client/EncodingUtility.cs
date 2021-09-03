@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Matchmaking.Client
 {
@@ -82,6 +83,17 @@ namespace Matchmaking.Client
 
             var bytes = reader.ReadBytes((int)length);
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        public static void Write(this BinaryWriter writer, Vector2 value)
+        {
+            writer.Write(value.X);
+            writer.Write(value.Y);
+        }
+
+        public static Vector2 ReadVector2(this BinaryReader reader)
+        {
+            return new Vector2(reader.ReadSingle(), reader.ReadSingle());
         }
     }
 }

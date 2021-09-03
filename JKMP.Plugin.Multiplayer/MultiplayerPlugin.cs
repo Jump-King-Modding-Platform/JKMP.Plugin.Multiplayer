@@ -45,7 +45,8 @@ namespace JKMP.Plugin.Multiplayer
             {
                 Logger.Verbose("Run started");
 
-                MatchmakingManager.Start();
+                var plr = EntityManager.instance.Find<PlayerEntity>();
+                MatchmakingManager.Start(plr.GetComponent<BodyComp>().position);
                 mpEntity = new();
             };
 

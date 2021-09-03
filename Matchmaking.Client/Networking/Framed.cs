@@ -27,44 +27,37 @@ namespace Matchmaking.Client.Networking
 
         public async Task<TData?> Next(CancellationToken cancellationToken = default)
         {
+            if (!Stream.CanRead)
+                return default;
+
+            int numBytes;
+
             try
             {
-                if (!Stream.CanRead)
-                    return default;
-
-                int numBytes;
-
-                try
-                {
-                    numBytes = await Stream.ReadAsync(recvBuffer, 0, recvBuffer.Length, cancellationToken);
-                }
-                catch (ObjectDisposedException) // Socket was closed
-                {
-                    return default;
-                }
-                catch (TaskCanceledException)
-                {
-                    return default;
-                }
-
-                if (numBytes == 0) // EOF/Disconnected
-                    return default;
-
-                // tfw no span
-                byte[] bytes = new byte[numBytes];
-                Array.Copy(recvBuffer, bytes, numBytes);
-
-                using var memoryStream = new MemoryStream(bytes);
-                using var reader = new BinaryReader(memoryStream);
-
-                // todo: support reading multiple messages in a packet
-                
-                return Codec.Decode(reader);
+                numBytes = await Stream.ReadAsync(recvBuffer, 0, recvBuffer.Length, cancellationToken);
             }
-            catch (SocketException ex)
+            catch (ObjectDisposedException) // Socket was closed
             {
                 return default;
             }
+            catch (TaskCanceledException)
+            {
+                return default;
+            }
+
+            if (numBytes == 0) // EOF/Disconnected
+                return default;
+
+            // tfw no span
+            byte[] bytes = new byte[numBytes];
+            Array.Copy(recvBuffer, bytes, numBytes);
+
+            using var memoryStream = new MemoryStream(bytes);
+            using var reader = new BinaryReader(memoryStream);
+
+            // todo: support reading multiple messages in a packet
+                
+            return Codec.Decode(reader);
         }
 
         public async Task<bool> Send(TData data)
@@ -80,7 +73,7 @@ namespace Matchmaking.Client.Networking
                 await Stream.WriteAsync(sendBuffer, 0, (int)memoryStream.Position);
                 return true;
             }
-            catch (SocketException)
+            catch (ObjectDisposedException)
             {
                 return false;
             }

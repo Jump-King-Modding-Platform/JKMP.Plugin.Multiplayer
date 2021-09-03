@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Microsoft.Xna.Framework;
 
 namespace Matchmaking.Client.Messages
 {
@@ -7,6 +8,8 @@ namespace Matchmaking.Client.Messages
     {
         public byte[]? AuthSessionTicket { get; set; }
         public string? Name { get; set; }
+        public string? MatchmakingPassword { get; set; }
+        public Vector2? Position { get; set; }
         
         public override void Serialize(BinaryWriter writer)
         {
@@ -16,14 +19,22 @@ namespace Matchmaking.Client.Messages
             if (Name == null)
                 throw new InvalidOperationException("Name is null");
 
+            if (MatchmakingPassword == null)
+                throw new InvalidOperationException("MatchmakingPassword is null");
+
+            if (Position == null)
+                throw new InvalidOperationException("Position is null");
+
             writer.WriteVarInt((ulong)AuthSessionTicket.Length);
             writer.Write(AuthSessionTicket);
             writer.WriteUtf8(Name);
+            writer.Write(MatchmakingPassword);
+            writer.Write(Position.Value);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 
@@ -34,7 +45,7 @@ namespace Matchmaking.Client.Messages
         
         public override void Serialize(BinaryWriter writer)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override void Deserialize(BinaryReader reader)

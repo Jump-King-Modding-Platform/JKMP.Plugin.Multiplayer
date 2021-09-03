@@ -2,9 +2,11 @@ using System;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Matchmaking;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
+using Serilog;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
@@ -12,6 +14,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
     {
         private FakePlayer fakePlayer = null!;
         private LocalPlayerListener plrListener = null!;
+
+        private float timeSincePositionUpdate = PositionUpdateInterval;
+        private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
+
+        private static readonly ILogger Logger = LogManager.CreateLogger<GameEntity>();
 
         protected override void OnFirstUpdate()
         {
@@ -28,38 +35,32 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
         private void OnJump()
         {
-            LogManager.TempLogger.Information("Jump");
             fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_up);
         }
 
         private void OnStartJump()
         {
-            LogManager.TempLogger.Information("StartJump");
             fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_charge);
         }
 
         private void OnStartedFalling(bool knocked)
         {
-            LogManager.TempLogger.Information("StartedFalling: {knocked}", knocked);
             if (!knocked)
                 fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_fall);
         }
 
         private void OnKnocked()
         {
-            LogManager.TempLogger.Information("Knocked");
             fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_bounce);
         }
 
         private void OnLand(bool splat)
         {
-            LogManager.TempLogger.Information("Land: {splat}", splat);
             fakePlayer.SetSprite(splat ? JKContentManager.PlayerSprites.splat : JKContentManager.PlayerSprites.idle);
         }
 
         private void OnWalk(int direction)
         {
-            LogManager.TempLogger.Information("Walk: {direction}", direction);
             if (direction != 0)
             {
                 fakePlayer.SetSprite(JKContentManager.PlayerSprites.walk_one);
@@ -77,6 +78,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
             plrListener.Update(delta);
             fakePlayer.SetPositionAndVelocity(plrListener.Position + new Vector2(0, -50), plrListener.Velocity);
+
+            timeSincePositionUpdate += delta;
+            while (timeSincePositionUpdate >= PositionUpdateInterval)
+            {
+                timeSincePositionUpdate = 0;
+                MatchmakingManager.Instance.SendPosition(plrListener.Position);
+            }
         }
 
         protected override void OnDestroy()
