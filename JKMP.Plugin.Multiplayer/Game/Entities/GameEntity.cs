@@ -15,7 +15,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         private FakePlayer fakePlayer = null!;
         private LocalPlayerListener plrListener = null!;
 
-        private float timeSincePositionUpdate = PositionUpdateInterval;
+        private float timeSincePositionUpdate;
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
 
         private static readonly ILogger Logger = LogManager.CreateLogger<GameEntity>();

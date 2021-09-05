@@ -6,5 +6,6 @@ namespace Matchmaking.Client.Networking
         HandshakeResponse,
         PositionUpdate,
         SetMatchmakingPassword,
+        InformNearbyClients,
     }
 }

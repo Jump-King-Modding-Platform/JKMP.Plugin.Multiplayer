@@ -104,6 +104,11 @@ namespace Matchmaking.Client
                 Logger.Warning("Failed to get handshake response");
                 return;
             }
+
+            await messages.Send(new PositionUpdate
+            {
+                Position = position
+            });
             
             // {} basically means not null
             while (await messages.Next(cancellationToken) is {} message)

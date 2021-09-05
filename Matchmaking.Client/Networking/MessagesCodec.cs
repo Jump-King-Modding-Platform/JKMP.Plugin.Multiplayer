@@ -15,7 +15,8 @@ namespace Matchmaking.Client.Networking
             { MessageType.HandshakeRequest, typeof(HandshakeRequest) },
             { MessageType.HandshakeResponse, typeof(HandshakeResponse) },
             { MessageType.PositionUpdate, typeof(PositionUpdate) },
-            { MessageType.SetMatchmakingPassword, typeof(SetMatchmakingPassword) }
+            { MessageType.SetMatchmakingPassword, typeof(SetMatchmakingPassword) },
+            { MessageType.InformNearbyClients, typeof(InformNearbyClients) },
         };
 
         private static readonly Dictionary<Type, MessageType> MessageTypesReversed = MessageTypes.ToDictionary(kv => kv.Value, kv => kv.Key);
