@@ -80,21 +80,9 @@ namespace Matchmaking.Client.Networking
         }
     }
 
-    public abstract class CodecSink<T>
+    internal abstract class CodecSink<T>
     {
         public abstract void Encode(T data, BinaryWriter writer);
         public abstract T Decode(BinaryReader reader);
-
-        internal void Write(Stream stream, T data)
-        {
-            using var writer = new BinaryWriter(new MemoryStream());
-            Encode(data, writer);
-        }
-
-        internal T Read(byte[] bytes)
-        {
-            using var reader = new BinaryReader(new MemoryStream(bytes));
-            return Decode(reader);
-        }
     }
 }

@@ -1,6 +1,6 @@
 namespace Matchmaking.Client.Networking
 {
-    public enum MessageType
+    internal enum MessageType
     {
         HandshakeRequest,
         HandshakeResponse,

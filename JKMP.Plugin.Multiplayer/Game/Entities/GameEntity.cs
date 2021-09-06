@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
 using Serilog;
+using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
@@ -14,6 +18,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
     {
         private FakePlayer fakePlayer = null!;
         private LocalPlayerListener plrListener = null!;
+        // ReSharper disable once InconsistentNaming
+        private P2PManager p2p = null!;
 
         private float timeSincePositionUpdate;
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
@@ -31,6 +37,18 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             plrListener.Knocked += OnKnocked;
             plrListener.Land += OnLand;
             plrListener.Walk += OnWalk;
+
+            MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
+            p2p = new();
+        }
+
+        protected override void OnDestroy()
+        {
+            MatchmakingManager.Instance.Events.NearbyClientsReceived -= OnNearbyClientsReceived;
+
+            base.OnDestroy();
+            plrListener.Dispose();
+            p2p.Dispose();
         }
 
         private void OnJump()
@@ -72,6 +90,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             }
         }
 
+        private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
+        {
+            p2p.ConnectTo(steamIds.Select(id => new SteamId { Value = id }).ToArray());
+        }
+
         protected override void Update(float delta)
         {
             base.Update(delta);
@@ -85,12 +108,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 timeSincePositionUpdate = 0;
                 MatchmakingManager.Instance.SendPosition(plrListener.Position);
             }
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            plrListener.Dispose();
         }
     }
 }

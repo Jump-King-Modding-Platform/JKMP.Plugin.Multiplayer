@@ -18,6 +18,8 @@ namespace Matchmaking.Client
         
         public bool IsConnected => client?.Connected ?? false;
 
+        public Events Events { get; } = new();
+
         private TcpClient? client;
         private Framed<NetworkStream, MessagesCodec, Message>? messages;
 
@@ -95,7 +97,7 @@ namespace Matchmaking.Client
 
                 if (!response.Success)
                 {
-                    Logger.Warning("Error message {message}", response.ErrorMessage);
+                    Logger.Warning("Error message: {message}", response.ErrorMessage);
                     return;
                 }
             }
@@ -114,6 +116,11 @@ namespace Matchmaking.Client
             while (await messages.Next(cancellationToken) is {} message)
             {
                 Logger.Verbose("New message received: {messageType}", message.GetType().Name);
+
+                if (message is InformNearbyClients informNearbyClients)
+                {
+                    Events.OnNearbyClientsReceived(informNearbyClients.ClientIds!);
+                }
             }
 
             messages = null;
