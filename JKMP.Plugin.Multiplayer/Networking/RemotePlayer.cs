@@ -8,6 +8,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public readonly SteamId SteamId;
         public PlayerNetworkState State { get; private set; } = PlayerNetworkState.Handshaking;
 
+        internal AuthTicket? AuthTicket;
+
         public RemotePlayer(SteamId steamId)
         {
             SteamId = steamId;
@@ -15,22 +17,23 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         public void Update(float delta)
         {
-            
+            if (State != PlayerNetworkState.Connected)
+                return;
+        }
+
+        public void Draw()
+        {
+            if (State != PlayerNetworkState.Connected)
+                return;
         }
         
         public void Destroy()
         {
-            
         }
 
-        internal void InitializeFromHandshakeResponse(HandshakeResponse response)
+        internal void InitializeFromHandshakeResponse(HandshakeResponse response, Friend userInfo)
         {
-            
-        }
-
-        internal void HandleMessage(GameMessage message)
-        {
-            
+            State = PlayerNetworkState.Connected;
         }
     }
 

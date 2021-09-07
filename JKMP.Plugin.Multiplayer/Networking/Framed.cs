@@ -41,9 +41,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 {
                     while (SteamNetworking.ReadP2PPacket() is {} packet)
                     {
-                        string strBytes = string.Join(", ", packet.Data.Select(b => b.ToString("X2")));
-                        Logger.Verbose("Incoming message from {steamId}: [{bytes}]", packet.SteamId, strBytes);
-
                         using var memoryStream = new MemoryStream(packet.Data);
                         using var reader = new BinaryReader(memoryStream);
                         TData message;
@@ -88,13 +85,16 @@ namespace JKMP.Plugin.Multiplayer.Networking
         /// </summary>
         public bool Send(SteamId steamId, TData data, P2PSend sendType = P2PSend.Reliable)
         {
-            using var memoryStream = new MemoryStream(sendBuffer, true);
-            var writer = new BinaryWriter(memoryStream);
-            codec.Encode(data, writer);
+            lock (sendBuffer)
+            {
+                using var memoryStream = new MemoryStream(sendBuffer, true);
+                var writer = new BinaryWriter(memoryStream);
+                codec.Encode(data, writer);
 
-            byte[] bytes = new byte[(int)memoryStream.Position];
-            Array.Copy(sendBuffer, bytes, bytes.Length);
-            return SteamNetworking.SendP2PPacket(steamId, bytes, sendType: sendType);
+                byte[] bytes = new byte[(int)memoryStream.Position];
+                Array.Copy(sendBuffer, bytes, bytes.Length);
+                return SteamNetworking.SendP2PPacket(steamId, bytes, sendType: sendType);
+            }
         }
     }
 }

@@ -108,6 +108,25 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 timeSincePositionUpdate = 0;
                 MatchmakingManager.Instance.SendPosition(plrListener.Position);
             }
+
+            using (var connectedPlayers = p2p.ConnectedPlayersMtx.Lock())
+            {
+                foreach (RemotePlayer player in connectedPlayers.Value.Values)
+                {
+                    player.Update(delta);
+                }
+            }
+        }
+
+        public override void Draw()
+        {
+            using (var connectedPlayers = p2p.ConnectedPlayersMtx.Lock())
+            {
+                foreach (RemotePlayer player in connectedPlayers.Value.Values)
+                {
+                    player.Draw();
+                }
+            }
         }
     }
 }
