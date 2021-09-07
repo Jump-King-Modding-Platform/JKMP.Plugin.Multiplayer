@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Matchmaking.Client.Messages;
+using Matchmaking.Client.Messages.Handlers;
+using Matchmaking.Client.Messages.Processing;
 using Matchmaking.Client.Networking;
 using Microsoft.Xna.Framework;
 using Serilog;
@@ -22,8 +24,14 @@ namespace Matchmaking.Client
 
         private TcpClient? client;
         private Framed<NetworkStream, MessagesCodec, Message>? messages;
+        private readonly MessageProcessor<Message, Context> processor = new();
 
         private static readonly ILogger Logger = Log.ForContext(typeof(MatchmakingClient));
+
+        public MatchmakingClient()
+        {
+            processor.RegisterHandler(new InformNearbyClientsHandler());
+        }
         
         /// <summary>
         /// Connects to the endpoint and waits until we're disconnected.
@@ -117,10 +125,8 @@ namespace Matchmaking.Client
             {
                 Logger.Verbose("New message received: {messageType}", message.GetType().Name);
 
-                if (message is InformNearbyClients informNearbyClients)
-                {
-                    Events.OnNearbyClientsReceived(informNearbyClients.ClientIds!);
-                }
+                var context = new Context(messages, this);
+                await processor.HandleMessage(message, context);
             }
 
             messages = null;
