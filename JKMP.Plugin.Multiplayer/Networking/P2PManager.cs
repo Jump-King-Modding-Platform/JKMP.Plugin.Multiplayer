@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EntityComponent;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JKMP.Plugin.Multiplayer.Networking.Messages.Handlers;
 using JKMP.Plugin.Multiplayer.Threading;
@@ -17,9 +19,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public Mutex<Dictionary<ulong, RemotePlayer>> ConnectedPlayersMtx { get; } = new(new Dictionary<ulong, RemotePlayer>());
         
         private readonly Framed<GameMessagesCodec, GameMessage> messages;
-        private readonly MessageProcessor<GameMessage, Context> processor;
+        private readonly GameMessageProcessor processor;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<P2PManager>();
+
+        private readonly Queue<Action> pendingGameThreadActions = new();
 
         public P2PManager()
         {
@@ -28,14 +32,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
             messages = new(new GameMessagesCodec());
             processor = new();
-            RegisterMessageHandlers();
             Task.Run(ProcessMessages);
-        }
-
-        private void RegisterMessageHandlers()
-        {
-            processor.RegisterHandler(new HandshakeRequestHandler());
-            processor.RegisterHandler(new HandshakeResponseHandler());
         }
 
         public void Dispose()
@@ -149,6 +146,24 @@ namespace JKMP.Plugin.Multiplayer.Networking
             {
                 Logger.Error(ex, "An unhandled exception was raised in the message handler thread");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Executes the action on the game thread on the next update.
+        /// </summary>
+        /// <param name="action">The parameter is the delta time in the current update</param>
+        public void ExecuteOnGameThread(Action action)
+        {
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            pendingGameThreadActions.Enqueue(action);
+        }
+
+        public void Update(float delta)
+        {
+            while (pendingGameThreadActions.Count > 0)
+            {
+                pendingGameThreadActions.Dequeue()();
             }
         }
     }

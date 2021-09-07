@@ -24,14 +24,9 @@ namespace Matchmaking.Client
 
         private TcpClient? client;
         private Framed<NetworkStream, MessagesCodec, Message>? messages;
-        private readonly MessageProcessor<Message, Context> processor = new();
+        private readonly MatchmakingMessageProcessor processor = new();
 
         private static readonly ILogger Logger = Log.ForContext(typeof(MatchmakingClient));
-
-        public MatchmakingClient()
-        {
-            processor.RegisterHandler(new InformNearbyClientsHandler());
-        }
         
         /// <summary>
         /// Connects to the endpoint and waits until we're disconnected.
