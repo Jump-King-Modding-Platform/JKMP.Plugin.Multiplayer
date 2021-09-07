@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JKMP.Core.Logging;
 using Serilog;
 using Steamworks;
@@ -14,7 +15,7 @@ namespace JKMP.Plugin.Multiplayer.Steam
         {
             try
             {
-                SteamClient.Init(1061090);
+                SteamClient.Init(1061090, false);
             }
             catch (Exception ex)
             {

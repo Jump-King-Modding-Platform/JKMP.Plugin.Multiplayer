@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Xna.Framework;
 
 namespace JKMP.Plugin.Multiplayer.Game.Events
 {
@@ -53,6 +54,19 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
         {
             if (args == null) throw new ArgumentNullException(nameof(args));
             RunStarted?.Invoke(args);
+        }
+        
+        #endregion
+        
+        #region GameUpdate
+
+        public delegate void GameUpdateEventHandler(GameTime gameTime);
+
+        public static event GameUpdateEventHandler? GameUpdate;
+
+        public static void OnGameUpdate(GameTime gameTime)
+        {
+            GameUpdate?.Invoke(gameTime);
         }
         
         #endregion

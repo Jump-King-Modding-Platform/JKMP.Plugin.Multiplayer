@@ -66,6 +66,11 @@ namespace JKMP.Plugin.Multiplayer
                     // game entity is created in the RunStarted event above
                 }
             };
+
+            GameEvents.GameUpdate += gameTime =>
+            {
+                SteamClient.RunCallbacks();
+            };
         }
     }
 }
