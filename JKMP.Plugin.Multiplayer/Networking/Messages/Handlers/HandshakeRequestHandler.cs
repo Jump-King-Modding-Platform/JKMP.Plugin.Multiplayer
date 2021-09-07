@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
+using EntityComponent;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Entities;
 using Matchmaking.Client.Messages.Processing;
 using Serilog;
 using Steamworks;
@@ -28,9 +30,19 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 return;
             }
 
+            var plrListener = EntityManager.instance.Find<GameEntity>().PlayerListener;
+            var playerState = new PlayerStateChanged
+            {
+                Position = plrListener.Position,
+                Velocity = plrListener.Velocity,
+                State = plrListener.CurrentState,
+                WalkDirection = (sbyte)plrListener.WalkDirection
+            };
+
             context.Messages.Send(message.Sender, new HandshakeResponse
             {
-                Success = true
+                Success = true,
+                PlayerState = playerState
             });
         }
     }

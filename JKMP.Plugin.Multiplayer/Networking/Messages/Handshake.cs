@@ -12,7 +12,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         {
             if (AuthSessionTicket == null)
                 throw new InvalidOperationException("AuthSessionTicket is null");
-            
+
             writer.WriteVarInt((ulong)AuthSessionTicket.Length);
             writer.Write(AuthSessionTicket);
         }
@@ -29,16 +29,28 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         public bool Success { get; set; }
         public string? ErrorMessage { get; set; }
         
+        public PlayerStateChanged? PlayerState { get; set; }
+        
         public override void Serialize(BinaryWriter writer)
         {
-            if (!Success && ErrorMessage == null)
-                throw new InvalidOperationException("ErrorMessage can only be null if Success is false");
+            if (!Success)
+            {
+                if (ErrorMessage == null)
+                    throw new InvalidOperationException("ErrorMessage can only be null if Success is false");
+
+                if (PlayerState == null)
+                    throw new InvalidOperationException("PlayerState can only be null if Success is false");
+            }
             
             writer.Write(Success);
 
             if (!Success)
             {
                 writer.Write(ErrorMessage!);
+            }
+            else
+            {
+                PlayerState!.Serialize(writer);
             }
         }
 
@@ -49,6 +61,11 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
             if (!Success)
             {
                 ErrorMessage = reader.ReadString();
+            }
+            else
+            {
+                PlayerState = new();
+                PlayerState.Deserialize(reader);
             }
         }
     }

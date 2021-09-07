@@ -16,6 +16,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class GameEntity : BaseManagerEntity
     {
+        public LocalPlayerListener PlayerListener => plrListener;
+        
         private FakePlayer fakePlayer = null!;
         private LocalPlayerListener plrListener = null!;
         // ReSharper disable once InconsistentNaming
@@ -108,6 +110,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 timeSincePositionUpdate = 0;
                 MatchmakingManager.Instance.SendPosition(plrListener.Position);
             }
+
+            p2p.Update(delta);
 
             using (var connectedPlayers = p2p.ConnectedPlayersMtx.Lock())
             {

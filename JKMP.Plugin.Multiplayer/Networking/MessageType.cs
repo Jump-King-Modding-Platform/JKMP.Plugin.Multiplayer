@@ -1,8 +1,9 @@
-namespace JKMP.Plugin.Multiplayer.Networking.Messages
+namespace JKMP.Plugin.Multiplayer.Networking
 {
     public enum MessageType
     {
         HandshakeRequest,
-        HandshakeResponse
+        HandshakeResponse,
+        PlayerStateChanged
     }
 }

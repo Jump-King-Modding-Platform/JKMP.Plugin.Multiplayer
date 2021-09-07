@@ -14,6 +14,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             { MessageType.HandshakeRequest, typeof(HandshakeRequest) },
             { MessageType.HandshakeResponse, typeof(HandshakeResponse) },
+            { MessageType.PlayerStateChanged, typeof(PlayerStateChanged) },
         };
 
         private static readonly Dictionary<Type, MessageType> MessageTypesReversed = MessageTypes.ToDictionary(kv => kv.Value, kv => kv.Key);

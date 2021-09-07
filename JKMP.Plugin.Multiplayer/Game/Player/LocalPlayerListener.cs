@@ -1,6 +1,5 @@
 using System;
 using EntityComponent;
-using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JumpKing;
 using JumpKing.Player;
@@ -10,6 +9,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
 {
     public class LocalPlayerListener : IDisposable
     {
+        public PlayerState CurrentState { get; private set; }
+        public int WalkDirection { get; private set; } = 1;
+        
         public Vector2 Position => localBody.position;
         public Vector2 Velocity => localBody.velocity;
 
@@ -41,16 +43,19 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
         {
             if (localBody.LastVelocity.Y <= 0 && localBody.velocity.Y > 0)
             {
+                CurrentState = PlayerState.Falling;
                 StartedFalling?.Invoke(localBody.IsKnocked);
             }
 
             if (!lastIsOnGround && localBody.IsOnGround)
             {
+                CurrentState = localBody.LastVelocity.Y >= PlayerValues.MAX_FALL ? PlayerState.Splat : PlayerState.Land;
                 Land?.Invoke(localBody.LastVelocity.Y >= PlayerValues.MAX_FALL);
 
                 if (triggerStartJumpNextUpdate)
                 {
                     triggerStartJumpNextUpdate = false;
+                    CurrentState = PlayerState.StartJump;
                     StartJump?.Invoke();
                 }
             }
@@ -58,6 +63,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
             if (!lastIsKnocked && localBody.IsKnocked)
             {
                 Knocked?.Invoke();
+                CurrentState = PlayerState.Knocked;
             }
 
             int walkDirection = 0;
@@ -67,6 +73,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
                 if (triggerStartJumpNextUpdate)
                 {
                     triggerStartJumpNextUpdate = false;
+                    CurrentState = PlayerState.StartJump;
                     StartJump?.Invoke();
                 }
                 
@@ -87,8 +94,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
                     if (walkDirection != lastWalkDirection)
                     {
                         Walk?.Invoke(walkDirection);
+                        CurrentState = PlayerState.Walk;
                     }
 
+                    WalkDirection = (sbyte)walkDirection;
                 }
             }
 
@@ -110,6 +119,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
 
         private void OnJump()
         {
+            CurrentState = PlayerState.Jump;
             Jump?.Invoke();
         }
     }
