@@ -81,9 +81,30 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         /// <summary>
         /// Sends a message to the target steam id. Returns true if the message was successfully sent.
-        /// It does not indicate whether or not the message was received on the other end.
+        /// It does not indicate whether the message was received on the other end.
         /// </summary>
         public bool Send(SteamId steamId, TData data, P2PSend sendType = P2PSend.Reliable)
+        {
+            return Send(steamId, Encode(data), sendType);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Sends an array of bytes to the target steam id. Returns true if the message was successfully sent.
+        /// It does not indicate whether the message was received on the other end.
+        /// </para>
+        /// <para>
+        /// Note that the bytes are sent as-is, no prefix like message type or length is added.</para>
+        /// </summary>
+        public bool Send(SteamId steamId, byte[] data, P2PSend sendType = P2PSend.Reliable)
+        {
+            return SteamNetworking.SendP2PPacket(steamId, data, sendType: sendType);
+        }
+
+        /// <summary>
+        /// Encodes the data and returns the bytes.
+        /// </summary>
+        public byte[] Encode(TData data)
         {
             lock (sendBuffer)
             {
@@ -93,7 +114,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                 byte[] bytes = new byte[(int)memoryStream.Position];
                 Array.Copy(sendBuffer, bytes, bytes.Length);
-                return SteamNetworking.SendP2PPacket(steamId, bytes, sendType: sendType);
+                return bytes;
             }
         }
     }

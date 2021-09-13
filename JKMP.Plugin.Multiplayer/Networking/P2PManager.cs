@@ -87,6 +87,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
             {
                 try
                 {
+                    using var guard = await ConnectedPlayersMtx.LockAsync();
+                    var remotePlayer = guard.Value[steamId];
                     AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
 
                     if (authTicket == null)
@@ -95,6 +97,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
                         Disconnect(steamId);
                         return;
                     }
+
+                    remotePlayer.AuthTicket = authTicket;
 
                     messages.Send(steamId, new HandshakeRequest
                     {
@@ -130,14 +134,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             try
             {
+                var context = new Context(messages, this);
+                
                 while (await messages.Next() is {} message)
                 {
-                    using var connectedPlayers = await ConnectedPlayersMtx.LockAsync();
-                    if (connectedPlayers.Value.TryGetValue(message.Sender, out var player))
-                    {
-                        var context = new Context(player, messages, this);
-                        await processor.HandleMessage(message, context);
-                    }
+                    await processor.HandleMessage(message, context);
                 }
 
                 Logger.Verbose("Finished message processing");
@@ -152,7 +153,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
         /// <summary>
         /// Executes the action on the game thread on the next update.
         /// </summary>
-        /// <param name="action">The parameter is the delta time in the current update</param>
         public void ExecuteOnGameThread(Action action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -164,6 +164,21 @@ namespace JKMP.Plugin.Multiplayer.Networking
             while (pendingGameThreadActions.Count > 0)
             {
                 pendingGameThreadActions.Dequeue()();
+            }
+        }
+
+        internal void Broadcast(GameMessage message, P2PSend sendType = P2PSend.Reliable) => BroadcastAsync(message, sendType).Wait();
+        internal async Task BroadcastAsync(GameMessage message, P2PSend sendType = P2PSend.Reliable)
+        {
+            byte[] bytes = messages.Encode(message);
+            
+            using var guard = await ConnectedPlayersMtx.LockAsync();
+            foreach (RemotePlayer client in guard.Value.Values)
+            {
+                if (client.State != PlayerNetworkState.Connected)
+                    continue;
+                
+                messages.Send(client.SteamId, bytes, sendType);
             }
         }
     }

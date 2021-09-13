@@ -12,7 +12,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<HandshakeRequestHandler>();
         
-        public async Task HandleMessage(HandshakeRequest message, Context context)
+        public Task HandleMessage(HandshakeRequest message, Context context)
         {
             var authResult = SteamUser.BeginAuthSession(message.AuthSessionTicket, message.Sender);
 
@@ -27,14 +27,13 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 });
 
                 context.P2PManager.Disconnect(message.Sender);
-                return;
+                return Task.CompletedTask;
             }
 
             var plrListener = EntityManager.instance.Find<GameEntity>().PlayerListener;
             var playerState = new PlayerStateChanged
             {
                 Position = plrListener.Position,
-                Velocity = plrListener.Velocity,
                 State = plrListener.CurrentState,
                 WalkDirection = (sbyte)plrListener.WalkDirection
             };
@@ -44,6 +43,8 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 Success = true,
                 PlayerState = playerState
             });
+
+            return Task.CompletedTask;
         }
     }
 }

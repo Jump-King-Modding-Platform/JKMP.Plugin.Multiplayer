@@ -1,6 +1,8 @@
 using System;
 using EntityComponent;
 using EntityComponent.BT;
+using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Components;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
@@ -10,25 +12,24 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class FakePlayer : Entity
     {
-        private readonly BodyComp body;
+        public Vector2 Position { get; private set; }
+        
         private Sprite sprite;
         private bool flip;
 
         public FakePlayer()
         {
-            body = new BodyComp(Vector2.Zero, 18, 16);
             sprite = JKContentManager.PlayerSprites.idle;
         }
 
-        public void SetPositionAndVelocity(Vector2 position, Vector2 velocity)
+        public void SetPosition(Vector2 position)
         {
-            body.position = position;
-            body.velocity = velocity;
+            Position = position;
         }
 
         public override void Draw()
         {
-            sprite.Draw(Camera.TransformVector2(body.position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            sprite.Draw(Camera.TransformVector2(Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
         }
 
         public void SetSprite(Sprite newSprite)

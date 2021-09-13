@@ -62,7 +62,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                             }
                             
                             Logger.Debug("Connecting to matchmaking server...");
-                            await Client.Connect("127.0.0.1", 16000, currentSessionTicket.Data, SteamClient.Name, Password, position, matchmakingCancellationSource.Token);
+                            await Client.Connect("192.168.1.200", 16000, currentSessionTicket.Data, SteamClient.Name, Password, position, matchmakingCancellationSource.Token);
                         }
                         catch (SocketException ex)
                         {

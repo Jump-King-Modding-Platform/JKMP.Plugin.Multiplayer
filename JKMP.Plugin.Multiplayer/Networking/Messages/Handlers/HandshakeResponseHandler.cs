@@ -27,7 +27,9 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
 
                 context.P2PManager.ExecuteOnGameThread(() =>
                 {
-                    context.Player.InitializeFromHandshakeResponse(message, userInfo.Value);
+                    using var guard = context.P2PManager.ConnectedPlayersMtx.Lock();
+                    RemotePlayer player = guard.Value[message.Sender];
+                    player.InitializeFromHandshakeResponse(message, userInfo.Value);
                 });
             }
         }

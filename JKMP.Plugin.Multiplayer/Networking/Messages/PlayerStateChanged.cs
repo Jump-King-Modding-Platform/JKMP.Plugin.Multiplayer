@@ -9,14 +9,12 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
     {
         public PlayerState State { get; set; }
         public Vector2 Position { get; set; }
-        public Vector2 Velocity { get; set; }
         public sbyte WalkDirection { get; set; } // -1 for left, 1 for right
         
         public override void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)State);
             writer.Write(Position);
-            writer.Write(Velocity);
             writer.Write(WalkDirection);
         }
 
@@ -24,7 +22,6 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         {
             State = (PlayerState)reader.ReadByte();
             Position = reader.ReadVector2();
-            Velocity = reader.ReadVector2();
             WalkDirection = reader.ReadSByte();
         }
     }

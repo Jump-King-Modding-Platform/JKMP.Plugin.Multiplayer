@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JKMP.Core.Logging;
 
 namespace JKMP.Plugin.Multiplayer.Threading
 {
@@ -18,6 +19,8 @@ namespace JKMP.Plugin.Multiplayer.Threading
             this.value = value ?? throw new ArgumentNullException(nameof(value));
             semaphore = new(initialCount: 1, maxCount: 1);
         }
+
+        public bool IsLocked => semaphore.CurrentCount == 0;
 
         public async Task<MutexGuard<T>> LockAsync()
         {

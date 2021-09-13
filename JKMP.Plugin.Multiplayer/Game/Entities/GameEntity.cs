@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EntityComponent;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
@@ -42,6 +43,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
             p2p = new();
+
+            var localPlayer = EntityManager.instance.Find<PlayerEntity>();
+            localPlayer.AddComponents(new PlayerStateTransmitter(p2p));
         }
 
         protected override void OnDestroy()
@@ -102,7 +106,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             base.Update(delta);
 
             plrListener.Update(delta);
-            fakePlayer.SetPositionAndVelocity(plrListener.Position + new Vector2(0, -50), plrListener.Velocity);
+            fakePlayer.SetPosition(plrListener.Position + new Vector2(0, -50));
 
             timeSincePositionUpdate += delta;
             while (timeSincePositionUpdate >= PositionUpdateInterval)
@@ -112,25 +116,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             }
 
             p2p.Update(delta);
-
-            using (var connectedPlayers = p2p.ConnectedPlayersMtx.Lock())
-            {
-                foreach (RemotePlayer player in connectedPlayers.Value.Values)
-                {
-                    player.Update(delta);
-                }
-            }
-        }
-
-        public override void Draw()
-        {
-            using (var connectedPlayers = p2p.ConnectedPlayersMtx.Lock())
-            {
-                foreach (RemotePlayer player in connectedPlayers.Value.Values)
-                {
-                    player.Draw();
-                }
-            }
         }
     }
 }
