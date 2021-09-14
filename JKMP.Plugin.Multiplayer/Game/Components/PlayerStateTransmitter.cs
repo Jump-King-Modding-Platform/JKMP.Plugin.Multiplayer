@@ -4,7 +4,10 @@ using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
+using JumpKing.Level;
+using JumpKing.MiscEntities.WorldItems;
 using JumpKing.Player;
+using JumpKing.Player.Skins;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
@@ -70,12 +73,33 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (p2p.ConnectedPlayersMtx.IsLocked)
                 return;
 
+            var surfaceType = GetSurfaceType();
+            bool wearingShoes = SkinManager.IsWearingSkin(Items.Shoes);
+
             p2p.Broadcast(new PlayerStateChanged
             {
                 Position = body.position,
                 State = listener.CurrentState,
-                WalkDirection = (sbyte)listener.WalkDirection
+                WalkDirection = (sbyte)listener.WalkDirection,
+                SurfaceType = surfaceType,
+                WearingShoes = wearingShoes
             }, P2PSend.Unreliable);
+        }
+
+        private Content.SurfaceType GetSurfaceType()
+        {
+            var collisionInfo = LevelManager.GetCollisionInfo(body!.GetHitbox());
+
+            if (collisionInfo.ice)
+                return Content.SurfaceType.Ice;
+            if (collisionInfo.sand)
+                return Content.SurfaceType.Sand;
+            if (collisionInfo.snow)
+                return Content.SurfaceType.Snow;
+            if (collisionInfo.water)
+                return Content.SurfaceType.Water;
+
+            return Content.SurfaceType.Default;
         }
     }
 }

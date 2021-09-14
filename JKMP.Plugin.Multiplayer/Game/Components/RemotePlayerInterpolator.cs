@@ -79,7 +79,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             if (stateA.State != stateB.State)
             {
-                var surfaceType = Content.SurfaceType.Default;
+                var surfaceType = stateB.SurfaceType;
+
+                if (!Content.PlayerSounds.ContainsKey(surfaceType))
+                    surfaceType = Content.SurfaceType.Default;
 
                 switch (stateB.State)
                 {
@@ -88,12 +91,20 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                         break;
                     case PlayerState.Land:
                         soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, audioEmitter, 0.5f);
+
+                        if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
+                            soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, audioEmitter, 0.5f);
+
                         break;
                     case PlayerState.Knocked:
                         soundManager.PlaySound(Content.PlayerSounds[surfaceType].Bump, audioEmitter, 0.5f);
                         break;
                     case PlayerState.Splat:
                         soundManager.PlaySound(Content.PlayerSounds[surfaceType].Splat, audioEmitter, 0.5f);
+
+                        if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
+                            soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Splat, audioEmitter, 0.5f);
+
                         break;
                 }
             }
