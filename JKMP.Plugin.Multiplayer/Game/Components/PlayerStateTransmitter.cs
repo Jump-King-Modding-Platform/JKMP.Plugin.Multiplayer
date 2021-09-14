@@ -73,7 +73,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (p2p.ConnectedPlayersMtx.IsLocked)
                 return;
 
-            var surfaceType = GetSurfaceType();
+            var surfaceType = listener.CurrentSurfaceType;
             bool wearingShoes = SkinManager.IsWearingSkin(Items.Shoes);
 
             p2p.Broadcast(new PlayerStateChanged
@@ -84,22 +84,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 SurfaceType = surfaceType,
                 WearingShoes = wearingShoes
             }, P2PSend.Unreliable);
-        }
-
-        private Content.SurfaceType GetSurfaceType()
-        {
-            var collisionInfo = LevelManager.GetCollisionInfo(body!.GetHitbox());
-
-            if (collisionInfo.ice)
-                return Content.SurfaceType.Ice;
-            if (collisionInfo.sand)
-                return Content.SurfaceType.Sand;
-            if (collisionInfo.snow)
-                return Content.SurfaceType.Snow;
-            if (collisionInfo.water)
-                return Content.SurfaceType.Water;
-
-            return Content.SurfaceType.Default;
         }
     }
 }

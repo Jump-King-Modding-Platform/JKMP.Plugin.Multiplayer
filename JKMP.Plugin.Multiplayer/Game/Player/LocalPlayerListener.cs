@@ -2,6 +2,7 @@ using System;
 using EntityComponent;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JumpKing;
+using JumpKing.Level;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
 
@@ -11,6 +12,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
     {
         public PlayerState CurrentState { get; private set; }
         public int WalkDirection { get; private set; } = 1;
+        internal Content.SurfaceType CurrentSurfaceType { get; private set; }
         
         public Vector2 Position => localBody.position;
         public Vector2 Velocity => localBody.velocity;
@@ -104,6 +106,24 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
             lastIsOnGround = localBody.IsOnGround;
             lastIsKnocked = localBody.IsKnocked;
             lastWalkDirection = walkDirection;
+
+            CurrentSurfaceType = GetCurrentSurfaceType();
+        }
+        
+        private Content.SurfaceType GetCurrentSurfaceType()
+        {
+            var collisionInfo = LevelManager.GetCollisionInfo(localBody.GetHitbox());
+
+            if (collisionInfo.ice)
+                return Content.SurfaceType.Ice;
+            if (collisionInfo.sand)
+                return Content.SurfaceType.Sand;
+            if (collisionInfo.snow)
+                return Content.SurfaceType.Snow;
+            if (collisionInfo.water)
+                return Content.SurfaceType.Water;
+
+            return Content.SurfaceType.Default;
         }
 
         public void Dispose()
