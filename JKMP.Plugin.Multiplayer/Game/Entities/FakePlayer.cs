@@ -12,24 +12,26 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class FakePlayer : Entity
     {
-        public Vector2 Position { get; private set; }
-        
         private Sprite sprite;
         private bool flip;
+        
+        private readonly Transform transform;
 
         public FakePlayer()
         {
             sprite = JKContentManager.PlayerSprites.idle;
+            transform = new();
+            AddComponents(transform);
         }
 
         public void SetPosition(Vector2 position)
         {
-            Position = position;
+            transform.Position = position;
         }
 
         public override void Draw()
         {
-            sprite.Draw(Camera.TransformVector2(Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            sprite.Draw(Camera.TransformVector2(transform.Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
         }
 
         public void SetSprite(Sprite newSprite)

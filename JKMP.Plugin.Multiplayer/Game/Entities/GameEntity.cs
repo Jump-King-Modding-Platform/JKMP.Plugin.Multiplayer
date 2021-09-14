@@ -5,6 +5,7 @@ using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing;
@@ -18,8 +19,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
     public class GameEntity : BaseManagerEntity
     {
         public LocalPlayerListener PlayerListener => plrListener;
+        internal SoundManager Sound { get; private set; } = null!;
         
-        private FakePlayer fakePlayer = null!;
         private LocalPlayerListener plrListener = null!;
         // ReSharper disable once InconsistentNaming
         private P2PManager p2p = null!;
@@ -31,21 +32,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
         protected override void OnFirstUpdate()
         {
-            fakePlayer = new FakePlayer();
             plrListener = new LocalPlayerListener();
-
-            plrListener.Jump += OnJump;
-            plrListener.StartJump += OnStartJump;
-            plrListener.StartedFalling += OnStartedFalling;
-            plrListener.Knocked += OnKnocked;
-            plrListener.Land += OnLand;
-            plrListener.Walk += OnWalk;
-
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
             p2p = new();
+            Sound = new();
 
             var localPlayer = EntityManager.instance.Find<PlayerEntity>();
-            localPlayer.AddComponents(new PlayerStateTransmitter(p2p));
+            localPlayer.AddComponents(new PlayerStateTransmitter(p2p), new AudioListenerComponent());
         }
 
         protected override void OnDestroy()
@@ -55,45 +48,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             base.OnDestroy();
             plrListener.Dispose();
             p2p.Dispose();
-        }
-
-        private void OnJump()
-        {
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_up);
-        }
-
-        private void OnStartJump()
-        {
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_charge);
-        }
-
-        private void OnStartedFalling(bool knocked)
-        {
-            if (!knocked)
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_fall);
-        }
-
-        private void OnKnocked()
-        {
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_bounce);
-        }
-
-        private void OnLand(bool splat)
-        {
-            fakePlayer.SetSprite(splat ? JKContentManager.PlayerSprites.splat : JKContentManager.PlayerSprites.idle);
-        }
-
-        private void OnWalk(int direction)
-        {
-            if (direction != 0)
-            {
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.walk_one);
-                fakePlayer.SetDirection(direction);
-            }
-            else
-            {
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.idle);
-            }
         }
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
@@ -106,7 +60,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             base.Update(delta);
 
             plrListener.Update(delta);
-            fakePlayer.SetPosition(plrListener.Position + new Vector2(0, -50));
 
             timeSincePositionUpdate += delta;
             while (timeSincePositionUpdate >= PositionUpdateInterval)
@@ -116,6 +69,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             }
 
             p2p.Update(delta);
+            Sound.Update(delta);
         }
     }
 }

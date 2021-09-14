@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace JKMP.Plugin.Multiplayer.Game.Events
 {
@@ -64,11 +65,24 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
 
         public static event GameUpdateEventHandler? GameUpdate;
 
-        public static void OnGameUpdate(GameTime gameTime)
+        internal static void OnGameUpdate(GameTime gameTime)
         {
             GameUpdate?.Invoke(gameTime);
         }
         
+        #endregion
+        
+        #region LoadContent
+
+        public delegate void LoadContentEventHandler(ContentManager game);
+
+        public static event LoadContentEventHandler? LoadContent;
+
+        internal static void OnLoadContent(ContentManager content)
+        {
+            LoadContent?.Invoke(content);
+        }
+
         #endregion
     }
 }

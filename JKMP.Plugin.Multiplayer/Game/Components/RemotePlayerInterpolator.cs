@@ -4,9 +4,11 @@ using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
 {
@@ -15,6 +17,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private PlayerStateChanged? lastState;
         private PlayerStateChanged? nextState;
         private float elapsedTimeSinceLastState;
+
+        private AudioEmitter audioEmitter = null!;
+        private Transform plrTransform = null!;
+        private SoundManager soundManager = null!;
 
         private FakePlayer FakePlayer => (FakePlayer)gameObject;
 
@@ -29,6 +35,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             { PlayerState.Walk, JKContentManager.PlayerSprites.walk_one },
             { PlayerState.Splat, JKContentManager.PlayerSprites.splat },
         };
+
+        protected override void Init()
+        {
+            audioEmitter = new AudioEmitter();
+            plrTransform = GetComponent<Transform>() ?? throw new NotSupportedException("Transform component not found");
+            soundManager = EntityManager.instance.Find<GameEntity>()?.Sound ?? throw new InvalidOperationException("GameEntity or SoundManager not found");
+        }
 
         internal void UpdateState(PlayerStateChanged newState)
         {
@@ -51,28 +64,36 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 lerpDelta = MathHelper.Clamp(lerpDelta, 0, 1);
                 Vector2 position = Vector2.Lerp(lastState.Position, nextState.Position, lerpDelta);
                 FakePlayer.SetPosition(position);
+                UpdateAudioEmitter();
 
                 elapsedTimeSinceLastState += delta;
             }
+        }
+
+        private void UpdateAudioEmitter()
+        {
+            audioEmitter.Position = SoundUtil.ScalePosition(plrTransform.Position);
         }
 
         private void PlayStateSounds(PlayerStateChanged stateA, PlayerStateChanged stateB)
         {
             if (stateA.State != stateB.State)
             {
+                var surfaceType = Content.SurfaceType.Default;
+
                 switch (stateB.State)
                 {
                     case PlayerState.Jump:
-                        // todo: play jump sound
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Jump, audioEmitter, 0.5f);
                         break;
                     case PlayerState.Land:
-                        // todo: play land sound
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, audioEmitter, 0.5f);
                         break;
                     case PlayerState.Knocked:
-                        // todo: play bounce sound
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Bump, audioEmitter, 0.5f);
                         break;
                     case PlayerState.Splat:
-                        // todo: play splat sound
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Splat, audioEmitter, 0.5f);
                         break;
                 }
             }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EntityComponent;
 using HarmonyLib;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Matchmaking;
@@ -40,6 +41,8 @@ namespace JKMP.Plugin.Multiplayer
                     args.Success = SteamManager.InitializeSteam();
                 }
             };
+
+            GameEvents.LoadContent += Content.LoadContent;
 
             GameEvents.RunStarted += args =>
             {

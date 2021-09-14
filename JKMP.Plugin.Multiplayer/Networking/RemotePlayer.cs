@@ -24,7 +24,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
         
         public void Destroy()
         {
-            
+            fakePlayer?.Destroy();
+            fakePlayer = null;
         }
 
         internal void InitializeFromHandshakeResponse(HandshakeResponse response, Friend userInfo)
