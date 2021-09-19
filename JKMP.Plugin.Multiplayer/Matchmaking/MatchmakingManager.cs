@@ -62,7 +62,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                             }
                             
                             Logger.Debug("Connecting to matchmaking server...");
-                            await Client.Connect("192.168.1.200", 16000, currentSessionTicket.Data, SteamClient.Name, Password, position, matchmakingCancellationSource.Token);
+                            await Client.Connect("192.168.1.200", 16000, currentSessionTicket.Data, SteamClient.Name, GetLevelName(), Password, position, matchmakingCancellationSource.Token);
                         }
                         catch (SocketException ex)
                         {
@@ -98,6 +98,11 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
             {
                 Logger.Error(ex, "Matchmaking task raised an unhandled exception");
             }
+        }
+
+        private static string GetLevelName()
+        {
+            return "default"; // todo: get unique identifier for current level name
         }
     }
 }

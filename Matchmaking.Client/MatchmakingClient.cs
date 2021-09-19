@@ -16,7 +16,7 @@ namespace Matchmaking.Client
 {
     public class MatchmakingClient
     {
-        public string Password { get; private set; } = string.Empty;
+        public string? Password { get; private set; }
         
         public bool IsConnected => client?.Connected ?? false;
 
@@ -32,7 +32,7 @@ namespace Matchmaking.Client
         /// Connects to the endpoint and waits until we're disconnected.
         /// </summary>
         /// <exception cref="HostnameNotFoundException">Thrown when the hostname was not able to be resolved to an ip address.</exception>
-        public async Task Connect(string hostname, int port, byte[] sessionTicket, string name, string password, Vector2 position, CancellationToken cancellationToken = default)
+        public async Task Connect(string hostname, int port, byte[] sessionTicket, string name, string levelName, string? password, Vector2 position, CancellationToken cancellationToken = default)
         {
             if (!IPAddress.TryParse(hostname, out IPAddress? ipAddress))
             {
@@ -42,13 +42,13 @@ namespace Matchmaking.Client
                     throw new HostnameNotFoundException(hostname);
             }
 
-            await Connect(ipAddress, port, sessionTicket, name, password, position, cancellationToken);
+            await Connect(ipAddress, port, sessionTicket, name, levelName, password, position, cancellationToken);
         }
 
         /// <summary>
         /// Connects to the endpoint and waits until we're disconnected.
         /// </summary>
-        public async Task Connect(IPAddress ipAddress, int port, byte[] sessionTicket, string name, string password, Vector2 position, CancellationToken cancellationToken = default)
+        public async Task Connect(IPAddress ipAddress, int port, byte[] sessionTicket, string name, string levelName, string? password, Vector2 position, CancellationToken cancellationToken = default)
         {
             if (client?.Connected == true)
                 throw new InvalidOperationException("Client is already connected");
@@ -59,7 +59,7 @@ namespace Matchmaking.Client
             try
             {
                 await client.ConnectAsync(ipAddress, port);
-                await HandleConnection(sessionTicket, name, position, cancellationToken);
+                await HandleConnection(sessionTicket, name, levelName, position, cancellationToken);
                 Disconnect();
             }
             catch (Exception)
@@ -77,7 +77,7 @@ namespace Matchmaking.Client
             client.Close();
         }
 
-        private async Task HandleConnection(byte[] sessionTicket, string name, Vector2 position, CancellationToken cancellationToken)
+        private async Task HandleConnection(byte[] sessionTicket, string name, string levelName, Vector2 position, CancellationToken cancellationToken)
         {
             messages = new Framed<NetworkStream, MessagesCodec, Message>(client!.GetStream(), new MessagesCodec());
 
@@ -88,6 +88,7 @@ namespace Matchmaking.Client
                 AuthSessionTicket = sessionTicket,
                 Name = name,
                 MatchmakingPassword = Password,
+                LevelName = levelName,
                 Position = position
             }))
             {
