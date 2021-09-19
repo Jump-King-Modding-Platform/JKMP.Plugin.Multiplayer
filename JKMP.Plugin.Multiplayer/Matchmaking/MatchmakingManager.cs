@@ -14,7 +14,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
     {
         public static MatchmakingClient Instance => Client;
         
-        public static string Password
+        public static string? Password
         {
             get => Client.Password;
             set => Client.SetPassword(value);

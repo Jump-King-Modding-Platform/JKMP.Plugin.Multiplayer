@@ -128,13 +128,13 @@ namespace Matchmaking.Client
             messages = null;
         }
 
-        public void SetPassword(string password)
+        public async Task SetPassword(string? password)
         {
             Password = password;
 
             if (client?.Connected == true)
             {
-                messages!.Send(new SetMatchmakingPassword
+                await messages!.Send(new SetMatchmakingPassword
                 {
                     Password = password
                 });
