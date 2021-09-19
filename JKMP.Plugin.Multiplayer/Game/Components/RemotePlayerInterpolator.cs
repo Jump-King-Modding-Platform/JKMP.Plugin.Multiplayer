@@ -60,7 +60,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 FakePlayer.SetSprite(StateSprites[lastState.State]);
                 FakePlayer.SetDirection(nextState.WalkDirection);
 
-                float lerpDelta = (float)(elapsedTimeSinceLastState / (1d / 30d));
+                float lerpDelta = elapsedTimeSinceLastState / PlayerStateTransmitter.TransmissionInterval;
                 lerpDelta = MathHelper.Clamp(lerpDelta, 0, 1);
                 Vector2 position = Vector2.Lerp(lastState.Position, nextState.Position, lerpDelta);
                 FakePlayer.SetPosition(position);

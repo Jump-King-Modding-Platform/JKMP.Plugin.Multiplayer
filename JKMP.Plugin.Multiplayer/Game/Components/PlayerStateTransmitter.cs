@@ -14,12 +14,15 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 {
     public class PlayerStateTransmitter : Component
     {
+        /// <summary>
+        /// Gets the state transmission interval in seconds (30/sec)
+        /// </summary>
+        public const float TransmissionInterval = 1 / 30f;
+        
         private BodyComp? body;
         private float timeSinceTransmission;
         
         private readonly P2PManager p2p;
-
-        private const float TransmissionInterval = 1 / 30f; // Send update 30 times per second
 
         private LocalPlayerListener? listener;
 
