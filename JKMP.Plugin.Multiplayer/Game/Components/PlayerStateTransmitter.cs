@@ -43,8 +43,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         protected override void OnDisable()
         {
-            listener.Dispose();
+            listener!.Dispose();
             listener = null;
+        }
+
+        protected override void OnOwnerDestroy()
+        {
+            OnDisable();
         }
 
         protected override void Update(float delta)
