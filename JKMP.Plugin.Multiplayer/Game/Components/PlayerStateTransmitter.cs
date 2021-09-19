@@ -64,11 +64,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (timeSinceTransmission >= TransmissionInterval)
             {
                 timeSinceTransmission = 0;
-                SendTransmission();
+                SendState();
             }
         }
 
-        private void SendTransmission()
+        private void SendState()
         {
             if (body == null || listener == null)
                 throw new InvalidOperationException("SendTranmission was called before component was initialized");
