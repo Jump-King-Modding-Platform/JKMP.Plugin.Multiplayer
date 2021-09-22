@@ -4,6 +4,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
     {
         HandshakeRequest,
         HandshakeResponse,
-        PlayerStateChanged
+        PlayerStateChanged,
+        Disconnected
     }
 }

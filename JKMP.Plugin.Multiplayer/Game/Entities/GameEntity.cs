@@ -18,12 +18,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class GameEntity : BaseManagerEntity
     {
+        public P2PManager P2P { get; private set; } = null!;
         public LocalPlayerListener PlayerListener => plrListener;
         internal SoundManager Sound { get; private set; } = null!;
         
         private LocalPlayerListener plrListener = null!;
-        // ReSharper disable once InconsistentNaming
-        private P2PManager p2p = null!;
 
         private float timeSincePositionUpdate;
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
@@ -34,11 +33,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         {
             plrListener = new LocalPlayerListener();
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
-            p2p = new();
+            P2P = new();
             Sound = new();
 
             var localPlayer = EntityManager.instance.Find<PlayerEntity>();
-            localPlayer.AddComponents(new PlayerStateTransmitter(p2p), new AudioListenerComponent());
+            localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent());
         }
 
         protected override void OnDestroy()
@@ -47,12 +46,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
             base.OnDestroy();
             plrListener.Dispose();
-            p2p.Dispose();
+            P2P.Dispose();
         }
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
         {
-            p2p.ConnectTo(steamIds.Select(id => new SteamId { Value = id }).ToArray());
+            P2P.ConnectTo(steamIds.Select(id => new SteamId { Value = id }).ToArray());
         }
 
         protected override void Update(float delta)
@@ -68,7 +67,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 MatchmakingManager.Instance.SendPosition(plrListener.Position);
             }
 
-            p2p.Update(delta);
+            P2P.Update(delta);
             Sound.Update(delta);
         }
     }

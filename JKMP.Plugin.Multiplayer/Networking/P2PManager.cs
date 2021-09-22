@@ -25,6 +25,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private readonly Queue<Action> pendingGameThreadActions = new();
 
+        private readonly HashSet<(DateTime, SteamId)> recentlyDisconnectedPeers = new();
+
         public P2PManager()
         {
             SteamNetworking.OnP2PSessionRequest += OnP2PSessionRequest;
@@ -59,6 +61,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private void OnP2PSessionRequest(SteamId steamId)
         {
+            if (recentlyDisconnectedPeers.Any(t => t.Item2 == steamId))
+                return;
+
             Logger.Verbose("P2P session request incoming from {steamId}", steamId);
             SteamNetworking.AcceptP2PSessionWithUser(steamId);
             ConnectTo(steamId);
@@ -123,11 +128,32 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 Logger.Verbose("Disconnecting from {steamId}", player.SteamId);
                 player.Destroy();
                 connectedPlayers.Value.Remove(steamId);
-                
+                recentlyDisconnectedPeers.Add((DateTime.UtcNow, steamId));
+
+                messages.Send(steamId, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
                 SteamNetworking.CloseP2PSessionWithUser(steamId);
                 player.AuthTicket!.Dispose();
                 SteamUser.EndAuthSession(player.SteamId);
             }
+        }
+
+        public void DisconnectAll()
+        {
+            Logger.Verbose("Disconnecting all P2P clients");
+            
+            using var connectedPlayers = ConnectedPlayersMtx.Lock();
+            foreach (var kv in connectedPlayers.Value)
+            {
+                messages.Send(kv.Key, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
+                kv.Value.Destroy();
+                SteamNetworking.CloseP2PSessionWithUser(kv.Key);
+                kv.Value.AuthTicket!.Dispose();
+                SteamUser.EndAuthSession(kv.Key);
+
+                recentlyDisconnectedPeers.Add((DateTime.UtcNow, kv.Key));
+            }
+
+            connectedPlayers.Value.Clear();
         }
 
         private async Task ProcessMessages()
@@ -138,6 +164,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 
                 while (await messages.Next() is {} message)
                 {
+                    if (message is not PlayerStateChanged)
+                        Logger.Verbose("Incoming message {message}", message.GetType().Name);
+                    
                     await processor.HandleMessage(message, context);
                 }
 
@@ -164,6 +193,22 @@ namespace JKMP.Plugin.Multiplayer.Networking
             while (pendingGameThreadActions.Count > 0)
             {
                 pendingGameThreadActions.Dequeue()();
+            }
+            
+            if (recentlyDisconnectedPeers.Count > 0)
+            {
+                var now = DateTime.UtcNow;
+                var toRemove = new List<(DateTime, SteamId)>();
+                
+                foreach ((DateTime, SteamId) item in recentlyDisconnectedPeers)
+                {
+                    if ((now - item.Item1).TotalSeconds > 1d)
+                    {
+                        toRemove.Add(item);
+                    }
+                }
+
+                recentlyDisconnectedPeers.RemoveWhere(item => toRemove.Contains(item));
             }
         }
 

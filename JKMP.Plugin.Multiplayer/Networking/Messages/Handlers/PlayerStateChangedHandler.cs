@@ -18,6 +18,9 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 if (!guard.Value.TryGetValue(message.Sender, out var player))
                     return;
 
+                if (player.State != PlayerNetworkState.Connected)
+                    return;
+                
                 player.UpdateFromState(message);
             });
             
