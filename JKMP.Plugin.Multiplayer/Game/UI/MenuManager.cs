@@ -13,8 +13,6 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
     {
         public static void CreateOptionsMenu(MenuFactory menuFactory, GuiFormat guiFormat, MenuSelector menuSelector, List<IDrawable> drawables)
         {
-            Console.WriteLine("Creating options menu");
-            
             var mpMenu = new MenuSelector(guiFormat);
             var passwordField = new TextInputField("Password", MatchmakingManager.Password ?? string.Empty)
             {
