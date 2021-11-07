@@ -3,6 +3,7 @@ using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
+using Serilog;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Networking
@@ -16,6 +17,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private FakePlayer? fakePlayer;
         private RemotePlayerInterpolator? interpolator;
+
+        private static readonly ILogger Logger = LogManager.CreateLogger<RemotePlayer>();
 
         public RemotePlayer(SteamId steamId)
         {
@@ -37,7 +40,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             fakePlayer.AddComponents(interpolator);
             UpdateFromState(response.PlayerState!);
 
-            LogManager.TempLogger.Verbose("Initialized from handshake");
+            Logger.Verbose("Initialized from handshake");
         }
 
         internal void UpdateFromState(PlayerStateChanged message)

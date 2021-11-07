@@ -1,4 +1,5 @@
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.UI;
 using Serilog;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
@@ -9,7 +10,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
         protected override void OnFirstUpdate()
         {
-            
+            UIManager.PushShowCursor();
+        }
+
+        protected override void OnDestroy()
+        {
+            UIManager.PopShowCursor();
         }
     }
 }

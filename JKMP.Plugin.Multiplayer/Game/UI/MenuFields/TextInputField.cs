@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
 using BehaviorTree;
-using JKMP.Core.Logging;
 using JumpKing;
 using JumpKing.Controller;
-using JumpKing.GameManager.MultiEnding.NormalEnding.Babe;
 using JumpKing.PauseMenu;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
-namespace JKMP.Plugin.Multiplayer.Game.UI
+namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
 {
-    public class TextInputField : IBTnode, IMenuItem
+    internal class TextInputField : IBTnode, IMenuItem
     {
         public enum TextVisibility
         {
@@ -26,7 +23,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
         public int MaxLength { get; set; }
         public bool TrimWhitespace { get; set; }
         public TextVisibility Visibility { get; set; }
-        public Func<bool> Readonly { get; set; }
+        public Func<bool>? Readonly { get; set; }
 
         public Action<string>? OnValueChanged { get; set; }
 

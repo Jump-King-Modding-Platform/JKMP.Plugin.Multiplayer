@@ -59,6 +59,19 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
         
         #endregion
         
+        #region GameInitialize
+
+        public delegate void GameInitializeEventHandler();
+
+        public static event GameInitializeEventHandler? GameInitialize;
+
+        internal static void OnGameInitialize()
+        {
+            GameInitialize?.Invoke();
+        }
+        
+        #endregion
+        
         #region GameUpdate
 
         public delegate void GameUpdateEventHandler(GameTime gameTime);
@@ -68,6 +81,19 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
         internal static void OnGameUpdate(GameTime gameTime)
         {
             GameUpdate?.Invoke(gameTime);
+        }
+        
+        #endregion
+        
+        #region GameDraw
+
+        public delegate void GameDrawEventHandler(GameTime gameTime);
+
+        public static event GameDrawEventHandler? GameDraw;
+
+        internal static void OnGameDraw(GameTime gameTime)
+        {
+            GameDraw?.Invoke(gameTime);
         }
         
         #endregion

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using EntityComponent;
 using JKMP.Plugin.Multiplayer.Game.Entities;
+using JKMP.Plugin.Multiplayer.Game.UI.MenuFields;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
@@ -9,7 +10,7 @@ using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI
 {
-    public static class MenuManager
+    internal static class MenuManager
     {
         public static void CreateOptionsMenu(MenuFactory menuFactory, GuiFormat guiFormat, MenuSelector menuSelector, List<IDrawable> drawables)
         {

@@ -9,12 +9,14 @@ using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
+using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing;
 using JumpKing.Player;
 using Matchmaking.Client;
+using Microsoft.Xna.Framework;
 using Serilog;
 using Steamworks;
 
@@ -43,6 +45,7 @@ namespace JKMP.Plugin.Multiplayer
             };
 
             GameEvents.LoadContent += Content.LoadContent;
+            GameEvents.GameInitialize += UIManager.Initialize;
 
             GameEvents.RunStarted += args =>
             {
@@ -59,12 +62,14 @@ namespace JKMP.Plugin.Multiplayer
 
                 if (args.SceneType == SceneType.TitleScreen)
                 {
+                    mpEntity?.Destroy();
                     mpEntity = null;
                     MatchmakingManager.Stop();
                     titleScreenEntity = new();
                 }
                 else if (args.SceneType == SceneType.Game)
                 {
+                    titleScreenEntity?.Destroy();
                     titleScreenEntity = null;
                     // game entity is created in the RunStarted event above
                 }
@@ -73,6 +78,11 @@ namespace JKMP.Plugin.Multiplayer
             GameEvents.GameUpdate += gameTime =>
             {
                 SteamClient.RunCallbacks();
+            };
+
+            GameEvents.GameDraw += gameTime =>
+            {
+                UIManager.Draw(gameTime);
             };
         }
     }

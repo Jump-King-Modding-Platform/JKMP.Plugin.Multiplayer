@@ -13,6 +13,24 @@ namespace JKMP.Plugin.Multiplayer.Patches
             GameEvents.OnGameUpdate(gameTime);
         }
     }
+
+    [HarmonyPatch(typeof(Game1), "Draw")]
+    internal class HookGameDrawPatch
+    {
+        public static void Postfix(GameTime gameTime)
+        {
+            GameEvents.OnGameDraw(gameTime);
+        }
+    }
+
+    [HarmonyPatch(typeof(Game1), "Initialize")]
+    internal class HookGameInitializePatch
+    {
+        public static void Postfix()
+        {
+            GameEvents.OnGameInitialize();
+        }
+    }
     
     [HarmonyPatch(typeof(Game1), "LoadContent")]
     internal class HookLoadContentPatch
