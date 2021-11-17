@@ -1,5 +1,7 @@
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.UI;
+using JKMP.Plugin.Multiplayer.Game.UI.Widgets;
+using Myra.Graphics2D.UI;
 using Serilog;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
@@ -11,6 +13,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         protected override void OnFirstUpdate()
         {
             UIManager.PushShowCursor();
+
+            var chatWidget = new Chat();
+            UIManager.AddWidget(chatWidget);
         }
 
         protected override void OnDestroy()

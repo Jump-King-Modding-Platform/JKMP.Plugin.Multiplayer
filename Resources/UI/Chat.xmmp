@@ -1,0 +1,16 @@
+<VerticalStackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20, 0, 0, 20" Width="450" Height="275" Background="#242424">
+    <VerticalStackPanel.Proportions>
+        <Proportion Type="Fill" />
+        <Proportion Type="Auto" />
+    </VerticalStackPanel.Proportions>
+    
+    <!-- Chat output -->
+    <ScrollViewer Id="OutputScrollViewer" StyleName="ChatOutputContainer">
+        <VerticalStackPanel Padding="5" Id="ChatOutputPanel">
+            <Label Id="label" Text="Hello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\n" />
+        </VerticalStackPanel>
+    </ScrollViewer>
+    
+    <!-- Input panel -->
+    <ChatInput Id="ChatInput" />
+</VerticalStackPanel>

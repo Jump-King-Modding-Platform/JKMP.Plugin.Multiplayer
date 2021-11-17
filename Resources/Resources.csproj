@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net462</TargetFramework>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="UI\**\*.*" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="JKMP.Myra" Version="2.0.0" />
+    </ItemGroup>
+</Project>

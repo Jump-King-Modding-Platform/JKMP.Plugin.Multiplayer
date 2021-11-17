@@ -15,13 +15,17 @@
       <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.3.4" />
       <PackageReference Include="JKMP.Core" Version="0.4.4" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
-      <PackageReference Include="Myra" Version="1.3.2" />
+      <PackageReference Include="JKMP.Myra" Version="2.0.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" />
+      <ProjectReference Include="..\Resources\Resources.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Game\Chat" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="Content\UI\Chat.xmmp" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
@@ -29,12 +33,12 @@
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
+            <CoreFiles Include="$(TargetDir)Resources.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
             <CoreFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
             <CoreFiles Include="$(TargetDir)Matchmaking.Client.dll" />
             <CoreFiles Include="$(TargetDir)Myra.dll" />
             <CoreFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />
-            <CoreFiles Include="$(TargetDir)AssetManagementBase.dll" />
             <CoreFiles Include="$(TargetDir)StbImageSharp.dll" />
             <CoreFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
         </ItemGroup>

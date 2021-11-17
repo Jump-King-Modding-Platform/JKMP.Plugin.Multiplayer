@@ -1,16 +1,27 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using JKMP.Core.Logging;
+using System.Reflection;
 using JumpKing;
 using Microsoft.Xna.Framework;
 using Myra;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.TypeResolvers;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI
 {
     internal static class UIManager
     {
+        /// <summary>
+        /// The type resolver to use when loading MML. It contains custom widget that this project implements.
+        /// </summary>
+        public static readonly AssemblyTypeResolver TypeResolver;
+
+        static UIManager()
+        {
+            TypeResolver = new AssemblyTypeResolver();
+            TypeResolver.AddAssembly(Assembly.GetExecutingAssembly(), "JKMP.Plugin.Multiplayer.Game.UI.Widgets");
+        }
+        
         public static ReadOnlyObservableCollection<Widget> Widgets { get; private set; } = null!;
         private static Desktop desktop = null!;
         
@@ -20,8 +31,16 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
         {
             // Initialize myra
             MyraEnvironment.Game = Game1.instance;
+
+            desktop = new Desktop
+            {
+                HasExternalTextInput = true
+            };
+            Game1.instance.Window.TextInput += (_, args) =>
+            {
+                desktop.OnChar(args.Character);
+            };
             
-            desktop = new Desktop();
             Widgets = new ReadOnlyObservableCollection<Widget>(desktop.Widgets);
         }
 

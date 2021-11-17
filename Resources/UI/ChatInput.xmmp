@@ -1,0 +1,8 @@
+<HorizontalStackPanel Height="25">
+    <HorizontalStackPanel.Proportions>
+        <Proportion Type="Fill" />
+        <Proportion Type="Auto" />
+    </HorizontalStackPanel.Proportions>
+    <TextBox Id="InputText" VerticalAlignment="Stretch" />
+    <TextButton Id="SendButton" Text="Send" VerticalAlignment="Stretch" />
+</HorizontalStackPanel>
