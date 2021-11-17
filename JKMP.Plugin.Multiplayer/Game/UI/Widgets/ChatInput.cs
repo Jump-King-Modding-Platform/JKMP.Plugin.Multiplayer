@@ -10,7 +10,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         public ChatInput()
         {
-            HorizontalStackPanel panel = AddChild(ResourceManager.GetResourceWidget<HorizontalStackPanel, object>("UI/ChatInput.xmmp", stylesheet: null, handler: null, UIManager.TypeResolver));
+            HorizontalStackPanel panel = AddChild(ResourceManager.GetResourceWidget<HorizontalStackPanel, object>("UI/ChatInput.xmmp", UIManager.TypeResolver));
             inputText = (TextBox)panel.EnsureWidgetById("InputText");
             sendButton = (TextButton)panel.EnsureWidgetById("SendButton");
         }

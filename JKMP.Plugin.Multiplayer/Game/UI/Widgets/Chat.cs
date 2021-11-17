@@ -10,7 +10,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         
         public Chat()
         {
-            VerticalStackPanel panel = AddChild(ResourceManager.GetResourceWidget<VerticalStackPanel, object>("UI/Chat.xmmp", stylesheet: null, handler: null, UIManager.TypeResolver));
+            VerticalStackPanel panel = AddChild(ResourceManager.GetResourceWidget<VerticalStackPanel, object>("UI/Chat.xmmp", UIManager.TypeResolver));
             outputScrollViewer = (ScrollViewer)panel.EnsureWidgetById("OutputScrollViewer");
             chatOutput = (VerticalStackPanel)panel.EnsureWidgetById("ChatOutputPanel");
         }
