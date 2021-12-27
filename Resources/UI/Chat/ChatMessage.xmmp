@@ -1,0 +1,5 @@
+<HorizontalStackPanel>
+    <Label Id="Name" />
+    <Label Id="MessageSeparator" Text=": " />
+    <Label Id="Message" />
+</HorizontalStackPanel>

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -9,7 +11,8 @@ namespace Resources
     public static class ResourceManager
     {
         private static readonly Assembly Assembly;
-        
+        private static readonly Dictionary<string, byte[]> CachedResources = new();
+
         static ResourceManager()
         {
             Assembly = Assembly.GetExecutingAssembly();
@@ -43,9 +46,20 @@ namespace Resources
         /// <returns></returns>
         public static byte[] GetResourceBytes(string resourcePath)
         {
+            if (CachedResources.TryGetValue(resourcePath, out var cachedResource))
+            {
+                var cachedCopy = new byte[cachedResource.Length];
+                Array.Copy(cachedResource, cachedCopy, cachedCopy.Length);
+                return cachedCopy;
+            }
+            
             using var stream = GetResourceStream(resourcePath);
             var bytes = new byte[stream.Length];
             stream.Read(bytes, 0, bytes.Length);
+
+            var cachedBytes = new byte[bytes.Length];
+            Array.Copy(bytes, cachedBytes, bytes.Length);
+            CachedResources[resourcePath] = cachedBytes;
             
             return bytes;
         }

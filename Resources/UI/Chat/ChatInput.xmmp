@@ -3,6 +3,6 @@
         <Proportion Type="Fill" />
         <Proportion Type="Auto" />
     </HorizontalStackPanel.Proportions>
-    <TextBox Id="InputText" VerticalAlignment="Stretch" />
+    <TextBox Id="InputText" VerticalAlignment="Stretch" Text="" />
     <TextButton Id="SendButton" Text="Send" VerticalAlignment="Stretch" />
 </HorizontalStackPanel>

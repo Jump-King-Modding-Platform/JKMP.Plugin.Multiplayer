@@ -7,6 +7,7 @@ namespace Matchmaking.Client.Messages.Handlers
         public MatchmakingMessageProcessor()
         {
             RegisterHandler(new InformNearbyClientsHandler());
+            RegisterHandler(new OutgoingChatMessageHandler());
         }
     }
 }

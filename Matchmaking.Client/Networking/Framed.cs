@@ -70,6 +70,10 @@ namespace Matchmaking.Client.Networking
                 using var memoryStream = new MemoryStream(sendBuffer, true);
                 var writer = new BinaryWriter(memoryStream);
                 Codec.Encode(data, writer);
+
+                byte[] newBytes = new byte[memoryStream.Position];
+                Array.Copy(sendBuffer, newBytes, (int)memoryStream.Position);
+                
                 await Stream.WriteAsync(sendBuffer, 0, (int)memoryStream.Position);
                 return true;
             }

@@ -7,5 +7,9 @@ namespace Matchmaking.Client.Networking
         PositionUpdate,
         SetMatchmakingPassword,
         InformNearbyClients,
+        /// <summary>Incoming chat message from a client (to server)</summary>
+        IncomingChatMessage,
+        /// <summary>Outgoing chat message from server (to client)</summary>
+        OutgoingChatMessage
     }
 }

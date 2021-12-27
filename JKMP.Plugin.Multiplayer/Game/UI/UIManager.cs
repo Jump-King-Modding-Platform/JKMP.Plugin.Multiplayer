@@ -44,9 +44,16 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
             Widgets = new ReadOnlyObservableCollection<Widget>(desktop.Widgets);
         }
 
-        public static void AddWidget(Widget widget)
+        public static Widget AddWidget(Widget widget)
         {
             desktop.Widgets.Add(widget);
+            return widget;
+        }
+
+        public static T AddWidget<T>(T widget) where T : Widget
+        {
+            desktop.Widgets.Add(widget);
+            return widget;
         }
 
         public static bool RemoveWidget(Widget widget)

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Matchmaking.Client.Chat;
+using Matchmaking.Client.Messages;
 
 namespace Matchmaking.Client
 {
@@ -13,6 +15,15 @@ namespace Matchmaking.Client
         {
             if (steamIds == null) throw new ArgumentNullException(nameof(steamIds));
             NearbyClientsReceived?.Invoke(steamIds);
+        }
+
+        public delegate void ChatMessageReceivedHandler(ChatMessage message);
+
+        public event ChatMessageReceivedHandler? ChatMessageReceived;
+
+        internal void OnChatMessageReceived(ChatMessage message)
+        {
+            ChatMessageReceived?.Invoke(message);
         }
     }
 }

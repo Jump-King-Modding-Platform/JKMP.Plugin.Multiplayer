@@ -7,7 +7,6 @@ namespace Matchmaking.Client.Messages
     internal class HandshakeRequest : Message
     {
         public byte[]? AuthSessionTicket { get; set; }
-        public string? Name { get; set; }
         /// <summary>
         /// <p>The matchmaking password to use. If set, the player will only matchmake with players that have the same password set.</p>
         /// <p>Can be null.</p>
@@ -21,9 +20,6 @@ namespace Matchmaking.Client.Messages
             if (AuthSessionTicket == null)
                 throw new InvalidOperationException("AuthSessionTicket is null");
 
-            if (Name == null)
-                throw new InvalidOperationException("Name is null");
-
             if (LevelName == null)
                 throw new InvalidOperationException("LevelName is null");
 
@@ -32,7 +28,6 @@ namespace Matchmaking.Client.Messages
 
             writer.WriteVarInt((ulong)AuthSessionTicket.Length);
             writer.Write(AuthSessionTicket);
-            writer.WriteUtf8(Name);
 
             writer.Write(MatchmakingPassword != null);
             if (MatchmakingPassword != null)

@@ -1,9 +1,11 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Matchmaking.Client.Chat;
 using Matchmaking.Client.Messages;
 using Matchmaking.Client.Messages.Handlers;
 using Matchmaking.Client.Messages.Processing;
@@ -88,7 +90,6 @@ namespace Matchmaking.Client
             if (!await messages.Send(new HandshakeRequest
             {
                 AuthSessionTicket = sessionTicket,
-                Name = name,
                 MatchmakingPassword = Password,
                 LevelName = levelName,
                 Position = position
@@ -117,6 +118,8 @@ namespace Matchmaking.Client
             {
                 Position = position
             });
+
+            SendChatMessage("hello gamers", ChatChannel.Group);
             
             // {} basically means not null
             while (await messages.Next(cancellationToken) is {} message)
@@ -155,6 +158,23 @@ namespace Matchmaking.Client
             messages.Send(new PositionUpdate
             {
                 Position = position
+            });
+        }
+
+        public void SendChatMessage(string message, ChatChannel channel)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (channel != ChatChannel.Global && channel != ChatChannel.Group)
+                throw new ArgumentOutOfRangeException(nameof(channel), "Only Global and Group messages should be sent to the server");
+
+            if (client?.Connected == false || messages == null)
+                return;
+
+            Logger.Verbose("Sending chat message: {message}", message);
+            messages.Send(new IncomingChatMessage
+            {
+                Message = message,
+                Channel = channel
             });
         }
     }

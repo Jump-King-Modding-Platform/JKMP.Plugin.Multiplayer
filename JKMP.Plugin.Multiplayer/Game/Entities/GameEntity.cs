@@ -4,8 +4,11 @@ using System.Linq;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Components;
+using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Game.UI;
+using JKMP.Plugin.Multiplayer.Game.UI.Widgets;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing;
@@ -23,6 +26,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         internal SoundManager Sound { get; private set; } = null!;
         
         private LocalPlayerListener plrListener = null!;
+        private Chat chatWidget = null!;
 
         private float timeSincePositionUpdate;
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
@@ -35,6 +39,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
             P2P = new();
             Sound = new();
+            chatWidget = UIManager.AddWidget(new Chat());
 
             var localPlayer = EntityManager.instance.Find<PlayerEntity>();
             localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent());
@@ -69,6 +74,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
             P2P.Update(delta);
             Sound.Update(delta);
+            chatWidget.Update(delta);
         }
     }
 }

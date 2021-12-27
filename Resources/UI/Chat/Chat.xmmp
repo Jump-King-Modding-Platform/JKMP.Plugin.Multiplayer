@@ -6,9 +6,7 @@
     
     <!-- Chat output -->
     <ScrollViewer Id="OutputScrollViewer" StyleName="ChatOutputContainer">
-        <VerticalStackPanel Padding="5" Id="ChatOutputPanel">
-            <Label Id="label" Text="Hello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\nHello gamers\n" />
-        </VerticalStackPanel>
+        <VerticalStackPanel Padding="5" Id="ChatOutputPanel" />
     </ScrollViewer>
     
     <!-- Input panel -->
