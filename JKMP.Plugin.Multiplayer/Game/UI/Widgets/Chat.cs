@@ -50,10 +50,12 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                 if (chatInput.IsInputFocused())
                 {
                     chatInput.SendAndClearInput();
+                    InputManager.EnableGameInput();
                 }
                 else
                 {
                     chatInput.FocusInput();
+                    InputManager.DisableGameInput();
                 }
             }
         }

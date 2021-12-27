@@ -1,4 +1,6 @@
 using HarmonyLib;
+using JKMP.Plugin.Multiplayer.Game.Input;
+using JKMP.Plugin.Multiplayer.Game.UI;
 using JumpKing.Controller;
 using JumpKing.PauseMenu;
 using JumpKing.Player;
@@ -11,7 +13,7 @@ namespace JKMP.Plugin.Multiplayer.Patches
         // ReSharper disable once InconsistentNaming
         private static bool Prefix(ref InputComponent.State __result)
         {
-            if (PauseManager.instance.IsPaused)
+            if (PauseManager.instance.IsPaused || !InputManager.GameInputEnabled)
             {
                 return false;
             }
@@ -26,7 +28,7 @@ namespace JKMP.Plugin.Multiplayer.Patches
         // ReSharper disable once InconsistentNaming
         private static bool Prefix(ref InputComponent.State __result)
         {
-            if (PauseManager.instance.IsPaused)
+            if (PauseManager.instance.IsPaused || !InputManager.GameInputEnabled)
             {
                 return false;
             }

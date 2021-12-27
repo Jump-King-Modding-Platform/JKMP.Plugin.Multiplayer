@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -7,8 +8,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Input
 {
     internal static class InputManager
     {
+        /// <summary>
+        /// Returns true if game input is enabled. If not the character will not be able to move.
+        /// </summary>
+        public static bool GameInputEnabled => gameInputDisabledCount == 0;
+
         private static KeyboardState keyboardState;
         private static KeyboardState lastKeyboardState;
+        private static int gameInputDisabledCount;
 
         private static readonly HashSet<Keys> PressedKeysSet = new();
         private static readonly HashSet<Keys> ReleasedKeysSet = new();
@@ -56,6 +63,19 @@ namespace JKMP.Plugin.Multiplayer.Game.Input
         public static bool KeyUp(Keys key)
         {
             return keyboardState.IsKeyUp(key);
+        }
+
+        public static void DisableGameInput()
+        {
+            ++gameInputDisabledCount;
+        }
+
+        public static void EnableGameInput()
+        {
+            if (gameInputDisabledCount <= 0)
+                throw new InvalidOperationException("Game input is already enabled.");
+            
+            --gameInputDisabledCount;
         }
     }
 }
