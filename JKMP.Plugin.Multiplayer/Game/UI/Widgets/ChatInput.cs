@@ -19,12 +19,16 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         private static readonly ILogger Logger = LogManager.CreateLogger<ChatInput>();
 
+        /// <summary>The maximum length of the input text</summary>
+        private const int MaxInputLength = 100;
+
         public ChatInput() : base("UI/Chat/ChatInput.xmmp")
         {
             inputText = EnsureWidgetById<TextBox>("InputText");
             sendButton = EnsureWidgetById<TextButton>("SendButton");
 
             sendButton.Click += OnSendClicked;
+            inputText.TextChangedByUser += OnTextChangedByUser;
         }
 
         public override void UpdateLayout()
@@ -36,6 +40,18 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         private void OnSendClicked(object sender, EventArgs e)
         {
             SendAndClearInput();
+        }
+
+        private void OnTextChangedByUser(object sender, ValueChangedEventArgs<string> e)
+        {
+            if (e.NewValue.Length > MaxInputLength)
+            {
+                var cursorPosition = inputText.CursorPosition;
+                inputText.Text = e.NewValue.Substring(0, MaxInputLength);
+                
+                // Cursor position is reset to 0 when text is changed so we need to restore it
+                inputText.CursorPosition = cursorPosition;
+            }
         }
 
         public void FocusInput()
