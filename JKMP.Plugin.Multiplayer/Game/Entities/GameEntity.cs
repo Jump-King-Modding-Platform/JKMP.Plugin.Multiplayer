@@ -52,6 +52,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             base.OnDestroy();
             plrListener.Dispose();
             P2P.Dispose();
+            UIManager.RemoveWidget(chatWidget);
         }
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
