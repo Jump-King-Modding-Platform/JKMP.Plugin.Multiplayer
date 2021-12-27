@@ -15,7 +15,6 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         private readonly ChatInput chatInput;
 
         private const int MaxChatMessages = 100;
-        private int currentMessageCount;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<Chat>();
         
@@ -35,14 +34,12 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         public void AddMessage(string? senderName, string message, ChatChannel channel)
         {
-            while (currentMessageCount >= MaxChatMessages)
+            while (chatOutput.Widgets.Count >= MaxChatMessages)
             {
                 chatOutput.Widgets.RemoveAt(0);
-                currentMessageCount -= 1;
             }
             
             chatOutput.AddChild(new ChatMessageRow(senderName, message, channel));
-            currentMessageCount += 1;
         }
 
         internal void Update(float delta)
