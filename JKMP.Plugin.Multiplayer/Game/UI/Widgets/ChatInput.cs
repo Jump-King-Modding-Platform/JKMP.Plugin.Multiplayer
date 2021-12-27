@@ -64,11 +64,14 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             return inputText.IsKeyboardFocused;
         }
 
-        public void SendAndClearInput()
+        public void SendAndClearInput(bool clearFocus = true)
         {
-            // Unfocus input text widget
-            inputText.Desktop.FocusedKeyboardWidget = null;
-                
+            if (clearFocus)
+            {
+                // Unfocus input text widget
+                inputText.Desktop.FocusedKeyboardWidget = null;
+            }
+
             // Send message if any
             string message = inputText.Text.Trim();
             inputText.Text = string.Empty;
