@@ -1,5 +1,14 @@
-<HorizontalStackPanel>
-    <Label Id="Name" />
-    <Label Id="MessageSeparator" Text=": " />
-    <Label Id="Message" />
-</HorizontalStackPanel>
+<VerticalStackPanel Background="#00000064" Padding="3, 2" Margin="0, 0, 0, 1">
+    <HorizontalStackPanel>
+        <HorizontalStackPanel.Proportions>
+            <Proportion Type="Fill" />
+            <Proportion Type="Auto" />
+        </HorizontalStackPanel.Proportions>
+        <HorizontalStackPanel>
+            <Label Id="Name" Font="Fonts/OpenSans-Bold.ttf:22" SupportsCommands="False" />
+            <Label Id="Time" Font="Fonts/OpenSans-Bold.ttf:16" VerticalAlignment="Center" Padding="5, 0, 0, 0" />
+        </HorizontalStackPanel>
+        <Label Id="Channel" Font="Fonts/OpenSans-Bold.ttf:22" />
+    </HorizontalStackPanel>
+    <Label Id="Message" Font="Fonts/OpenSans.ttf:22" Wrap="True" SupportsCommands="False" />
+</VerticalStackPanel>

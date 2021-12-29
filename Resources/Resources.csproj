@@ -6,6 +6,7 @@
     </PropertyGroup>
     <ItemGroup>
       <EmbeddedResource Include="UI\**\*.*" />
+      <EmbeddedResource Include="Fonts\**\*.*" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="JKMP.Myra" Version="2.0.0" />

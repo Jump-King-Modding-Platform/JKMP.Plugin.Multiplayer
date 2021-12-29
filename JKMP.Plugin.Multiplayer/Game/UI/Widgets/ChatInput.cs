@@ -28,30 +28,21 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             sendButton = EnsureWidgetById<TextButton>("SendButton");
 
             sendButton.Click += OnSendClicked;
-            inputText.TextChangedByUser += OnTextChangedByUser;
         }
 
         public override void UpdateLayout()
         {
             base.UpdateLayout();
-            Chat = this.FindParentOfType<Chat>() ?? throw new InvalidOperationException("Parent chat widget not found");
+
+            Chat ??= this.FindParentOfType<Chat>() ?? throw new InvalidOperationException("Parent chat widget not found");
         }
 
         private void OnSendClicked(object sender, EventArgs e)
         {
             SendAndClearInput();
-        }
-
-        private void OnTextChangedByUser(object sender, ValueChangedEventArgs<string> e)
-        {
-            if (e.NewValue.Length > MaxInputLength)
-            {
-                var cursorPosition = inputText.CursorPosition;
-                inputText.Text = e.NewValue.Substring(0, MaxInputLength);
-                
-                // Cursor position is reset to 0 when text is changed so we need to restore it
-                inputText.CursorPosition = cursorPosition;
-            }
+            InputManager.EnableGameInput();
+            UIManager.PopShowCursor();
+            Chat!.HideBackground();
         }
 
         public void FocusInput()

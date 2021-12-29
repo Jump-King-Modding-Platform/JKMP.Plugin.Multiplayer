@@ -63,7 +63,7 @@ namespace Resources
             
             return bytes;
         }
-
+        
         /// <summary>
         /// Loads a resource from the Resources assembly and parses the contents as a Widget using <see cref="Project.LoadObjectFromXml{T}"/>.
         /// </summary>
