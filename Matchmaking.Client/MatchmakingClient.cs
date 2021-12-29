@@ -119,8 +119,6 @@ namespace Matchmaking.Client
                 Position = position
             });
 
-            SendChatMessage("hello gamers", ChatChannel.Group);
-            
             // {} basically means not null
             while (await messages.Next(cancellationToken) is {} message)
             {
