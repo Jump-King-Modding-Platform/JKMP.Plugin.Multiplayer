@@ -15,6 +15,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             { MessageType.HandshakeRequest, typeof(HandshakeRequest) },
             { MessageType.HandshakeResponse, typeof(HandshakeResponse) },
             { MessageType.PlayerStateChanged, typeof(PlayerStateChanged) },
+            { MessageType.LocalChatMessage, typeof(LocalChatMessage) },
             { MessageType.Disconnected, typeof(Disconnected) }
         };
 

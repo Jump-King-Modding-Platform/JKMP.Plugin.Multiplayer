@@ -14,6 +14,7 @@ using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
+using Myra;
 using Serilog;
 using Steamworks;
 
@@ -57,7 +58,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
         {
-            P2P.ConnectTo(steamIds.Select(id => new SteamId { Value = id }).ToArray());
+            P2P.ConnectTo(steamIds.Select(id => new SteamId { Value = id }));
         }
 
         protected override void Update(float delta)

@@ -16,7 +16,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
 {
     public class P2PManager : IDisposable
     {
+        public static P2PManager? Instance { get; private set; }
+        
         public Mutex<Dictionary<ulong, RemotePlayer>> ConnectedPlayersMtx { get; } = new(new Dictionary<ulong, RemotePlayer>());
+        
+        public P2PEvents Events { get; private set; }
         
         private readonly Framed<GameMessagesCodec, GameMessage> messages;
         private readonly GameMessageProcessor processor;
@@ -34,7 +38,10 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
             messages = new(new GameMessagesCodec());
             processor = new();
+            Events = new();
             Task.Run(ProcessMessages);
+
+            Instance = this;
         }
 
         public void Dispose()
@@ -51,6 +58,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             }
 
             connectedPlayers.Value.Clear();
+            Instance = null;
         }
 
         private void OnP2PConnectionFailed(SteamId steamId, P2PSessionError error)
@@ -69,7 +77,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             ConnectTo(steamId);
         }
 
-        public void ConnectTo(ICollection<SteamId> steamIds)
+        public void ConnectTo(IEnumerable<SteamId> steamIds)
         {
             foreach (var steamId in steamIds)
             {

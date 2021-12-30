@@ -3,6 +3,8 @@ using System.Linq;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
+using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing.PauseMenu;
 using Matchmaking.Client.Chat;
 using Microsoft.Xna.Framework.Input;
@@ -36,6 +38,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             originalRootBackground = Root.Background;
 
             MatchmakingManager.Instance.Events.ChatMessageReceived += OnChatMessageReceived;
+            P2PManager.Instance!.Events.IncomingChatMessage += OnChatMessageReceived;
 
             HideBackground();
         }

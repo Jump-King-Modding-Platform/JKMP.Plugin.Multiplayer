@@ -9,6 +9,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
             RegisterHandler(new HandshakeRequestHandler());
             RegisterHandler(new HandshakeResponseHandler());
             RegisterHandler(new PlayerStateChangedHandler());
+            RegisterHandler(new LocalChatMessageHandler());
             RegisterHandler(new DisconnectedMessageHandler());
         }
     }

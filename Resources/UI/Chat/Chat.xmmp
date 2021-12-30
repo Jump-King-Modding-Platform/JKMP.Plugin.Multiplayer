@@ -1,4 +1,4 @@
-<VerticalStackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20, 0, 0, 20" Width="450" Height="275" Background="#242424">
+<VerticalStackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20, 0, 0, 20" Width="450" Height="275" Background="#292929">
     <VerticalStackPanel.Proportions>
         <Proportion Type="Fill" />
         <Proportion Type="Auto" />

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using FontStashSharp;
 using JKMP.Core.Logging;
 using Matchmaking.Client.Chat;
@@ -18,11 +19,12 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         private static readonly Dictionary<ChatChannel, Color> ChannelColors = new()
         {
-            { ChatChannel.Global, Color.White },
-            { ChatChannel.Group, new Color(57, 219, 122) }
+            { ChatChannel.Global, new Color(245, 245, 245) },
+            { ChatChannel.Group, new Color(57, 219, 122) },
+            { ChatChannel.Local, new Color(200, 200, 200) }
         };
 
-        private const float TimeUntilFade = 5f;
+        private const float TimeUntilFade = 30f;
         private const float FadeOutTime = 0.5f;
         
         public ulong SenderId { get; set; }
@@ -60,6 +62,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                 var textColor = ChannelColors[value];
                 nameLabel.TextColor = textColor;
                 channelLabel.TextColor = textColor;
+                timeLabel.TextColor = textColor;
             }
         }
 
@@ -87,7 +90,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             Channel = channel;
             creationDate = DateTime.Now;
 
-            timeLabel.Text = creationDate.ToString("t");
+            timeLabel.Text = creationDate.ToString("t", CultureInfo.InstalledUICulture);
         }
 
         public void ShowBackground()

@@ -1,19 +1,36 @@
 using System;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
+using JKMP.Plugin.Multiplayer.Networking.Messages;
 using Matchmaking.Client.Chat;
 using Microsoft.Xna.Framework.Input;
 using Myra.Graphics2D.UI;
 using Myra.Utility;
 using Serilog;
+using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 {
     public class ChatInput : ResourceWidget<ChatInput>
     {
-        internal Chat? Chat;
+        public ChatChannel Channel
+        {
+            get => channel;
+            set
+            {
+                channel = value;
+                channelLabel.Text = value.ToString();
+            }
+        }
         
+        internal Chat? Chat;
+
+        private ChatChannel channel;
+
+        private readonly Label channelLabel;
         private readonly TextBox inputText;
         private readonly TextButton sendButton;
 
@@ -24,10 +41,14 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         public ChatInput() : base("UI/Chat/ChatInput.xmmp")
         {
+            channelLabel = EnsureWidgetById<Label>("Channel");
             inputText = EnsureWidgetById<TextBox>("InputText");
             sendButton = EnsureWidgetById<TextButton>("SendButton");
 
             sendButton.Click += OnSendClicked;
+            inputText.KeyDown += OnInputKeyDown;
+
+            Channel = ChatChannel.Global;
         }
 
         public override void UpdateLayout()
@@ -43,6 +64,50 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             InputManager.EnableGameInput();
             UIManager.PopShowCursor();
             Chat!.HideBackground();
+        }
+
+        private void OnInputKeyDown(object sender, GenericEventArgs<Keys> args)
+        {
+            if (args.Data == Keys.Tab)
+            {
+                int direction = 1;
+                
+                if (InputManager.KeyDown(Keys.LeftControl) || InputManager.KeyDown(Keys.RightControl))
+                {
+                    direction = -1;
+                }
+
+                ChatChannel newChannel = Channel;
+
+                if (newChannel + direction < 0)
+                {
+                    newChannel = ChatChannel.Count - 1;
+                }
+                else if (newChannel + direction >= ChatChannel.Count)
+                {
+                    newChannel = 0;
+                }
+                else
+                {
+                    newChannel += direction;
+                }
+
+                Channel = newChannel;
+            }
+            else if (args.Data >= Keys.D1 && args.Data <= Keys.D9)
+            {
+                if (!InputManager.KeyDown(Keys.LeftControl))
+                    return;
+                
+                int channelIndex = args.Data - Keys.D1;
+
+                ChatChannel channel = (ChatChannel)channelIndex;
+
+                if (Enum.IsDefined(typeof(ChatChannel), channel) && channel != ChatChannel.Count)
+                {
+                    Channel = channel;
+                }
+            }
         }
 
         public void FocusInput()
@@ -69,7 +134,29 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
             if (message.Length > 0)
             {
-                MatchmakingManager.Instance.SendChatMessage(message, ChatChannel.Global);
+                switch (Channel)
+                {
+                    case ChatChannel.Global:
+                    case ChatChannel.Group:
+                    {
+                        MatchmakingManager.Instance.SendChatMessage(message, Channel);
+                        break;
+                    }
+                    case ChatChannel.Local:
+                    {
+                        P2PManager.Instance?.Broadcast(new LocalChatMessage
+                        {
+                            Message = message
+                        });
+                        Chat!.AddMessage(SteamClient.Name, SteamClient.SteamId.Value, message, channel);
+                        break;
+                    }
+                    default:
+                    {
+                        Logger.Warning("Did not send message to channel {channel} due to missing implementation", Channel);
+                        break;
+                    }
+                }
             }
         }
     }

@@ -1,8 +1,10 @@
-<HorizontalStackPanel Height="25">
+<HorizontalStackPanel Height="30" Background="#333333">
     <HorizontalStackPanel.Proportions>
+        <Proportion Type="Auto" />
         <Proportion Type="Fill" />
         <Proportion Type="Auto" />
     </HorizontalStackPanel.Proportions>
-    <TextBox Id="InputText" VerticalAlignment="Stretch" Text="" Font="Fonts/OpenSans.ttf:24" />
-    <TextButton Id="SendButton" Text="Send" VerticalAlignment="Stretch" />
+    <Label Id="Channel" Font="Fonts/OpenSans-Bold.ttf:16" VerticalAlignment="Center" HorizontalAlignment="Center" Width="40" Margin="5, 0" />
+    <TextBox Padding="4, 3, 0, 0" Id="InputText" VerticalAlignment="Stretch" Text="" Font="Fonts/OpenSans.ttf:22" />
+    <TextButton Id="SendButton" Text="→" VerticalAlignment="Stretch" Width="50" />
 </HorizontalStackPanel>
