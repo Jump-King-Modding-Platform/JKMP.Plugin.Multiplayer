@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using FontStashSharp;
 using JKMP.Core.Logging;
 using Matchmaking.Client.Chat;
 using Microsoft.Xna.Framework;
@@ -12,16 +11,16 @@ using Serilog;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 {
-    public class ChatMessageRow : ResourceWidget<ChatMessageRow>
+    internal class ChatMessageRow : ResourceWidget<ChatMessageRow>
     {
         private static readonly IBrush HiddenBackground = new SolidBrush(Color.Transparent);
         private static readonly ILogger Logger = LogManager.CreateLogger<ChatMessageRow>();
 
         private static readonly Dictionary<ChatChannel, Color> ChannelColors = new()
         {
-            { ChatChannel.Global, new Color(245, 245, 245) },
+            { ChatChannel.Global, Color.CornflowerBlue },
             { ChatChannel.Group, new Color(57, 219, 122) },
-            { ChatChannel.Local, new Color(200, 200, 200) }
+            { ChatChannel.Local, new Color(245, 245, 245) }
         };
 
         private const float TimeUntilFade = 30f;

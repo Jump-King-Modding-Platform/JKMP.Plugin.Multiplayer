@@ -23,6 +23,13 @@
     </ItemGroup>
     <ItemGroup>
       <None Remove="Content\UI\Chat.xmmp" />
+      <None Update="Content\Multiplayer\Fonts\LocalChatFont.xnb">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Remove="Content\obj\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Content" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 

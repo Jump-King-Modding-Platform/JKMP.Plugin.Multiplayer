@@ -16,12 +16,26 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         private bool flip;
         
         private readonly Transform transform;
+        private readonly FollowingTextRenderer nameDisplay;
+        private readonly FollowingTextRenderer messageDisplay;
 
         public FakePlayer()
         {
             sprite = JKContentManager.PlayerSprites.idle;
             transform = new();
-            AddComponents(transform);
+            nameDisplay = new(Content.Fonts.LocalChatFont)
+            {
+                Offset = new Vector2(9, 0),
+                MaxWidth = 200
+            };
+            messageDisplay = new(Content.Fonts.LocalChatFont)
+            {
+                Offset = new Vector2(9, -12),
+                TimeUntilMessageFade = 10f,
+                MessageFadeTime = 0.5f,
+                MaxWidth = 200
+            };
+            AddComponents(transform, nameDisplay, messageDisplay);
         }
 
         public void SetPosition(Vector2 position)
@@ -45,6 +59,30 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 return;
             
             flip = direction < 0;
+        }
+
+        /// <summary>
+        /// Shows the given message above the player's head. If null then the message is hidden.
+        /// </summary>
+        public void Say(string? message)
+        {
+            messageDisplay.ShowMessage(message);
+        }
+        
+        /// <summary>
+        /// Sets the name displayed above the character's head.
+        /// </summary>
+        public void SetName(string name)
+        {
+            nameDisplay.Text = name;
+        }
+
+        /// <summary>
+        /// Sets the color of the name displayed above the character's head.
+        /// </summary>
+        public void SetNameColor(Color color)
+        {
+            nameDisplay.Color = color;
         }
     }
 }

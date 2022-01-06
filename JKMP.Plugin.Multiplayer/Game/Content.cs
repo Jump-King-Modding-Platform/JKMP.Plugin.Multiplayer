@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace JKMP.Plugin.Multiplayer.Game
 {
@@ -34,11 +35,24 @@ namespace JKMP.Plugin.Multiplayer.Game
             }
         }
 
+        public class FontContent
+        {
+            public SpriteFont LocalChatFont { get; }
+
+            public FontContent(ContentManager content)
+            {
+                LocalChatFont = content.Load<SpriteFont>("Multiplayer/Fonts/LocalChatFont");
+            }
+        }
+
         public static Dictionary<SurfaceType, PlayerSoundEffects> PlayerSounds { get; } = new();
+
+        public static FontContent Fonts { get; private set; } = null!;
 
         internal static void LoadContent(ContentManager content)
         {
             LoadSounds(content);
+            Fonts = new(content);
         }
 
         private static void LoadSounds(ContentManager content)
