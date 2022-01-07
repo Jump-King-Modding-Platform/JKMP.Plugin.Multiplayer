@@ -100,9 +100,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
             {
                 try
                 {
+                    AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
                     using var guard = await ConnectedPlayersMtx.LockAsync();
                     var remotePlayer = guard.Value[steamId];
-                    AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
 
                     if (authTicket == null)
                     {
