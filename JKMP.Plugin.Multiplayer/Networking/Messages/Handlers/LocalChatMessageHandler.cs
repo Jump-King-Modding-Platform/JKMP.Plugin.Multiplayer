@@ -40,6 +40,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
             }
             
             Logger.Information("[{channel}, {senderId}] {senderName}: {message}", ChatChannel.Local, message.Sender, senderName, trimmedMessage);
+
             context.P2PManager.Events.OnIncomingChatMessage(new ChatMessage(ChatChannel.Local, message.Sender.Value, senderName, trimmedMessage));
         }
     }

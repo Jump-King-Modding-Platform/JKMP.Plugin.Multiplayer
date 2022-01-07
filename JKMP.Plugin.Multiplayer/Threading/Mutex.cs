@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using JKMP.Core.Logging;
@@ -30,6 +31,14 @@ namespace JKMP.Plugin.Multiplayer.Threading
 
         public MutexGuard<T> Lock()
         {
+            if (semaphore.CurrentCount == 0)
+            {
+                LogManager.TempLogger.Debug("Locking: {semaphoreCount}", semaphore.CurrentCount);
+
+                var stackTrace = new StackTrace();
+                LogManager.TempLogger.Debug("{stackTrace}", stackTrace.ToString());
+            }
+
             semaphore.Wait();
             return new MutexGuard<T>(semaphore, value);
         }

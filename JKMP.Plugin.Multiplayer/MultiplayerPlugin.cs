@@ -12,6 +12,7 @@ using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing;

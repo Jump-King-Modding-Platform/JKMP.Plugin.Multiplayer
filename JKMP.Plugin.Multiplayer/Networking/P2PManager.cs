@@ -106,6 +106,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                     if (authTicket == null)
                     {
+                        guard.Dispose();
+                        
                         Logger.Error("Failed to get auth session ticket, aborting connection to {steamId}", steamId);
                         Disconnect(steamId);
                         return;
@@ -140,7 +142,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                 messages.Send(steamId, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
                 SteamNetworking.CloseP2PSessionWithUser(steamId);
-                player.AuthTicket!.Dispose();
+                player.AuthTicket?.Dispose();
                 SteamUser.EndAuthSession(player.SteamId);
             }
         }
@@ -174,8 +176,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 {
                     if (message is not PlayerStateChanged)
                         Logger.Verbose("Incoming message {message}", message.GetType().Name);
-                    
-                    await processor.HandleMessage(message, context);
+
+                    processor.PushMessage(message, context);
                 }
 
                 Logger.Verbose("Finished message processing");
@@ -218,6 +220,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                 recentlyDisconnectedPeers.RemoveWhere(item => toRemove.Contains(item));
             }
+
+            processor.HandlePendingMessages().Wait();
         }
 
         internal void Broadcast(GameMessage message, P2PSend sendType = P2PSend.Reliable) => BroadcastAsync(message, sendType).Wait();

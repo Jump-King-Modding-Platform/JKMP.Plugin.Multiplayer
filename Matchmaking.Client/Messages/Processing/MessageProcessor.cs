@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace Matchmaking.Client.Messages.Processing
     public class MessageProcessor<TMessage, TContext>
     {
         private readonly Dictionary<Type, List<IMessageHandler<TMessage, TContext>>> handlers = new();
+        private readonly ConcurrentQueue<Tuple<TMessage, TContext>> pendingMessages = new();
 
         public void RegisterHandler<T2>(IMessageHandler<TMessage, TContext> handler) where T2 : TMessage
         {
@@ -25,11 +27,45 @@ namespace Matchmaking.Client.Messages.Processing
             GetHandlers(typeof(T2))!.Add(converterHandler);
         }
 
-        public async Task HandleMessage(TMessage message, TContext context)
+        /// <summary>
+        /// Pushes an incoming message to the pending queue. To handle the queued messages, call <see cref="HandlePendingMessages"/>.
+        /// This method is thread safe.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if message or context is null.</exception>
+        public void PushMessage(TMessage message, TContext context)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (context == null) throw new ArgumentNullException(nameof(context));
 
+            pendingMessages.Enqueue(new Tuple<TMessage, TContext>(message, context));
+        }
+
+        /// <summary>
+        /// Handles all pending messages. This method is thread safe but should ideally only be called from one thread that handles the incoming messages.
+        /// </summary>
+        public async Task HandlePendingMessages()
+        {
+            while (pendingMessages.Count > 0)
+            {
+                if (!pendingMessages.TryDequeue(out var tuple))
+                    break;
+                
+                TMessage message = tuple.Item1!;
+                TContext context = tuple.Item2!;
+
+                await HandleMessage(message, context);
+            }
+        }
+
+        /// <summary>
+        /// Handles a message instantly without pushing it to the pending queue.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if message or context is null.</exception>
+        public async Task HandleMessage(TMessage message, TContext context)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            
             var messageHandlers = GetHandlers(message.GetType());
 
             if (messageHandlers == null)
