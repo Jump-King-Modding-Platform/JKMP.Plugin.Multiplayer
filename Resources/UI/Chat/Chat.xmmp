@@ -4,10 +4,15 @@
         <Proportion Type="Auto" />
     </VerticalStackPanel.Proportions>
     
-    <!-- Chat output -->
-    <ScrollViewer Id="OutputScrollViewer" StyleName="ChatOutputContainer">
-        <VerticalStackPanel Padding="5" Id="ChatOutputPanel" />
-    </ScrollViewer>
+    <Panel>
+        <!-- Chat output -->
+        <ScrollViewer Id="OutputScrollViewer" StyleName="ChatOutputContainer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <VerticalStackPanel Padding="5" Id="ChatOutputPanel" />
+        </ScrollViewer>
+        
+        <!-- Notice about not being at the bottom of the chat -->
+        <Label Id="BottomNotice" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="5" Margin="0, 0, 0, 5" Background="#292929BB" OverBackground="#292929FF" Text="View recent chat" Font="Fonts/OpenSans-Bold.ttf:16" />
+    </Panel>
     
     <!-- Input panel -->
     <ChatInput Id="ChatInput" />

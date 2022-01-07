@@ -68,8 +68,8 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                             }
 
                             Logger.Debug("Connecting to matchmaking server...");
-                            await Client.Connect("192.168.1.200",
-                                16000, currentSessionTicket.Data,
+                            await Client.Connect("jkmp-backend-matchmaking.fly.dev",
+                                10069, currentSessionTicket.Data,
                                 SteamClient.Name, CalculateLevelHash(false),
                                 Password,
                                 position,

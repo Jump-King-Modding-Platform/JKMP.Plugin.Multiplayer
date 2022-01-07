@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JKMP.Core.Logging;
@@ -7,6 +8,7 @@ using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing.PauseMenu;
 using Matchmaking.Client.Chat;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -21,6 +23,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         private readonly ScrollViewer outputScrollViewer;
         private readonly VerticalStackPanel chatOutput;
         private readonly ChatInput chatInput;
+        private readonly Widget bottomNotice;
         private readonly IBrush originalRootBackground;
         private readonly object accessRowsLock = new();
 
@@ -35,7 +38,10 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             outputScrollViewer = EnsureWidgetById<ScrollViewer>("OutputScrollViewer");
             chatOutput = EnsureWidgetById<VerticalStackPanel>("ChatOutputPanel");
             chatInput = EnsureWidgetById<ChatInput>("ChatInput");
+            bottomNotice = EnsureWidgetById<Widget>("BottomNotice");
             originalRootBackground = Root.Background;
+
+            bottomNotice.TouchUp += OnBottomNoticeClicked;
 
             MatchmakingManager.Instance.Events.ChatMessageReceived += OnChatMessageReceived;
             P2PManager.Instance!.Events.IncomingChatMessage += OnChatMessageReceived;
@@ -52,6 +58,8 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         {
             lock (accessRowsLock)
             {
+                bool outputIsAtBottom = outputScrollViewer.ScrollPosition.Y >= outputScrollViewer.ScrollMaximum.Y;
+                
                 while (chatOutput.Widgets.Count >= MaxChatMessages)
                 {
                     chatOutput.Widgets.RemoveAt(0);
@@ -63,17 +71,30 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                 if (previousMessage != null && previousMessage.CanMerge(channel, senderId))
                 {
                     previousMessage.Message += "\n" + message;
+
+                    if (outputIsAtBottom)
+                        ScrollOutputToBottom();
+                    
                     return;
                 }
 
                 var row = new ChatMessageRow(senderName, senderId ?? 0, message, channel);
                 chatOutput.AddChild(row);
 
+                if (outputIsAtBottom)
+                    ScrollOutputToBottom();
+
                 if (Root.Background != HiddenBackground)
                     row.HideBackground();
             }
         }
         
+        private void ScrollOutputToBottom()
+        {
+            outputScrollViewer.Arrange();
+            outputScrollViewer.ScrollPosition = new Point(0, outputScrollViewer.ScrollMaximum.Y);
+        }
+
         internal void Update(float delta)
         {
             // Toggle chat focus
@@ -86,6 +107,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                     InputManager.EnableGameInput();
                     UIManager.PopShowCursor();
                     HideBackground();
+                    ScrollOutputToBottom();
                 }
                 else
                 {
@@ -102,25 +124,33 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                 {
                     row.Update(delta);
                 }
+                
+                bottomNotice.Visible = outputScrollViewer.ScrollPosition.Y < outputScrollViewer.ScrollMaximum.Y;
             }
         }
 
         internal void HideBackground()
         {
-            Root.Background = HiddenBackground;
-            chatInput.Opacity = 0;
-            chatInput.Enabled = false;
-            outputScrollViewer.ShowVerticalScrollBar = false;
-            ToggleChatRowBackgrounds(true);
+            lock (accessRowsLock)
+            {
+                Root.Background = HiddenBackground;
+                chatInput.Opacity = 0;
+                chatInput.Enabled = false;
+                outputScrollViewer.ShowVerticalScrollBar = false;
+                ToggleChatRowBackgrounds(true);
+            }
         }
 
         internal void ShowBackground()
         {
-            Root.Background = originalRootBackground;
-            chatInput.Opacity = 1;
-            chatInput.Enabled = true;
-            outputScrollViewer.ShowVerticalScrollBar = true;
-            ToggleChatRowBackgrounds(false);
+            lock (accessRowsLock)
+            {
+                Root.Background = originalRootBackground;
+                chatInput.Opacity = 1;
+                chatInput.Enabled = true;
+                outputScrollViewer.ShowVerticalScrollBar = true;
+                ToggleChatRowBackgrounds(false);
+            }
         }
 
         private void ToggleChatRowBackgrounds(bool visible)
@@ -139,6 +169,11 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
         private IEnumerable<ChatMessageRow> GetMessageRows()
         {
             return ((StackPanel)outputScrollViewer.Content).Widgets.Cast<ChatMessageRow>();
+        }
+
+        private void OnBottomNoticeClicked(object sender, EventArgs e)
+        {
+            ScrollOutputToBottom();
         }
     }
 }
