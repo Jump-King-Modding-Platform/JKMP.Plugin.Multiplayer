@@ -33,6 +33,10 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
         private static void OnPasswordChanged(string newPassword)
         {
             MatchmakingManager.Password = newPassword.Length > 0 ? newPassword : null;
+            
+            // Save to config
+            MultiplayerPlugin.Instance.SaveMatchmakingConfig();
+
             var gameEntity = EntityManager.instance.Find<GameEntity>();
 
             if (gameEntity != null)

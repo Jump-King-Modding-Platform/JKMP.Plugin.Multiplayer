@@ -9,5 +9,7 @@ namespace JKMP.Plugin.Multiplayer.Configuration
 
         [JsonRequired]
         public ushort Port { get; set; } = 16000;
+
+        public string Password { get; set; } = "";
     }
 }

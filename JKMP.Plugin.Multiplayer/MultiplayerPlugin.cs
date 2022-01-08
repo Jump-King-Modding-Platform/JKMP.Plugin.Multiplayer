@@ -29,6 +29,8 @@ namespace JKMP.Plugin.Multiplayer
     // ReSharper disable once UnusedType.Global
     public class MultiplayerPlugin : Core.Plugins.Plugin
     {
+        internal static MultiplayerPlugin Instance { get; private set; }
+        
         private readonly Harmony harmony = new("com.jkmp.plugin.multiplayer");
 
         private static readonly ILogger Logger = LogManager.CreateLogger<MultiplayerPlugin>();
@@ -37,9 +39,32 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
 
+        public MultiplayerPlugin()
+        {
+            Instance = this;
+        }
+
         public override void OnLoaded()
         {
             matchmakingConfig = Configs.LoadConfig<MatchmakingConfig>("Matchmaking");
+            MatchmakingManager.Password = matchmakingConfig.Password;
+        }
+
+        public bool SaveMatchmakingConfig()
+        {
+            // Set password to UI value
+            matchmakingConfig!.Password = MatchmakingManager.Password ?? "";
+
+            try
+            {
+                Configs.SaveConfig(matchmakingConfig, "Matchmaking");
+                return true;
+            }
+            catch
+            {
+                // Ignore, errors are logged to console for eventual troubleshooting
+                return false;
+            }
         }
 
         public override void Initialize()
