@@ -22,7 +22,6 @@
       <ProjectReference Include="..\Resources\Resources.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <None Remove="Content\UI\Chat.xmmp" />
       <None Update="Content\Multiplayer\Fonts\LocalChatFont.xnb">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
