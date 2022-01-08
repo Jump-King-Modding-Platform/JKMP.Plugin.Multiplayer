@@ -1,8 +1,15 @@
 namespace Matchmaking.Client.Networking
 {
-    public enum MessageType
+    internal enum MessageType
     {
         HandshakeRequest,
-        HandshakeResponse
+        HandshakeResponse,
+        PositionUpdate,
+        SetMatchmakingPassword,
+        InformNearbyClients,
+        /// <summary>Incoming chat message from a client (to server)</summary>
+        IncomingChatMessage,
+        /// <summary>Outgoing chat message from server (to client)</summary>
+        OutgoingChatMessage
     }
 }

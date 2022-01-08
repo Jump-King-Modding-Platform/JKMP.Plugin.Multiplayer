@@ -6,14 +6,19 @@ using System.Threading.Tasks;
 using EntityComponent;
 using HarmonyLib;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
+using JKMP.Plugin.Multiplayer.Game.Input;
+using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
 using JumpKing;
 using JumpKing.Player;
 using Matchmaking.Client;
+using Microsoft.Xna.Framework;
 using Serilog;
 using Steamworks;
 
@@ -41,11 +46,15 @@ namespace JKMP.Plugin.Multiplayer
                 }
             };
 
+            GameEvents.LoadContent += Content.LoadContent;
+            GameEvents.GameInitialize += UIManager.Initialize;
+
             GameEvents.RunStarted += args =>
             {
                 Logger.Verbose("Run started");
 
-                MatchmakingManager.Start();
+                var plr = EntityManager.instance.Find<PlayerEntity>();
+                MatchmakingManager.Start(plr.GetComponent<BodyComp>().position);
                 mpEntity = new();
             };
 
@@ -55,15 +64,28 @@ namespace JKMP.Plugin.Multiplayer
 
                 if (args.SceneType == SceneType.TitleScreen)
                 {
+                    mpEntity?.Destroy();
                     mpEntity = null;
                     MatchmakingManager.Stop();
                     titleScreenEntity = new();
                 }
                 else if (args.SceneType == SceneType.Game)
                 {
+                    titleScreenEntity?.Destroy();
                     titleScreenEntity = null;
                     // game entity is created in the RunStarted event above
                 }
+            };
+
+            GameEvents.GameUpdate += gameTime =>
+            {
+                SteamClient.RunCallbacks();
+                InputManager.Update(gameTime);
+            };
+
+            GameEvents.GameDraw += gameTime =>
+            {
+                UIManager.Draw(gameTime);
             };
         }
     }

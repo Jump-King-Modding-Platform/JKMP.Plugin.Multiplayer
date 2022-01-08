@@ -15,8 +15,8 @@ namespace Matchmaking.Client.Serializing
             }
         }
 
-        public static byte[] Serialize<T>(IBinarySerializable<T> serializable) => Serialize(serializable, GetDefaultOptions());
-        public static byte[] Serialize<T>(IBinarySerializable<T> serializable, Options options)
+        public static byte[] Serialize(IBinarySerializable serializable) => Serialize(serializable, GetDefaultOptions());
+        public static byte[] Serialize(IBinarySerializable serializable, Options options)
         {
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream, options.Encoding);
@@ -24,8 +24,8 @@ namespace Matchmaking.Client.Serializing
             return stream.ToArray();
         }
 
-        public static T Deserialize<T>(byte[] bytes) where T : IBinarySerializable<T>, new() => Deserialize<T>(bytes, GetDefaultOptions());
-        public static T Deserialize<T>(byte[] bytes, Options options) where T : IBinarySerializable<T>, new()
+        public static T Deserialize<T>(byte[] bytes) where T : IBinarySerializable, new() => Deserialize<T>(bytes, GetDefaultOptions());
+        public static T Deserialize<T>(byte[] bytes, Options options) where T : IBinarySerializable, new()
         {
             using var reader = new BinaryReader(new MemoryStream(bytes), options.Encoding);
             var instance = new T();

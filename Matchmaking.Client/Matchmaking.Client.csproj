@@ -10,4 +10,11 @@
       <PackageReference Include="Serilog" Version="2.10.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, PublicKeyToken=null">
+        <HintPath>$(MainGameDirectory)\MonoGame.Framework.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
+
 </Project>

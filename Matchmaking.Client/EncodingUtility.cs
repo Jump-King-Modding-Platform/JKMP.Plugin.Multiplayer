@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Matchmaking.Client.Serializing;
+using Microsoft.Xna.Framework;
 
 namespace Matchmaking.Client
 {
@@ -82,6 +85,81 @@ namespace Matchmaking.Client
 
             var bytes = reader.ReadBytes((int)length);
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        public static void Write(this BinaryWriter writer, Vector2 value)
+        {
+            writer.Write(value.X);
+            writer.Write(value.Y);
+        }
+
+        public static Vector2 ReadVector2(this BinaryReader reader)
+        {
+            return new Vector2(reader.ReadSingle(), reader.ReadSingle());
+        }
+
+        internal static void Write<T>(this BinaryWriter writer, ICollection<T> collection) where T : IBinarySerializable
+        {
+            writer.WriteVarInt((ulong)collection.Count);
+
+            foreach (T item in collection)
+            {
+                item.Serialize(writer);
+            }
+        }
+
+        internal static List<T> ReadList<T>(this BinaryReader reader) where T : IBinarySerializable, new()
+        {
+            ulong length = reader.ReadVarInt();
+            List<T> result = new();
+
+            for (ulong i = 0; i < length; ++i)
+            {
+                var instance = new T();
+
+                try
+                {
+                    instance.Deserialize(reader);
+                }
+                catch (Exception ex)
+                {
+                    throw new FormatException($"Failed to deserialize item in collection at index {i}/{length}", ex);
+                }
+
+                result.Add(instance);
+            }
+
+            return result;
+        }
+
+        public static void Write(this BinaryWriter writer, ICollection<ulong> collection)
+        {
+            writer.WriteVarInt((ulong)collection.Count);
+
+            foreach (float item in collection)
+            {
+                writer.Write(item);
+            }
+        }
+
+        public static List<ulong> ReadUInt64List(this BinaryReader reader)
+        {
+            ulong length = reader.ReadVarInt();
+            List<ulong> result = new();
+
+            for (ulong i = 0; i < length; ++i)
+            {
+                try
+                {
+                    result.Add(reader.ReadVarInt());
+                }
+                catch (Exception ex)
+                {
+                    throw new FormatException($"Failed to deserialize ulong in collection at index {i}/{length}", ex);
+                }
+            }
+            
+            return result;
         }
     }
 }

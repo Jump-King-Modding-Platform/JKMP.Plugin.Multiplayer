@@ -5,20 +5,31 @@
         <LangVersion>9</LangVersion>
         <Version>0.1.0</Version>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <PlatformTarget>x86</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>x86</PlatformTarget>
+    </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="Facepunch.Steamworks.win32" Version="2.3.4" />
+      <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.3.4" />
       <PackageReference Include="JKMP.Core" Version="0.4.4" />
-    </ItemGroup>
-    <ItemGroup>
-      <Reference Include="JumpKing, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-        <HintPath>$(MainGameDirectory)\JumpKing.exe</HintPath>
-      </Reference>
-      <Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, PublicKeyToken=null">
-        <HintPath>$(MainGameDirectory)\MonoGame.Framework.dll</HintPath>
-      </Reference>
+      <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
+      <PackageReference Include="JKMP.Myra" Version="2.0.1" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" />
+      <ProjectReference Include="..\Resources\Resources.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="Content\UI\Chat.xmmp" />
+      <None Update="Content\Multiplayer\Fonts\LocalChatFont.xnb">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Remove="Content\obj\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Content" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
@@ -26,9 +37,18 @@
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
+            <CoreFiles Include="$(TargetDir)Resources.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
             <CoreFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
             <CoreFiles Include="$(TargetDir)Matchmaking.Client.dll" />
+            <CoreFiles Include="$(TargetDir)Myra.dll" />
+            <CoreFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />
+            <CoreFiles Include="$(TargetDir)StbImageSharp.dll" />
+            <CoreFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
+        </ItemGroup>
+        
+        <ItemGroup>
+            <ContentFiles Include="$(TargetDir)Content\**\*.*" />
         </ItemGroup>
 
         <PropertyGroup>
@@ -37,5 +57,8 @@
 
         <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Plugins/Multiplayer" />
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)/JKMP/Plugins/Multiplayer" SkipUnchangedFiles="true" />
+
+        <Message Importance="high" Text="Copying @(ContentFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Plugins/Multiplayer/Content" />
+        <Copy SourceFiles="@(ContentFiles)" DestinationFolder="$(Destination)/JKMP/Plugins/Multiplayer/Content/%(RecursiveDir)" SkipUnchangedFiles="true" />
     </Target>
 </Project>

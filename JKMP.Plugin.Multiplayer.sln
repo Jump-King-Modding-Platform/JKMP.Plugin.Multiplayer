@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JKMP.Plugin.Multiplayer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Matchmaking.Client", "Matchmaking.Client\Matchmaking.Client.csproj", "{EFC444C0-EAFB-4696-A0B2-A531EB5BD371}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources", "Resources\Resources.csproj", "{B5D21A62-D011-4DD4-BFC1-6345C9866278}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -24,5 +26,9 @@ Global
 		{EFC444C0-EAFB-4696-A0B2-A531EB5BD371}.Debug|x86.Build.0 = Debug|Any CPU
 		{EFC444C0-EAFB-4696-A0B2-A531EB5BD371}.Release|x86.ActiveCfg = Release|Any CPU
 		{EFC444C0-EAFB-4696-A0B2-A531EB5BD371}.Release|x86.Build.0 = Release|Any CPU
+		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Debug|x86.Build.0 = Debug|Any CPU
+		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Release|x86.ActiveCfg = Release|Any CPU
+		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

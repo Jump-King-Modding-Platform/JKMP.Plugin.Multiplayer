@@ -1,4 +1,6 @@
 using System;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace JKMP.Plugin.Multiplayer.Game.Events
 {
@@ -55,6 +57,58 @@ namespace JKMP.Plugin.Multiplayer.Game.Events
             RunStarted?.Invoke(args);
         }
         
+        #endregion
+        
+        #region GameInitialize
+
+        public delegate void GameInitializeEventHandler();
+
+        public static event GameInitializeEventHandler? GameInitialize;
+
+        internal static void OnGameInitialize()
+        {
+            GameInitialize?.Invoke();
+        }
+        
+        #endregion
+        
+        #region GameUpdate
+
+        public delegate void GameUpdateEventHandler(GameTime gameTime);
+
+        public static event GameUpdateEventHandler? GameUpdate;
+
+        internal static void OnGameUpdate(GameTime gameTime)
+        {
+            GameUpdate?.Invoke(gameTime);
+        }
+        
+        #endregion
+        
+        #region GameDraw
+
+        public delegate void GameDrawEventHandler(GameTime gameTime);
+
+        public static event GameDrawEventHandler? GameDraw;
+
+        internal static void OnGameDraw(GameTime gameTime)
+        {
+            GameDraw?.Invoke(gameTime);
+        }
+        
+        #endregion
+        
+        #region LoadContent
+
+        public delegate void LoadContentEventHandler(ContentManager game);
+
+        public static event LoadContentEventHandler? LoadContent;
+
+        internal static void OnLoadContent(ContentManager content)
+        {
+            LoadContent?.Invoke(content);
+        }
+
         #endregion
     }
 }

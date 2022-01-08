@@ -1,74 +1,65 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using EntityComponent;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Components;
+using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Game.UI;
+using JKMP.Plugin.Multiplayer.Game.UI.Widgets;
+using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
+using Myra;
+using Serilog;
+using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class GameEntity : BaseManagerEntity
     {
-        private FakePlayer fakePlayer = null!;
+        public P2PManager P2P { get; private set; } = null!;
+        public LocalPlayerListener PlayerListener => plrListener;
+        internal SoundManager Sound { get; private set; } = null!;
+        
         private LocalPlayerListener plrListener = null!;
+        private Chat chatWidget = null!;
+
+        private float timeSincePositionUpdate;
+        private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
+
+        private static readonly ILogger Logger = LogManager.CreateLogger<GameEntity>();
+        private PlayerEntity localPlayer = null!;
 
         protected override void OnFirstUpdate()
         {
-            fakePlayer = new FakePlayer();
             plrListener = new LocalPlayerListener();
-
-            plrListener.Jump += OnJump;
-            plrListener.StartJump += OnStartJump;
-            plrListener.StartedFalling += OnStartedFalling;
-            plrListener.Knocked += OnKnocked;
-            plrListener.Land += OnLand;
-            plrListener.Walk += OnWalk;
+            P2P = new();
+            Sound = new();
+            chatWidget = UIManager.AddWidget(new Chat());
+            localPlayer = EntityManager.instance.Find<PlayerEntity>();
+            localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent());
+            
+            MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
         }
 
-        private void OnJump()
+        protected override void OnDestroy()
         {
-            LogManager.TempLogger.Information("Jump");
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_up);
+            MatchmakingManager.Instance.Events.NearbyClientsReceived -= OnNearbyClientsReceived;
+
+            base.OnDestroy();
+            plrListener.Dispose();
+            P2P.Dispose();
+            UIManager.RemoveWidget(chatWidget);
         }
 
-        private void OnStartJump()
+        private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
         {
-            LogManager.TempLogger.Information("StartJump");
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_charge);
-        }
-
-        private void OnStartedFalling(bool knocked)
-        {
-            LogManager.TempLogger.Information("StartedFalling: {knocked}", knocked);
-            if (!knocked)
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_fall);
-        }
-
-        private void OnKnocked()
-        {
-            LogManager.TempLogger.Information("Knocked");
-            fakePlayer.SetSprite(JKContentManager.PlayerSprites.jump_bounce);
-        }
-
-        private void OnLand(bool splat)
-        {
-            LogManager.TempLogger.Information("Land: {splat}", splat);
-            fakePlayer.SetSprite(splat ? JKContentManager.PlayerSprites.splat : JKContentManager.PlayerSprites.idle);
-        }
-
-        private void OnWalk(int direction)
-        {
-            LogManager.TempLogger.Information("Walk: {direction}", direction);
-            if (direction != 0)
-            {
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.walk_one);
-                fakePlayer.SetDirection(direction);
-            }
-            else
-            {
-                fakePlayer.SetSprite(JKContentManager.PlayerSprites.idle);
-            }
+            P2P.ConnectTo(steamIds.Select(id => new SteamId { Value = id }));
         }
 
         protected override void Update(float delta)
@@ -76,13 +67,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             base.Update(delta);
 
             plrListener.Update(delta);
-            fakePlayer.SetPositionAndVelocity(plrListener.Position + new Vector2(0, -50), plrListener.Velocity);
-        }
 
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            plrListener.Dispose();
+            timeSincePositionUpdate += delta;
+            if (timeSincePositionUpdate >= PositionUpdateInterval)
+            {
+                timeSincePositionUpdate = 0;
+                MatchmakingManager.Instance.SendPosition(plrListener.Position);
+            }
+
+            P2P.Update(delta);
+            Sound.Update(delta);
+            chatWidget.Update(delta);
         }
     }
 }

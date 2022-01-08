@@ -27,44 +27,37 @@ namespace Matchmaking.Client.Networking
 
         public async Task<TData?> Next(CancellationToken cancellationToken = default)
         {
+            if (!Stream.CanRead)
+                return default;
+
+            int numBytes;
+
             try
             {
-                if (!Stream.CanRead)
-                    return default;
-
-                int numBytes;
-
-                try
-                {
-                    numBytes = await Stream.ReadAsync(recvBuffer, 0, recvBuffer.Length, cancellationToken);
-                }
-                catch (ObjectDisposedException) // Socket was closed
-                {
-                    return default;
-                }
-                catch (TaskCanceledException)
-                {
-                    return default;
-                }
-
-                if (numBytes == 0) // EOF/Disconnected
-                    return default;
-
-                // tfw no span
-                byte[] bytes = new byte[numBytes];
-                Array.Copy(recvBuffer, bytes, numBytes);
-
-                using var memoryStream = new MemoryStream(bytes);
-                using var reader = new BinaryReader(memoryStream);
-
-                // todo: support reading multiple messages in a packet
-                
-                return Codec.Decode(reader);
+                numBytes = await Stream.ReadAsync(recvBuffer, 0, recvBuffer.Length, cancellationToken);
             }
-            catch (SocketException ex)
+            catch (ObjectDisposedException) // Socket was closed
             {
                 return default;
             }
+            catch (TaskCanceledException)
+            {
+                return default;
+            }
+
+            if (numBytes == 0) // EOF/Disconnected
+                return default;
+
+            // tfw no span
+            byte[] bytes = new byte[numBytes];
+            Array.Copy(recvBuffer, bytes, numBytes);
+
+            using var memoryStream = new MemoryStream(bytes);
+            using var reader = new BinaryReader(memoryStream);
+
+            // todo: support reading multiple messages in a packet
+                
+            return Codec.Decode(reader);
         }
 
         public async Task<bool> Send(TData data)
@@ -77,31 +70,23 @@ namespace Matchmaking.Client.Networking
                 using var memoryStream = new MemoryStream(sendBuffer, true);
                 var writer = new BinaryWriter(memoryStream);
                 Codec.Encode(data, writer);
+
+                byte[] newBytes = new byte[memoryStream.Position];
+                Array.Copy(sendBuffer, newBytes, (int)memoryStream.Position);
+                
                 await Stream.WriteAsync(sendBuffer, 0, (int)memoryStream.Position);
                 return true;
             }
-            catch (SocketException)
+            catch (ObjectDisposedException)
             {
                 return false;
             }
         }
     }
 
-    public abstract class CodecSink<T>
+    internal abstract class CodecSink<T>
     {
         public abstract void Encode(T data, BinaryWriter writer);
         public abstract T Decode(BinaryReader reader);
-
-        internal void Write(Stream stream, T data)
-        {
-            using var writer = new BinaryWriter(new MemoryStream());
-            Encode(data, writer);
-        }
-
-        internal T Read(byte[] bytes)
-        {
-            using var reader = new BinaryReader(new MemoryStream(bytes));
-            return Decode(reader);
-        }
     }
 }

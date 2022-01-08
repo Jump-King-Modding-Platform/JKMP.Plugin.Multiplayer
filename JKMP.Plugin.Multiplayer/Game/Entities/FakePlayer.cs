@@ -1,6 +1,8 @@
 using System;
 using EntityComponent;
 using EntityComponent.BT;
+using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Components;
 using JumpKing;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
@@ -10,25 +12,40 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class FakePlayer : Entity
     {
-        private readonly BodyComp body;
         private Sprite sprite;
         private bool flip;
+        
+        private readonly Transform transform;
+        private readonly FollowingTextRenderer nameDisplay;
+        private readonly FollowingTextRenderer messageDisplay;
 
         public FakePlayer()
         {
-            body = new BodyComp(Vector2.Zero, 18, 16);
             sprite = JKContentManager.PlayerSprites.idle;
+            transform = new();
+            nameDisplay = new(Content.Fonts.LocalChatFont)
+            {
+                Offset = new Vector2(9, 0),
+                MaxWidth = 200
+            };
+            messageDisplay = new(Content.Fonts.LocalChatFont)
+            {
+                Offset = new Vector2(9, -12),
+                TimeUntilMessageFade = 10f,
+                MessageFadeTime = 0.5f,
+                MaxWidth = 200
+            };
+            AddComponents(transform, nameDisplay, messageDisplay);
         }
 
-        public void SetPositionAndVelocity(Vector2 position, Vector2 velocity)
+        public void SetPosition(Vector2 position)
         {
-            body.position = position;
-            body.velocity = velocity;
+            transform.Position = position;
         }
 
         public override void Draw()
         {
-            sprite.Draw(Camera.TransformVector2(body.position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            sprite.Draw(Camera.TransformVector2(transform.Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
         }
 
         public void SetSprite(Sprite newSprite)
@@ -42,6 +59,30 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 return;
             
             flip = direction < 0;
+        }
+
+        /// <summary>
+        /// Shows the given message above the player's head. If null then the message is hidden.
+        /// </summary>
+        public void Say(string? message)
+        {
+            messageDisplay.ShowMessage(message);
+        }
+        
+        /// <summary>
+        /// Sets the name displayed above the character's head.
+        /// </summary>
+        public void SetName(string name)
+        {
+            nameDisplay.Text = name;
+        }
+
+        /// <summary>
+        /// Sets the color of the name displayed above the character's head.
+        /// </summary>
+        public void SetNameColor(Color color)
+        {
+            nameDisplay.Color = color;
         }
     }
 }

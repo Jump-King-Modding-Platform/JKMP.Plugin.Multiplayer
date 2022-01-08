@@ -469,3 +469,6 @@ fabric.properties
 
 # Development variables
 DevVars.targets
+
+# Content temporary build files
+JKMP.Plugin.Multiplayer/Content/obj
