@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using EntityComponent;
 using HarmonyLib;
+using JKMP.Core.Configuration;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Configuration;
 using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
@@ -33,6 +35,12 @@ namespace JKMP.Plugin.Multiplayer
 
         private GameEntity? mpEntity;
         private TitleScreenEntity? titleScreenEntity;
+        private MatchmakingConfig? matchmakingConfig;
+
+        public override void OnLoaded()
+        {
+            matchmakingConfig = Configs.LoadConfig<MatchmakingConfig>("Matchmaking");
+        }
 
         public override void Initialize()
         {
@@ -54,7 +62,7 @@ namespace JKMP.Plugin.Multiplayer
                 Logger.Verbose("Run started");
 
                 var plr = EntityManager.instance.Find<PlayerEntity>();
-                MatchmakingManager.Start(plr.GetComponent<BodyComp>().position);
+                MatchmakingManager.Start(plr.GetComponent<BodyComp>().position, matchmakingConfig!.Endpoint, matchmakingConfig.Port);
                 mpEntity = new();
             };
 

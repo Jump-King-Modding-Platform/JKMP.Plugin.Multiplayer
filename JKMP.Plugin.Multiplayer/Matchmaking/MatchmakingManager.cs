@@ -32,9 +32,9 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
 
         private static readonly ILogger Logger = LogManager.CreateLogger(typeof(MatchmakingManager));
 
-        public static void Start(Vector2 position)
+        public static void Start(Vector2 position, string endpoint, ushort port)
         {
-            var _ = StartMatchmaking(position);
+            var _ = StartMatchmaking(position, endpoint, port);
         }
 
         public static void Stop()
@@ -43,7 +43,7 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
             matchmakingCancellationSource?.Cancel();
         }
         
-        private static async Task StartMatchmaking(Vector2 position)
+        private static async Task StartMatchmaking(Vector2 position, string endpoint, ushort port)
         {
             try
             {
@@ -67,9 +67,9 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                                 continue;
                             }
 
-                            Logger.Debug("Connecting to matchmaking server...");
-                            await Client.Connect("jkmp-backend-matchmaking.fly.dev",
-                                10069, currentSessionTicket.Data,
+                            Logger.Debug("Connecting to matchmaking server at {endpoint}:{port}...", endpoint, port);
+                            await Client.Connect(endpoint,
+                                port, currentSessionTicket.Data,
                                 SteamClient.Name, CalculateLevelHash(false),
                                 Password,
                                 position,

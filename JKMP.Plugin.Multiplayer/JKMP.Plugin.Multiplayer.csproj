@@ -13,7 +13,7 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.3.4" />
-      <PackageReference Include="JKMP.Core" Version="0.4.4" />
+      <PackageReference Include="JKMP.Core" Version="0.8.2" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="JKMP.Myra" Version="2.0.1" />
     </ItemGroup>
