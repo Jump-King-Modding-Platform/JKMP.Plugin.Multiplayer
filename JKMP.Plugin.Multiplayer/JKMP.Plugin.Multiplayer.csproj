@@ -44,6 +44,7 @@
             <CoreFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />
             <CoreFiles Include="$(TargetDir)StbImageSharp.dll" />
             <CoreFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
+            <CoreFiles Include="$(TargetDir)info.lundin.math.dll" />
         </ItemGroup>
         
         <ItemGroup>
