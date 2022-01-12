@@ -1,0 +1,56 @@
+name: Publish NuGet package and create GitHub release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v2
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore packages
+        run: dotnet restore
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build project
+        run: dotnet build --no-restore -c Release
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal
+      - name: Package project
+        run: dotnet pack --no-build -c Release
+      - name: Publish package
+        run: dotnet nuget push JKMP.Plugin.Multiplayer/bin/Release/*.nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+      - name: Package artifact
+        uses: vimtor/action-zip@v1
+        with:
+          files: >
+            JKMP.Plugin.Multiplayer/plugin.json
+            JKMP.Plugin.Multiplayer/bin/Release/net462/JKMP.Plugin.Multiplayer.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Resources.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Facepunch.Steamworks.Win32.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Matchmaking.Client.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Myra.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/FontStashSharp.MonoGame.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/StbTrueTypeSharp.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/info.lundin.math.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Content/
+          dest: out/JKMP.Plugin.Multiplayer.zip
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          name: Modular release
+          artifacts: "out/JKMP.Plugin.Multiplayer.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          generateReleaseNotes: true
