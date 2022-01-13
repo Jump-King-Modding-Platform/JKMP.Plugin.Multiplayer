@@ -47,6 +47,7 @@ jobs:
             JKMP.Plugin.Multiplayer/bin/Release/net462/Myra.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/FontStashSharp.MonoGame.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/StbTrueTypeSharp.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/StbImageSharp.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/info.lundin.math.dll
             out/dist/
           dest: out/JKMP.Plugin.Multiplayer.zip
