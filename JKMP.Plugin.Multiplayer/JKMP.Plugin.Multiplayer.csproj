@@ -4,7 +4,7 @@
         <PackageId>JKMP.Plugin.Multiplayer</PackageId>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
-        <Version>0.1.0</Version>
+        <Version>0.1.1</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
