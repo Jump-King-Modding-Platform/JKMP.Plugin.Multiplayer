@@ -14,7 +14,8 @@ namespace Matchmaking.Client.Messages
         public string? MatchmakingPassword { get; set; }
         public string? LevelName { get; set; }
         public Vector2? Position { get; set; }
-        
+        public uint Version { get; set; }
+
         public override void Serialize(BinaryWriter writer)
         {
             if (AuthSessionTicket == null)
@@ -35,6 +36,7 @@ namespace Matchmaking.Client.Messages
 
             writer.Write(LevelName);
             writer.Write(Position.Value);
+            writer.WriteVarInt(Version);
         }
 
         public override void Deserialize(BinaryReader reader)

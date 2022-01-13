@@ -18,6 +18,8 @@ namespace Matchmaking.Client
 {
     public class MatchmakingClient
     {
+        public const uint Version = 1;
+        
         public string? Password { get; private set; }
         
         public bool IsConnected => client?.Connected ?? false;
@@ -92,7 +94,8 @@ namespace Matchmaking.Client
                 AuthSessionTicket = sessionTicket,
                 MatchmakingPassword = Password,
                 LevelName = levelName,
-                Position = position
+                Position = position,
+                Version = Version,
             }))
             {
                 return;
@@ -104,8 +107,9 @@ namespace Matchmaking.Client
 
                 if (!response.Success)
                 {
-                    Logger.Warning("Error message: {message}", response.ErrorMessage);
-                    return;
+                    Logger.Warning("Failed to handshake with matchmaking server: {message}", response.ErrorMessage);
+                    Events.OnChatMessageReceived(new ChatMessage(ChatChannel.Global, null, null, $"Failed to connect to matchmaking server: {response.ErrorMessage}"));
+                    throw new MatchmakingConnectException(response.ErrorMessage!);
                 }
             }
             else

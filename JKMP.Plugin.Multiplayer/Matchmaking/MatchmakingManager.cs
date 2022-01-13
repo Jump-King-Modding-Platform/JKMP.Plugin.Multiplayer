@@ -80,6 +80,10 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                         {
                             Logger.Warning("Failed to connect to matchmaking server: {errorMessage}", ex.Message);
                         }
+                        catch (MatchmakingConnectException)
+                        {
+                            break;
+                        }
                         catch (TaskCanceledException)
                         {
                             break;
