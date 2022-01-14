@@ -36,8 +36,10 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
             if (!Success)
             {
                 if (ErrorMessage == null)
-                    throw new InvalidOperationException("ErrorMessage can only be null if Success is false");
-
+                    throw new InvalidOperationException("ErrorMessage can only be null if Success is true");
+            }
+            else
+            {
                 if (PlayerState == null)
                     throw new InvalidOperationException("PlayerState can only be null if Success is false");
             }
