@@ -12,6 +12,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
     public class FakePlayer : Entity
     {
+        public Sprite Sprite => sprite;
+        
         private Sprite sprite;
         private bool flip;
         
