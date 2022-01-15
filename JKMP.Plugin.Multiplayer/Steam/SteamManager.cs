@@ -15,7 +15,7 @@ namespace JKMP.Plugin.Multiplayer.Steam
         {
             try
             {
-                SteamClient.Init(1061090, false);
+                SteamClient.Init(1061090, true);
             }
             catch (Exception ex)
             {
