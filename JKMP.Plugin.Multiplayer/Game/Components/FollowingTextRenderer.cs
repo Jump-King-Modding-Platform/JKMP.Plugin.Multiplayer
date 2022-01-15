@@ -72,6 +72,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             textRenderer = new(font);
         }
 
+        protected override void OnOwnerDestroy()
+        {
+            textRenderer.Destroy();
+        }
+
         protected override void Init()
         {
             transform = GetComponent<Transform>();
