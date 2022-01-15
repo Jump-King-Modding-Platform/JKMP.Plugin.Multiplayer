@@ -1,0 +1,15 @@
+<Panel Padding="20" Margin="10, 10, 0, 0" HorizontalAlignment="Left" VerticalAlignment="Top" Background="#00000096">
+    <VerticalStackPanel Id="ConnectedContainer">
+        <HorizontalStackPanel>
+            <Label Text="Players online: " Font="Fonts/OpenSans-Bold.ttf:22" />
+            <Label Id="TotalPlayers" Text="..." Font="Fonts/OpenSans-Bold.ttf:22" />
+        </HorizontalStackPanel>
+        <HorizontalStackPanel>
+            <Label Text="Players in your group: " Font="Fonts/OpenSans-Bold.ttf:22" />
+            <Label Id="GroupPlayers" Text="..." Font="Fonts/OpenSans-Bold.ttf:22" />
+        </HorizontalStackPanel>
+    </VerticalStackPanel>
+    <VerticalStackPanel Id="DisconnectedContainer">
+        <Label Text="Reconnecting..." Font="Fonts/OpenSans-Bold.ttf:22" />
+    </VerticalStackPanel>
+</Panel>
