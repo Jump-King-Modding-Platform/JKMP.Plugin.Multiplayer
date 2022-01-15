@@ -43,7 +43,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
 
         public void Update(float delta)
         {
-            if (localBody.LastVelocity.Y <= 0 && localBody.velocity.Y > 0)
+            if (localBody.LastVelocity.Y <= PlayerValues.GRAVITY && localBody.velocity.Y > PlayerValues.GRAVITY)
             {
                 CurrentState = PlayerState.Falling;
                 StartedFalling?.Invoke(localBody.IsKnocked);
@@ -96,7 +96,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
                     if (walkDirection != lastWalkDirection)
                     {
                         Walk?.Invoke(walkDirection);
-                        CurrentState = PlayerState.Walk;
+                        CurrentState = walkDirection != 0 ? PlayerState.Walk : PlayerState.Idle;
                     }
 
                     WalkDirection = (sbyte)walkDirection;
@@ -141,6 +141,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Player
         {
             CurrentState = PlayerState.Jump;
             Jump?.Invoke();
+
+            WalkDirection = localBody.velocity.X switch
+            {
+                < 0 => -1,
+                > 0 => 1,
+                _ => 0
+            };
         }
     }
 }

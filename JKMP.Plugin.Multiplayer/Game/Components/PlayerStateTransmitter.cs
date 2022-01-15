@@ -21,6 +21,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         
         private BodyComp? body;
         private float timeSinceTransmission;
+        private PlayerState lastState;
         
         private readonly P2PManager p2p;
 
@@ -64,11 +65,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             timeSinceTransmission += delta;
 
-            if (timeSinceTransmission >= TransmissionInterval)
+            if (timeSinceTransmission >= TransmissionInterval || listener!.CurrentState != lastState)
             {
                 timeSinceTransmission = 0;
                 SendState();
             }
+
+            lastState = listener!.CurrentState;
         }
 
         private void SendState()

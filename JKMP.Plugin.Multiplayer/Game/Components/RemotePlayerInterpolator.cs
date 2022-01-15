@@ -4,6 +4,7 @@ using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Game.Player.Animations;
 using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing;
@@ -24,15 +25,42 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         private FakePlayer FakePlayer => (FakePlayer)gameObject;
 
+        private static readonly SpriteAnimation StretchAnimation = new(CreateStretchAnimationFrames());
+
+        private static IEnumerable<SpriteFrame> CreateStretchAnimationFrames()
+        {
+            for (int i = 0; i < 7; ++i)
+            {
+                yield return new SpriteFrame(JKContentManager.PlayerSprites.stretch_one, 0.5f);
+                yield return new SpriteFrame(JKContentManager.PlayerSprites.stretch_smear, 0.25f);
+                yield return new SpriteFrame(JKContentManager.PlayerSprites.stretch_two, 0.5f);
+                yield return new SpriteFrame(JKContentManager.PlayerSprites.stretch_smear, 0.25f);
+            }
+        }
+
+        private static readonly SpriteAnimation IdleAnimation = new(
+            new SpriteFrame(JKContentManager.PlayerSprites.idle, 7f, 15f),
+            new SpriteFrame(JKContentManager.PlayerSprites.look_up, 5f, 7f),
+            new SpriteFrame(JKContentManager.PlayerSprites.idle, 7f, 15f),
+            new SpriteFrame(StretchAnimation, 10.5f)
+        );
+
+        private static readonly SpriteAnimation WalkAnimation = new(
+            new SpriteFrame(JKContentManager.PlayerSprites.walk_one, 0.225f),
+            new SpriteFrame(JKContentManager.PlayerSprites.walk_smear, 0.05f),
+            new SpriteFrame(JKContentManager.PlayerSprites.walk_two, 0.225f),
+            new SpriteFrame(JKContentManager.PlayerSprites.walk_smear, 0.05f)
+        );
+
         private static readonly Dictionary<PlayerState, Sprite> StateSprites = new()
         {
-            { PlayerState.Idle, JKContentManager.PlayerSprites.idle },
+            { PlayerState.Idle, IdleAnimation },
             { PlayerState.Falling, JKContentManager.PlayerSprites.jump_fall },
             { PlayerState.StartJump, JKContentManager.PlayerSprites.jump_charge },
             { PlayerState.Jump, JKContentManager.PlayerSprites.jump_up },
             { PlayerState.Knocked, JKContentManager.PlayerSprites.jump_bounce },
-            { PlayerState.Land, JKContentManager.PlayerSprites.idle },
-            { PlayerState.Walk, JKContentManager.PlayerSprites.walk_one },
+            { PlayerState.Land, IdleAnimation },
+            { PlayerState.Walk, WalkAnimation },
             { PlayerState.Splat, JKContentManager.PlayerSprites.splat },
         };
 
@@ -57,6 +85,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             if (lastState != null && nextState != null)
             {
+                // Reset animation if we're changing states
+                if (FakePlayer.Sprite is SpriteAnimation spriteAnimation && lastState.State != nextState.State)
+                {
+                    spriteAnimation.Reset();
+                }
+                
                 FakePlayer.SetSprite(StateSprites[lastState.State]);
                 FakePlayer.SetDirection(nextState.WalkDirection);
 
@@ -67,6 +101,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 UpdateAudioEmitter();
 
                 elapsedTimeSinceLastState += delta;
+            }
+
+            if (FakePlayer.Sprite is SpriteAnimation)
+            {
+                var spriteAnimation = (SpriteAnimation)FakePlayer.Sprite;
+                spriteAnimation.Update(delta);
             }
         }
 
