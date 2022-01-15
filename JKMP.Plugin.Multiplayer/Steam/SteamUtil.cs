@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JKMP.Core.Logging;
 using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Steam
@@ -29,15 +30,7 @@ namespace JKMP.Plugin.Multiplayer.Steam
         {
             if (!SteamFriends.RequestUserInformation(steamId))
             {
-                Friend friend = SteamFriends.GetFriends().FirstOrDefault(f => f.Id == steamId);
-
-                if (!friend.Id.IsValid)
-                    friend = SteamFriends.GetFriendsOnGameServer().FirstOrDefault(f => f.Id == steamId);
-
-                if (!friend.Id.IsValid)
-                    return null;
-
-                return friend;
+                return new Friend(steamId);
             }
 
             var tcs = new TaskCompletionSource<Friend>();
