@@ -113,6 +113,7 @@ namespace JKMP.Plugin.Multiplayer
             GameEvents.GameUpdate += gameTime =>
             {
                 SteamClient.RunCallbacks();
+
                 InputManager.Update(gameTime);
             };
 
