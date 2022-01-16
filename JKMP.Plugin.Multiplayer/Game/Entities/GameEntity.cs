@@ -28,6 +28,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         
         private LocalPlayerListener plrListener = null!;
         private Chat chatWidget = null!;
+        private StatusPanel statusPanel = null!;
 
         private float timeSincePositionUpdate;
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
@@ -43,6 +44,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             chatWidget = UIManager.AddWidget(new Chat());
             localPlayer = EntityManager.instance.Find<PlayerEntity>();
             localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent());
+            statusPanel = UIManager.AddWidget(new StatusPanel());
             
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
         }
@@ -55,6 +57,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             plrListener.Dispose();
             P2P.Dispose();
             UIManager.RemoveWidget(chatWidget);
+            UIManager.RemoveWidget(statusPanel);
         }
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
@@ -78,6 +81,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             P2P.Update(delta);
             Sound.Update(delta);
             chatWidget.Update(delta);
+            statusPanel.Update(delta);
         }
     }
 }

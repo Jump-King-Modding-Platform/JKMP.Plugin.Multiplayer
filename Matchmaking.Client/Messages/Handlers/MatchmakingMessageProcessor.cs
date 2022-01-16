@@ -8,6 +8,7 @@ namespace Matchmaking.Client.Messages.Handlers
         {
             RegisterHandler(new InformNearbyClientsHandler());
             RegisterHandler(new OutgoingChatMessageHandler());
+            RegisterHandler(new ServerStatusUpdateHandler());
         }
     }
 }

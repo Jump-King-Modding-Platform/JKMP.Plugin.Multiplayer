@@ -14,6 +14,8 @@ namespace JKMP.Plugin.Multiplayer.Threading
     {
         private T value;
         private readonly SemaphoreSlim semaphore;
+
+        private StackTrace? lastLockTrace;
         
         public Mutex(T value)
         {
@@ -25,13 +27,27 @@ namespace JKMP.Plugin.Multiplayer.Threading
 
         public async Task<MutexGuard<T>> LockAsync()
         {
+            if (semaphore.CurrentCount == 0)
+            {
+                LogManager.TempLogger.Verbose("last: {stackTrace}", lastLockTrace);
+                LogManager.TempLogger.Verbose("new: {stackTrace}", new StackTrace().ToString());
+            }
+            
             await semaphore.WaitAsync();
+            lastLockTrace = new();
             return new MutexGuard<T>(semaphore, value);
         }
 
         public MutexGuard<T> Lock()
         {
+            if (semaphore.CurrentCount == 0)
+            {
+                LogManager.TempLogger.Verbose("last: {stackTrace}", lastLockTrace);
+                LogManager.TempLogger.Verbose("new: {stackTrace}", new StackTrace().ToString());
+            }
+            
             semaphore.Wait();
+            lastLockTrace = new();
             return new MutexGuard<T>(semaphore, value);
         }
 

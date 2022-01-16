@@ -77,12 +77,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private void SendState()
         {
             if (body == null || listener == null)
-                throw new InvalidOperationException("SendTranmission was called before component was initialized");
-
-            // Only send message if the connected players mutex isn't locked (prevents potential lag spikes)
-            // Note that there's still a chance it will be locked after this check and before the broadcast happens, but it should (hopefully) lower lag spikes significantly
-            if (p2p.ConnectedPlayersMtx.IsLocked)
-                return;
+                throw new InvalidOperationException("SendState was called before component was initialized");
 
             var surfaceType = listener.CurrentSurfaceType;
             bool wearingShoes = SkinManager.IsWearingSkin(Items.Shoes);

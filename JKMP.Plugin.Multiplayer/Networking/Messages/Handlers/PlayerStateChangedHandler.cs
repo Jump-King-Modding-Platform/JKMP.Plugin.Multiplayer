@@ -11,15 +11,18 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         
         public async Task HandleMessage(PlayerStateChanged message, Context context)
         {
-            using var guard = await context.P2PManager.ConnectedPlayersMtx.LockAsync();
+            await context.P2PManager.ExecuteOnGameThread(() =>
+            {
+                using var guard = context.P2PManager.ConnectedPlayersMtx.Lock();
 
-            if (!guard.Value.TryGetValue(message.Sender, out var player))
-                return;
+                if (!guard.Value.TryGetValue(message.Sender, out var player))
+                    return;
 
-            if (player.State != PlayerNetworkState.Connected)
-                return;
-                
-            player.UpdateFromState(message);
+                if (player.State != PlayerNetworkState.Connected)
+                    return;
+
+                player.UpdateFromState(message);
+            });
         }
     }
 }
