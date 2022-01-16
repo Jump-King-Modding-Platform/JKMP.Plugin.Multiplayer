@@ -10,6 +10,7 @@ namespace Matchmaking.Client.Networking
         /// <summary>Incoming chat message from a client (to server)</summary>
         IncomingChatMessage,
         /// <summary>Outgoing chat message from server (to client)</summary>
-        OutgoingChatMessage
+        OutgoingChatMessage,
+        ServerStatusUpdate,
     }
 }
