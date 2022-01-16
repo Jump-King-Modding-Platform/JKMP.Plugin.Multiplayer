@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -16,7 +17,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
     {
         private bool isRunning = true;
 
-        private readonly ReusableTCS<TData?> tcs = new();
+        private TaskCompletionSource<bool>? tcs = new();
+        private readonly Queue<TData> queuedMessages = new();
         private readonly TCodec codec;
         private readonly byte[] sendBuffer = new byte[4096];
         
@@ -54,8 +56,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
                             Logger.Error(ex, "An unhandled exception was raised when decoding message from {steamId}", packet.SteamId);
                             continue;
                         }
-
-                        await tcs.SetResult(message);
+                        
+                        queuedMessages.Enqueue(message);
+                        tcs?.TrySetResult(true);
                     }
 
                     await Task.Delay(33).ConfigureAwait(false); // poll around 30 times per second
@@ -73,9 +76,19 @@ namespace JKMP.Plugin.Multiplayer.Networking
             if (!isRunning)
                 return default;
 
-            await tcs;
-            TData? result = tcs.GetResult();
-            tcs.Reset();
+            if (tcs != null)
+            {
+                await tcs.Task;
+                tcs = null;
+            }
+
+            TData result = queuedMessages.Dequeue();
+
+            if (queuedMessages.Count == 0)
+            {
+                tcs = new();
+            }
+            
             return result;
         }
 
