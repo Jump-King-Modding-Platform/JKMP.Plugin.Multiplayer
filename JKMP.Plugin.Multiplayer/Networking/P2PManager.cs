@@ -27,7 +27,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private static readonly ILogger Logger = LogManager.CreateLogger<P2PManager>();
 
-        private readonly Queue<Action> pendingGameThreadActions = new();
+        private readonly Queue<(Action action, TaskCompletionSource<bool> tcs)> pendingGameThreadActions = new();
 
         private readonly HashSet<(DateTime, SteamId)> recentlyDisconnectedPeers = new();
 
@@ -177,7 +177,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
                     if (message is not PlayerStateChanged)
                         Logger.Verbose("Incoming message {message}", message.GetType().Name);
 
-                    processor.PushMessage(message, context);
+                    await processor.HandleMessage(message, context);
                 }
 
                 Logger.Verbose("Finished message processing");
@@ -190,19 +190,23 @@ namespace JKMP.Plugin.Multiplayer.Networking
         }
 
         /// <summary>
-        /// Executes the action on the game thread on the next update.
+        /// Executes the action on the game thread on the next update and waits for it to be executed.
         /// </summary>
-        public void ExecuteOnGameThread(Action action)
+        public async Task ExecuteOnGameThread(Action action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            pendingGameThreadActions.Enqueue(action);
+            var tcs = new TaskCompletionSource<bool>(false);
+            pendingGameThreadActions.Enqueue((action, tcs));
+            await tcs.Task;
         }
 
         public void Update(float delta)
         {
             while (pendingGameThreadActions.Count > 0)
             {
-                pendingGameThreadActions.Dequeue()();
+                (Action action, TaskCompletionSource<bool> tcs) = pendingGameThreadActions.Dequeue();
+                action();
+                tcs.SetResult(true);
             }
             
             if (recentlyDisconnectedPeers.Count > 0)
@@ -220,8 +224,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                 recentlyDisconnectedPeers.RemoveWhere(item => toRemove.Contains(item));
             }
-
-            processor.HandlePendingMessages().Wait();
         }
 
         internal void Broadcast(GameMessage message, P2PSend sendType = P2PSend.Reliable) => BroadcastAsync(message, sendType).Wait();

@@ -12,7 +12,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
     {
         private static readonly ILogger Logger = LogManager.CreateLogger<HandshakeRequestHandler>();
         
-        public Task HandleMessage(HandshakeRequest message, Context context)
+        public async Task HandleMessage(HandshakeRequest message, Context context)
         {
             var authResult = SteamUser.BeginAuthSession(message.AuthSessionTicket, message.Sender);
 
@@ -26,25 +26,31 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                     ErrorMessage = $"Steam auth result = {authResult}"
                 });
 
-                context.P2PManager.Disconnect(message.Sender);
-                return Task.CompletedTask;
+                await context.P2PManager.ExecuteOnGameThread(() =>
+                {
+                    context.P2PManager.Disconnect(message.Sender);
+                });
+                return;
             }
 
-            var plrListener = EntityManager.instance.Find<GameEntity>().PlayerListener;
-            var playerState = new PlayerStateChanged
-            {
-                Position = plrListener.Position,
-                State = plrListener.CurrentState,
-                WalkDirection = (sbyte)plrListener.WalkDirection
-            };
+            PlayerStateChanged? playerState = null;
 
+            await context.P2PManager.ExecuteOnGameThread(() =>
+            {
+                var plrListener = EntityManager.instance.Find<GameEntity>().PlayerListener;
+                playerState = new PlayerStateChanged
+                {
+                    Position = plrListener.Position,
+                    State = plrListener.CurrentState,
+                    WalkDirection = (sbyte)plrListener.WalkDirection
+                };
+            });
+            
             context.Messages.Send(message.Sender, new HandshakeResponse
             {
                 Success = true,
                 PlayerState = playerState
             });
-
-            return Task.CompletedTask;
         }
     }
 }
