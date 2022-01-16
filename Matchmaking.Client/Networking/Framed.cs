@@ -57,7 +57,29 @@ namespace Matchmaking.Client.Networking
 
             // todo: support reading multiple messages in a packet
                 
-            return Codec.Decode(reader);
+            try
+            {
+                return Codec.Decode(reader);
+            }
+            catch (FormatException ex)
+            {
+                throw new FormatException($"Decoding incoming message failed.\nBytes: [{BytesToString(bytes)}]", ex);
+            }
+        }
+
+        private string BytesToString(byte[] bytes)
+        {
+            StringBuilder builder = new();
+
+            for (int i = 0; i < bytes.Length; ++i)
+            {
+                builder.Append("0x" + bytes[i].ToString("X2"));
+
+                if (i < bytes.Length - 1)
+                    builder.Append(", ");
+            }
+
+            return builder.ToString();
         }
 
         public async Task<bool> Send(TData data)
