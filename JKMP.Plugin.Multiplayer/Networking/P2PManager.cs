@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,8 +18,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
     public class P2PManager : IDisposable
     {
         public static P2PManager? Instance { get; private set; }
-        
-        public Mutex<Dictionary<ulong, RemotePlayer>> ConnectedPlayersMtx { get; } = new(new Dictionary<ulong, RemotePlayer>());
+
+        public ConcurrentDictionary<ulong, RemotePlayer> ConnectedPlayers { get; } = new();
         
         public P2PEvents Events { get; private set; }
         
@@ -50,14 +51,13 @@ namespace JKMP.Plugin.Multiplayer.Networking
             SteamNetworking.OnP2PConnectionFailed -= OnP2PConnectionFailed;
             messages.Dispose();
 
-            using var connectedPlayers = ConnectedPlayersMtx.Lock();
-            foreach (var player in connectedPlayers.Value)
+            foreach (var player in ConnectedPlayers)
             {
                 player.Value.Destroy();
                 SteamNetworking.CloseP2PSessionWithUser(player.Key);
             }
 
-            connectedPlayers.Value.Clear();
+            ConnectedPlayers.Clear();
             Instance = null;
         }
 
@@ -87,27 +87,21 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         public void ConnectTo(SteamId steamId)
         {
-            using (var connectedPlayers = ConnectedPlayersMtx.Lock())
-            {
-                if (connectedPlayers.Value.ContainsKey(steamId))
-                    return;
+            if (ConnectedPlayers.ContainsKey(steamId))
+                return;
 
-                Logger.Verbose("Connecting to {steamId}...", steamId);
-                connectedPlayers.Value.Add(steamId, new RemotePlayer(steamId));
-            }
+            Logger.Verbose("Connecting to {steamId}...", steamId);
+            ConnectedPlayers[steamId] = new RemotePlayer(steamId);
 
             Task.Run(async () =>
             {
                 try
                 {
                     AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
-                    using var guard = await ConnectedPlayersMtx.LockAsync();
-                    var remotePlayer = guard.Value[steamId];
+                    var remotePlayer = ConnectedPlayers[steamId];
 
                     if (authTicket == null)
                     {
-                        guard.Dispose();
-                        
                         Logger.Error("Failed to get auth session ticket, aborting connection to {steamId}", steamId);
                         Disconnect(steamId);
                         return;
@@ -131,13 +125,13 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public void Disconnect(RemotePlayer player) => Disconnect(player.SteamId);
         public void Disconnect(SteamId steamId)
         {
-            using var connectedPlayers = ConnectedPlayersMtx.Lock();
-            
-            if (connectedPlayers.Value.TryGetValue(steamId, out var player))
+            if (ConnectedPlayers.TryGetValue(steamId, out var player))
             {
                 Logger.Verbose("Disconnecting from {steamId}", player.SteamId);
                 player.Destroy();
-                connectedPlayers.Value.Remove(steamId);
+                //ConnectedPlayers.Remove(steamId);
+
+                ConnectedPlayers.TryRemove(steamId, out _);
                 recentlyDisconnectedPeers.Add((DateTime.UtcNow, steamId));
 
                 messages.Send(steamId, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
@@ -151,8 +145,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             Logger.Verbose("Disconnecting all P2P clients");
             
-            using var connectedPlayers = ConnectedPlayersMtx.Lock();
-            foreach (var kv in connectedPlayers.Value)
+            foreach (var kv in ConnectedPlayers)
             {
                 messages.Send(kv.Key, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
                 kv.Value.Destroy();
@@ -163,7 +156,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 recentlyDisconnectedPeers.Add((DateTime.UtcNow, kv.Key));
             }
 
-            connectedPlayers.Value.Clear();
+            ConnectedPlayers.Clear();
         }
 
         private async Task ProcessMessages()
@@ -231,8 +224,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             byte[] bytes = messages.Encode(message);
             
-            using var guard = await ConnectedPlayersMtx.LockAsync();
-            foreach (RemotePlayer client in guard.Value.Values)
+            foreach (RemotePlayer client in ConnectedPlayers.Values)
             {
                 if (client.State != PlayerNetworkState.Connected)
                     continue;

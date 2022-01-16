@@ -24,12 +24,10 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
 
                 if (!userInfo.HasValue)
                     throw new NotImplementedException("User info is null, this shouldn't happen");
-
-                using var guard = await context.P2PManager.ConnectedPlayersMtx.LockAsync();
-
+                
                 await context.P2PManager.ExecuteOnGameThread(() =>
                 {
-                    RemotePlayer player = guard.Value[message.Sender];
+                    RemotePlayer player = context.P2PManager.ConnectedPlayers[message.Sender];
                     player.InitializeFromHandshakeResponse(message, userInfo.Value);
                 });
             }
