@@ -88,6 +88,11 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
                         {
                             break;
                         }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Matchmaking thread raised an unhandled exception");
+                            // Ignore for now to ensure we don't crash the game
+                        }
 
                         if (matchmakingCancellationSource.IsCancellationRequested)
                             break;
