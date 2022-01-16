@@ -53,10 +53,10 @@ namespace Matchmaking.Client.Networking
             Message message = (Message)Activator.CreateInstance(clrType);
             message.Deserialize(reader);
 
-            available = (ulong)(reader.BaseStream.Position - reader.BaseStream.Length);
+            available = (ulong)(reader.BaseStream.Length - reader.BaseStream.Position);
             
             if (available > 0)
-                throw new FormatException($"Deserialized message did not consume the full length of the message (remaining bytes: {available}");
+                throw new FormatException($"Deserialized message did not consume the full length of the message (remaining bytes: {available})");
 
             return message;
         }
