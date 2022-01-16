@@ -1,6 +1,7 @@
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
 using JumpKing.PauseMenu;
+using Matchmaking.Client.EventData;
 using Myra.Graphics2D.UI;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
@@ -50,6 +51,14 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
             connectedContainer.Visible = false;
             
             AcceptsKeyboardFocus = false;
+
+            MatchmakingManager.Instance.Events.ServerStatusUpdateReceived += OnServerStatusReceived;
+        }
+
+        private void OnServerStatusReceived(ServerStatus status)
+        {
+            TotalPlayers = status.TotalPlayers.ToString();
+            GroupPlayers = status.GroupPlayers.ToString();
         }
 
         public void Update(float delta)
