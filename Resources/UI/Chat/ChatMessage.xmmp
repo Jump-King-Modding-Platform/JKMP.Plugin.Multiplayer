@@ -5,8 +5,8 @@
             <Proportion Type="Auto" />
         </HorizontalStackPanel.Proportions>
         <HorizontalStackPanel>
-            <Label Id="Name" Font="Fonts/OpenSans-Bold.ttf:22" SupportsCommands="False" />
-            <Label Id="Time" Font="Fonts/OpenSans-Bold.ttf:16" VerticalAlignment="Center" Padding="5, 0, 0, 0" />
+            <Label Id="Name" Font="Fonts/OpenSans-Bold.ttf:22" SupportsCommands="False" Padding="0, 0, 5, 0" />
+            <Label Id="Time" Font="Fonts/OpenSans-Bold.ttf:16" VerticalAlignment="Center" />
         </HorizontalStackPanel>
         <Label Id="Channel" Font="Fonts/OpenSans-Bold.ttf:22" />
     </HorizontalStackPanel>
