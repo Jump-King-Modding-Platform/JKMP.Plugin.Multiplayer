@@ -18,7 +18,7 @@ namespace Matchmaking.Client
 {
     public class MatchmakingClient
     {
-        public const uint Version = 1;
+        public const uint Version = 2;
         
         public string? Password { get; private set; }
         
