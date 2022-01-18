@@ -27,8 +27,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private readonly Queue<(Action action, TaskCompletionSource<bool> tcs)> pendingGameThreadActions = new();
 
         private readonly PeerManager peerManager = new();
-        private readonly Steamworks.SocketManager p2pListener;
+        private readonly SocketManager p2pListener;
         private readonly ConcurrentDictionary<NetIdentity, Connection> playerConnections = new();
+        private readonly ConcurrentDictionary<NetIdentity, Steamworks.ConnectionManager> connectionManagers = new();
 
         public P2PManager()
         {
@@ -40,7 +41,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
             peerManager.Disconnected += OnPeerDisconnected;
             peerManager.IncomingMessage += OnPeerMessage;
             p2pListener = SteamNetworkingSockets.CreateRelaySocket(VirtualPort, peerManager, symmetricConnect: true);
-            peerManager.Listener = p2pListener;
 
             Instance = this;
         }
@@ -53,21 +53,39 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private void OnPeerConnected(Connection connection, ConnectionInfo info)
         {
-            Logger.Debug("Client from {identity} connected", info.Identity);
-            playerConnections.TryAdd(info.Identity, connection);
-
-            connection.SendMessage("Hello gamer");
+            // OnPeerMessageMessage is sometimes called before OnPeerConnected, so we have to check if the player is already connected
+            TryConnectPeer(connection, info.Identity);
         }
 
         private void OnPeerDisconnected(Connection connection, ConnectionInfo info)
         {
             Logger.Debug("Client from {identity} disconnected", info.Identity);
-            Disconnect(info.Identity);
+
+            playerConnections.TryRemove(info.Identity, out _);
+            connectionManagers.TryRemove(info.Identity, out _);
         }
 
         private void OnPeerMessage(Connection connection, NetIdentity identity, IntPtr data, int size, long messageNum, long recvTime, int channel)
         {
+            // Message is sometimes received before OnPeerConnected, so we have to check if the player is already connected
+            TryConnectPeer(connection, identity);
+            
             Logger.Debug("Incoming message from {identity} of {numBytes} bytes", identity, size);
+        }
+
+        private bool TryConnectPeer(Connection connection, NetIdentity identity)
+        {
+            if (playerConnections.TryAdd(identity, connection))
+            {
+                Logger.Debug("Client from {identity} connected", identity);
+                playerConnections.TryAdd(identity, connection);
+
+                connection.SendMessage("Hello gamer");
+                
+                return true;
+            }
+
+            return false;
         }
 
         public void Dispose()
@@ -109,32 +127,34 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
             Logger.Verbose("Connecting to {identity}...", identity);
 
-            Steamworks.ConnectionManager connectionManager;
+            ConnectionManager connectionManager;
             
             try
             {
-                var manager = peerManager.CreateClientConnectionManager(identity);
-                connectionManager = SteamNetworkingSockets.ConnectRelay(identity, VirtualPort, manager, symmetricConnect: true);
-                manager.Connection = connectionManager.Connection;
+                connectionManager = SteamNetworkingSockets.ConnectRelay<ConnectionManager>(identity, VirtualPort, symmetricConnect: true);
+                connectionManager.SetOwner(peerManager);
             }
-            catch (ArgumentException) // Thrown when connection was already established from an incoming connection
+            catch (ArgumentException) // Thrown when connection was already established (or in the process of being established) from an incoming connection
             {
                 return;
             }
-            
-            playerConnections.TryAdd(identity, connectionManager.Connection);
-            peerManager.AddClientConnection(identity, connectionManager.Connection);
+
+            connectionManagers.TryAdd(identity, connectionManager);
         }
         
         public void Disconnect(RemotePlayer player) => Disconnect(player.SteamId);
         public void Disconnect(NetIdentity identity)
         {
-            
+            playerConnections[identity].Flush();
+            playerConnections[identity].Close();
         }
 
         public void DisconnectAll()
         {
-            
+            foreach (var identity in playerConnections.Keys)
+            {
+                Disconnect(identity);
+            }
         }
 
         /// <summary>
@@ -155,6 +175,13 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 (Action action, TaskCompletionSource<bool> tcs) = pendingGameThreadActions.Dequeue();
                 action();
                 tcs.SetResult(true);
+            }
+
+            p2pListener.Receive();
+
+            foreach (var manager in connectionManagers.Values)
+            {
+                manager.Receive();
             }
         }
 

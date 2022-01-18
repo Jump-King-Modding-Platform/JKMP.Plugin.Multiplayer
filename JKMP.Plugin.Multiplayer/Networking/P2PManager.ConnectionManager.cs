@@ -8,43 +8,40 @@ namespace JKMP.Plugin.Multiplayer.Networking
 {
     public partial class P2PManager
     {
-        private class ConnectionManager : IConnectionManager
+        private class ConnectionManager : Steamworks.ConnectionManager
         {
-            public Connection? Connection { get; internal set; }
-            public NetIdentity Identity { get; }
+            private PeerManager owner;
 
-            private readonly PeerManager owner;
-
-            public ConnectionManager(PeerManager owner, NetIdentity identity)
+            public void SetOwner(PeerManager owner)
             {
                 this.owner = owner ?? throw new ArgumentNullException(nameof(owner));
-                Identity = identity;
             }
 
             // ReSharper disable once MemberHidesStaticFromOuterClass
             private static readonly ILogger Logger = LogManager.CreateLogger<ConnectionManager>();
 
-            void IConnectionManager.OnConnecting(ConnectionInfo info)
+            public override void OnConnecting(ConnectionInfo info)
             {
-                if (Connection == null)
-                    throw new InvalidOperationException("Connection has not been assigned yet.");
-
-                owner.OnConnecting(Connection!.Value, info);
+                base.OnConnecting(info);
+                owner.OnConnecting(Connection, info);
             }
 
-            void IConnectionManager.OnConnected(ConnectionInfo info)
+            public override void OnConnected(ConnectionInfo info)
             {
-                owner.OnConnected(Connection!.Value, info);
+                base.OnConnected(info);
+                owner.OnConnected(Connection, info);
             }
 
-            void IConnectionManager.OnDisconnected(ConnectionInfo info)
+            public override void OnDisconnected(ConnectionInfo info)
             {
-                owner.OnDisconnected(Connection!.Value, info);
+                base.OnDisconnected(info);
+                owner.OnDisconnected(Connection, info);
             }
 
-            void IConnectionManager.OnMessage(IntPtr data, int size, long messageNum, long recvTime, int channel)
+            public override void OnMessage(IntPtr data, int size, long messageNum, long recvTime, int channel)
             {
-                owner.OnIncomingMessage(Connection!.Value, Identity, data, size, messageNum, recvTime, channel);
+                base.OnMessage(data, size, messageNum, recvTime, channel);
+                owner.OnIncomingMessage(Connection, ConnectionInfo.Identity, data, size, messageNum, recvTime, channel);
             }
         }
     }
