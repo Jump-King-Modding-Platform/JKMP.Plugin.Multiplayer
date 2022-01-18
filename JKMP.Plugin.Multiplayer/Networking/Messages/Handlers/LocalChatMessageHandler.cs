@@ -23,27 +23,31 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
 
             if (trimmedMessage.Length <= 0)
             {
-                Logger.Warning("Received empty chat message from {senderId}", message.Sender);
+                Logger.Warning("Received empty chat message from {senderId}", context.Messages.Identity);
             }
 
-            var userInfo = await SteamUtil.GetUserInfo(message.Sender);
+            Friend? userInfo = null;
+
+            if (context.Messages.Identity.IsSteamId)
+                userInfo = await SteamUtil.GetUserInfo(context.Messages.Identity);
+            
             string senderName;
 
             if (userInfo == null)
             {
-                Logger.Error("Failed to retrieve user info for steam id {senderId}", message.Sender);
-                senderName = message.Sender.ToString();
+                Logger.Error("Failed to retrieve user info for identity {senderId}", context.Messages.Identity);
+                senderName = context.Messages.Identity.ToString();
             }
             else
             {
                 senderName = userInfo.Value.Name;
             }
             
-            Logger.Information("[{channel}, {senderId}] {senderName}: {message}", ChatChannel.Local, message.Sender, senderName, trimmedMessage);
+            Logger.Information("[{channel}, {senderId}] {senderName}: {message}", ChatChannel.Local, context.Messages.Identity, senderName, trimmedMessage);
 
             await context.P2PManager.ExecuteOnGameThread(() =>
             {
-                context.P2PManager.Events.OnIncomingChatMessage(new ChatMessage(ChatChannel.Local, message.Sender.Value, senderName, trimmedMessage));
+                context.P2PManager.Events.OnIncomingChatMessage(new ChatMessage(ChatChannel.Local, context.Messages.Identity.SteamId, senderName, trimmedMessage));
             });
         }
     }

@@ -9,6 +9,7 @@ using JumpKing.MiscEntities.WorldItems;
 using JumpKing.Player;
 using JumpKing.Player.Skins;
 using Steamworks;
+using Steamworks.Data;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
 {
@@ -89,7 +90,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 WalkDirection = (sbyte)listener.WalkDirection,
                 SurfaceType = surfaceType,
                 WearingShoes = wearingShoes
-            }, P2PSend.Unreliable);
+            }, SendType.Unreliable);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 {
     public partial class P2PManager
     {
-        private class PeerManager : ISocketManager
+        internal class PeerManager : ISocketManager
         {
             #region Events
             
