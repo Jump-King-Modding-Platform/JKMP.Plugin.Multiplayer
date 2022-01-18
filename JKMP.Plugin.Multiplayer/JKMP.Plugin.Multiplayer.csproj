@@ -35,6 +35,9 @@
     <ItemGroup>
       <Folder Include="Content" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Networking\P2PManager.SocketManager.cs" />
+    </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
     <!-- Copy files to game directories if this is not a CI build -->
