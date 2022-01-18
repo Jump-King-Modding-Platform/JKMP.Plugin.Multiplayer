@@ -19,7 +19,6 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
             {
                 TrimWhitespace = true,
                 Visibility = TextInputField.TextVisibility.HiddenWhenUnfocused,
-                Readonly = () => MatchmakingManager.Instance.IsConnected // Disable ability to change matchmaking password while connected
             };
             mpMenu.AddChild(passwordField);
             mpMenu.Initialize();
