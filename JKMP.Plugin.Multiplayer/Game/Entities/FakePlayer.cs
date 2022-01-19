@@ -13,6 +13,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
     public class FakePlayer : Entity
     {
         public Sprite Sprite => sprite;
+
+        public Transform Transform => transform;
         
         private Sprite sprite;
         private bool flip;
@@ -44,7 +46,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         {
             transform.Position = position;
         }
-
+        
         public override void Draw()
         {
             sprite.Draw(Camera.TransformVector2(transform.Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
