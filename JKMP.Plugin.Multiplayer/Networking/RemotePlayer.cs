@@ -15,8 +15,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public readonly SteamId SteamId;
         public PlayerNetworkState State { get; private set; } = PlayerNetworkState.Handshaking;
 
-        internal AuthTicket? AuthTicket;
-
         private FakePlayer? fakePlayer;
         private RemotePlayerInterpolator? interpolator;
 

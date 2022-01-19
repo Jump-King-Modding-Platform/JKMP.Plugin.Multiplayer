@@ -32,6 +32,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private readonly SocketManager p2pListener;
         private readonly ConcurrentDictionary<NetIdentity, (Connection connection, Framed<GameMessagesCodec, GameMessage> messages)> playerConnections = new();
         private readonly ConcurrentDictionary<NetIdentity, Steamworks.ConnectionManager> connectionManagers = new();
+        private readonly ConcurrentDictionary<NetIdentity, AuthTicket> authTickets = new();
         private readonly CancellationTokenSource processIncomingMessagesCts = new();
 
         public P2PManager()
@@ -72,6 +73,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 if (ConnectedPlayers.TryGetValue(info.Identity, out var player))
                 {
                     player.Destroy();
+
+                    if (authTickets.TryRemove(info.Identity, out var authTicket))
+                        authTicket.Dispose();
                 }
             }
             
@@ -104,6 +108,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
                                 Disconnect(identity);
                                 return;
                             }
+
+                            authTickets.TryAdd(identity, authTicket);
 
                             messages.Send(new HandshakeRequest
                             {
