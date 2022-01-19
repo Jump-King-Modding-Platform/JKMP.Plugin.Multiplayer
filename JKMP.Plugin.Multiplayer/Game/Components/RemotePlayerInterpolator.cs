@@ -94,9 +94,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 FakePlayer.SetSprite(StateSprites[lastState.State]);
                 FakePlayer.SetDirection(nextState.WalkDirection);
 
-                float lerpDelta = elapsedTimeSinceLastState / PlayerStateTransmitter.TransmissionInterval;
-                lerpDelta = MathHelper.Clamp(lerpDelta, 0, 1);
-                Vector2 position = Vector2.Lerp(lastState.Position, nextState.Position, lerpDelta);
+                Vector2 position = Vector2.Lerp(FakePlayer.Transform.Position, nextState.Position, 30f * delta);
                 FakePlayer.SetPosition(position);
                 UpdateAudioEmitter();
 
