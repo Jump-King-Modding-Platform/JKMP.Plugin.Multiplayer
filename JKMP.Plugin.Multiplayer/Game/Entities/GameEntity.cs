@@ -80,6 +80,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             }
 
             P2P.Update(delta);
+            MatchmakingManager.Update(delta);
             Sound.Update(delta);
             chatWidget.Update(delta);
             statusPanel.Update(delta);

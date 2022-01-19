@@ -12,7 +12,11 @@ namespace Matchmaking.Client.Messages.Handlers
         public Task HandleMessage(OutgoingChatMessage message, Context context)
         {
             Logger.Information("[{channel}, {senderId}] {senderName}: {message}", message.Channel, message.SenderSteamId, message.SenderName, message.Message);
-            context.MatchmakingClient.Events.OnChatMessageReceived(new ChatMessage(message.Channel, message.SenderSteamId, message.SenderName, message.Message!));
+
+            context.MatchmakingClient.ExecuteOnMainThread(() =>
+            {
+                context.MatchmakingClient.Events.OnChatMessageReceived(new ChatMessage(message.Channel, message.SenderSteamId, message.SenderName, message.Message!));
+            });
 
             return Task.CompletedTask;
         }
