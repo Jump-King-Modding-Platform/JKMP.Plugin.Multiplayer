@@ -11,8 +11,12 @@ namespace Matchmaking.Client.Messages.Handlers
         
         public Task HandleMessage(ServerStatusUpdate message, Context context)
         {
-            Logger.Information("Received server status. Total players: {totalPlayers}, group players: {groupPlayers}", message.TotalPlayers, message.GroupPlayers);
-            context.MatchmakingClient.Events.OnServerStatusUpdateReceived(new ServerStatus(message.TotalPlayers, message.GroupPlayers));
+            Logger.Verbose("Received server status. Total players: {totalPlayers}, group players: {groupPlayers}", message.TotalPlayers, message.GroupPlayers);
+
+            context.MatchmakingClient.ExecuteOnMainThread(() =>
+            {
+                context.MatchmakingClient.Events.OnServerStatusUpdateReceived(new ServerStatus(message.TotalPlayers, message.GroupPlayers));
+            });
             
             return Task.CompletedTask;
         }

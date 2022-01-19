@@ -4,7 +4,7 @@
         <PackageId>JKMP.Plugin.Multiplayer</PackageId>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
-        <Version>0.1.7</Version>
+        <Version>0.2.0</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
@@ -17,8 +17,7 @@
       <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.3.5" />
-      <PackageReference Include="JKMP.Core" Version="0.8.3" />
+      <PackageReference Include="JKMP.Core" Version="0.9.0" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="JKMP.Myra" Version="2.0.1" />
     </ItemGroup>
@@ -35,6 +34,9 @@
     <ItemGroup>
       <Folder Include="Content" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Networking\P2PManager.SocketManager.cs" />
+    </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
     <!-- Copy files to game directories if this is not a CI build -->
@@ -43,7 +45,6 @@
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
             <CoreFiles Include="$(TargetDir)Resources.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
-            <CoreFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
             <CoreFiles Include="$(TargetDir)Matchmaking.Client.dll" />
             <CoreFiles Include="$(TargetDir)Myra.dll" />
             <CoreFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />

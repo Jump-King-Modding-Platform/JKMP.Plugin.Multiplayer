@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -29,6 +30,8 @@ namespace Matchmaking.Client
         private TcpClient? client;
         private Framed<NetworkStream, MessagesCodec, Message>? messages;
         private readonly MatchmakingMessageProcessor processor = new();
+
+        private readonly Queue<(Action action, TaskCompletionSource<bool> tcs)> pendingMainThreadActions = new();
 
         private static readonly ILogger Logger = Log.ForContext(typeof(MatchmakingClient));
         
@@ -81,6 +84,29 @@ namespace Matchmaking.Client
                 return;
 
             client.Close();
+            
+            while (pendingMainThreadActions.Count > 0)
+            {
+                var (_, tcs) = pendingMainThreadActions.Dequeue();
+                tcs.TrySetResult(false);
+            }
+        }
+        
+        public void RunPendingMainThreadActions()
+        {
+            while (pendingMainThreadActions.Count > 0)
+            {
+                var (action, tcs) = pendingMainThreadActions.Dequeue();
+                action();
+                tcs.TrySetResult(true);
+            }
+        }
+        
+        public Task<bool> ExecuteOnMainThread(Action action)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            pendingMainThreadActions.Enqueue((action, tcs));
+            return tcs.Task;
         }
 
         private async Task HandleConnection(byte[] sessionTicket, string name, string levelName, Vector2 position, CancellationToken cancellationToken)
@@ -156,7 +182,6 @@ namespace Matchmaking.Client
                 return;
             }
 
-            Logger.Verbose("Sending position update");
             messages.Send(new PositionUpdate
             {
                 Position = position

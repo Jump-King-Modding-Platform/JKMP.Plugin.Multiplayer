@@ -42,6 +42,11 @@ namespace JKMP.Plugin.Multiplayer.Matchmaking
             Client.Disconnect();
             matchmakingCancellationSource?.Cancel();
         }
+
+        public static void Update(float delta)
+        {
+            Client.RunPendingMainThreadActions();
+        }
         
         private static async Task StartMatchmaking(Vector2 position, string endpoint, ushort port)
         {

@@ -7,7 +7,11 @@ namespace Matchmaking.Client.Messages.Handlers
     {
         public Task HandleMessage(InformNearbyClients message, Context context)
         {
-            context.MatchmakingClient.Events.OnNearbyClientsReceived(message.ClientIds!);
+            context.MatchmakingClient.ExecuteOnMainThread(() =>
+            {
+                context.MatchmakingClient.Events.OnNearbyClientsReceived(message.ClientIds!);
+            });
+
             return Task.CompletedTask;
         }
     }

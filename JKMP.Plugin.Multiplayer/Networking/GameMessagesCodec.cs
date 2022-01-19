@@ -28,7 +28,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             data.Serialize(writer);
         }
 
-        public override GameMessage Decode(SteamId sender, BinaryReader reader)
+        public override GameMessage Decode(BinaryReader reader)
         {
             var messageType = (MessageType)reader.ReadVarInt();
             Type? clrType = GetMessageType(messageType);
@@ -37,7 +37,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 throw new FormatException($"Unknown message type received");
 
             var message = (GameMessage)Activator.CreateInstance(clrType);
-            message.Sender = sender;
             message.Deserialize(reader);
 
             ulong available = (ulong)(reader.BaseStream.Position - reader.BaseStream.Length);

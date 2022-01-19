@@ -42,7 +42,6 @@ jobs:
             JKMP.Plugin.Multiplayer/plugin.json
             JKMP.Plugin.Multiplayer/bin/Release/net462/JKMP.Plugin.Multiplayer.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Resources.dll
-            JKMP.Plugin.Multiplayer/bin/Release/net462/Facepunch.Steamworks.Win32.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Matchmaking.Client.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Myra.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/FontStashSharp.MonoGame.dll

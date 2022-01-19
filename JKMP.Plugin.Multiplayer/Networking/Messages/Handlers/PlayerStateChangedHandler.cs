@@ -13,7 +13,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         {
             await context.P2PManager.ExecuteOnGameThread(() =>
             {
-                if (!context.P2PManager.ConnectedPlayers.TryGetValue(message.Sender, out var player))
+                if (!context.P2PManager.ConnectedPlayers.TryGetValue(context.Messages.Identity, out var player))
                     return;
 
                 if (player.State != PlayerNetworkState.Connected)
