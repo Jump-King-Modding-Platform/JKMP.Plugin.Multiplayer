@@ -58,6 +58,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             }
             
             UpdateFromState(response.PlayerState!);
+            fakePlayer.SetPosition(response.PlayerState!.Position); // Prevent lerping from (0,0) to the player's position when the player is spawned.
 
             Logger.Verbose("Initialized from handshake");
         }
