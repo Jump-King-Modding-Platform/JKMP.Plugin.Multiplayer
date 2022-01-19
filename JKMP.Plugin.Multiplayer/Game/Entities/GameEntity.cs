@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework;
 using Myra;
 using Serilog;
 using Steamworks;
+using Steamworks.Data;
 
 namespace JKMP.Plugin.Multiplayer.Game.Entities
 {
@@ -62,7 +63,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
         {
-            P2P.ConnectTo(steamIds.Select(id => new SteamId { Value = id }));
+            P2P.ConnectTo(steamIds.Select(id => (NetIdentity)(SteamId)id));
         }
 
         protected override void Update(float delta)

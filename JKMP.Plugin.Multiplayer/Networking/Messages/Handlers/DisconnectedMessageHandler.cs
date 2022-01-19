@@ -9,7 +9,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         {
             return context.P2PManager.ExecuteOnGameThread(() =>
             {
-                context.P2PManager.Disconnect(message.Sender);
+                context.P2PManager.Disconnect(context.Messages.Identity);
             });
         }
     }

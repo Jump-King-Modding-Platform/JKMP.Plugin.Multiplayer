@@ -1,235 +1,265 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using EntityComponent;
 using JKMP.Core.Logging;
-using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JKMP.Plugin.Multiplayer.Networking.Messages.Handlers;
-using JKMP.Plugin.Multiplayer.Threading;
-using Matchmaking.Client.Messages.Processing;
 using Serilog;
 using Steamworks;
+using Steamworks.Data;
 
 namespace JKMP.Plugin.Multiplayer.Networking
 {
-    public class P2PManager : IDisposable
+    public partial class P2PManager : IDisposable
     {
+        public const ushort VirtualPort = 1;
+        
         public static P2PManager? Instance { get; private set; }
 
-        public ConcurrentDictionary<ulong, RemotePlayer> ConnectedPlayers { get; } = new();
-        
+        public ConcurrentDictionary<NetIdentity, RemotePlayer> ConnectedPlayers { get; } = new();
+
         public P2PEvents Events { get; private set; }
         
-        private readonly Framed<GameMessagesCodec, GameMessage> messages;
         private readonly GameMessageProcessor processor;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<P2PManager>();
 
         private readonly Queue<(Action action, TaskCompletionSource<bool> tcs)> pendingGameThreadActions = new();
 
-        private readonly HashSet<(DateTime, SteamId)> recentlyDisconnectedPeers = new();
+        private readonly PeerManager peerManager;
+        private readonly SocketManager p2pListener;
+        private readonly ConcurrentDictionary<NetIdentity, (Connection connection, Framed<GameMessagesCodec, GameMessage> messages)> playerConnections = new();
+        private readonly ConcurrentDictionary<NetIdentity, Steamworks.ConnectionManager> connectionManagers = new();
+        private readonly CancellationTokenSource processIncomingMessagesCts = new();
 
         public P2PManager()
         {
-            SteamNetworking.OnP2PSessionRequest += OnP2PSessionRequest;
-            SteamNetworking.OnP2PConnectionFailed += OnP2PConnectionFailed;
-
-            messages = new(new GameMessagesCodec());
             processor = new();
             Events = new();
-            Task.Run(ProcessMessages);
+            peerManager = new();
+
+            peerManager.Connecting += OnPeerConnecting;
+            peerManager.Connected += OnPeerConnected;
+            peerManager.Disconnected += OnPeerDisconnected;
+            peerManager.IncomingMessage += OnPeerMessage;
+            p2pListener = SteamNetworkingSockets.CreateRelaySocket(VirtualPort, peerManager, symmetricConnect: true);
 
             Instance = this;
+            Task.Run(ProcessIncomingMessages);
+        }
+
+        private void OnPeerConnecting(Connection connection, ConnectionInfo info)
+        {
+            Logger.Debug("Incoming connection from {identity}", info.Identity);
+            connection.Accept();
+        }
+
+        private void OnPeerConnected(Connection connection, ConnectionInfo info)
+        {
+            // OnPeerMessageMessage is sometimes called before OnPeerConnected, so we have to check if the player is already connected
+            TryConnectPeer(connection, info.Identity);
+        }
+
+        private void OnPeerDisconnected(Connection connection, ConnectionInfo info)
+        {
+            Logger.Debug("Client from {identity} disconnected", info.Identity);
+
+            if (playerConnections.TryRemove(info.Identity, out var tuple))
+            {
+                tuple.messages.Dispose();
+                if (ConnectedPlayers.TryGetValue(info.Identity, out var player))
+                {
+                    player.Destroy();
+                }
+            }
+            
+            connectionManagers.TryRemove(info.Identity, out _);
+        }
+
+        private void OnPeerMessage(Connection connection, NetIdentity identity, IntPtr data, int size, long messageNum, long recvTime, int channel)
+        {
+            // Message is sometimes received before OnPeerConnected, so we have to check if the player is connected
+            TryConnectPeer(connection, identity);
+        }
+
+        private bool TryConnectPeer(Connection connection, NetIdentity identity)
+        {
+            if (!playerConnections.ContainsKey(identity))
+            {
+                var messages = new Framed<GameMessagesCodec, GameMessage>(new GameMessagesCodec(), connection, identity, peerManager);
+                if (playerConnections.TryAdd(identity, (connection, messages)))
+                {
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            Logger.Debug("Client from {identity} connected", identity);
+                            AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
+
+                            if (authTicket == null)
+                            {
+                                Logger.Error("Failed to get auth ticket, aborting connection to {identity}", identity);
+                                Disconnect(identity);
+                                return;
+                            }
+
+                            messages.Send(new HandshakeRequest
+                            {
+                                AuthSessionTicket = authTicket.Data
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "An unhandled exception was raised when connecting to {identity}", identity);
+                            throw;
+                        }
+                    });
+                    
+                    return true;
+                }
+
+                messages.Dispose();
+            }
+
+            return false;
+        }
+
+        private async Task ProcessIncomingMessages()
+        {
+            while (true)
+            {
+                if (processIncomingMessagesCts.IsCancellationRequested)
+                    return;
+
+                foreach (var kv in playerConnections)
+                {
+                    var messages = kv.Value.messages;
+                    Context? context = null;
+
+                    while (messages.HasQueuedMessages)
+                    {
+                        context ??= new Context(messages, this);
+
+                        GameMessage? message = await messages.Next();
+
+                        if (message == null)
+                            break;
+                        
+                        await processor.HandleMessage(message, context);
+                    }
+
+                    await Task.Delay(1).ConfigureAwait(false);
+                }
+            }
         }
 
         public void Dispose()
         {
-            SteamNetworking.OnP2PSessionRequest -= OnP2PSessionRequest;
-            SteamNetworking.OnP2PConnectionFailed -= OnP2PConnectionFailed;
-            messages.Dispose();
+            processIncomingMessagesCts.Cancel();
+            
+            p2pListener.Close();
 
+            foreach (var manager in playerConnections)
+            {
+                manager.Value.connection.Close();
+                manager.Value.messages.Dispose();
+            }
+            
+            playerConnections.Clear();
+            
             foreach (var player in ConnectedPlayers)
             {
                 player.Value.Destroy();
-                SteamNetworking.CloseP2PSessionWithUser(player.Key);
             }
-
+            
             ConnectedPlayers.Clear();
+
             Instance = null;
         }
 
-        private void OnP2PConnectionFailed(SteamId steamId, P2PSessionError error)
+        public void ConnectTo(IEnumerable<NetIdentity> identities)
         {
-            Logger.Warning("Connection to {steamId} failed: {sessionError}", steamId, error);
-            Disconnect(steamId);
-        }
-
-        private void OnP2PSessionRequest(SteamId steamId)
-        {
-            if (recentlyDisconnectedPeers.Any(t => t.Item2 == steamId))
-                return;
-
-            Logger.Verbose("P2P session request incoming from {steamId}", steamId);
-            SteamNetworking.AcceptP2PSessionWithUser(steamId);
-            ConnectTo(steamId);
-        }
-
-        public void ConnectTo(IEnumerable<SteamId> steamIds)
-        {
-            foreach (var steamId in steamIds)
+            foreach (var identity in identities)
             {
-                ConnectTo(steamId);
+                ConnectTo(identity);
             }
         }
 
-        public void ConnectTo(SteamId steamId)
+        public void ConnectTo(NetIdentity identity)
         {
-            if (ConnectedPlayers.ContainsKey(steamId))
+            if (!identity.IsSteamId)
+                throw new NotSupportedException("Only steamid identities are supported right now");
+
+            if (playerConnections.ContainsKey(identity))
                 return;
 
-            Logger.Verbose("Connecting to {steamId}...", steamId);
-            ConnectedPlayers[steamId] = new RemotePlayer(steamId);
+            Logger.Verbose("Connecting to {identity}...", identity);
 
-            Task.Run(async () =>
+            ConnectionManager connectionManager;
+            
+            try
             {
-                try
-                {
-                    AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
-                    var remotePlayer = ConnectedPlayers[steamId];
+                connectionManager = SteamNetworkingSockets.ConnectRelay<ConnectionManager>(identity, VirtualPort, symmetricConnect: true);
+                connectionManager.SetOwner(peerManager);
+            }
+            catch (ArgumentException) // Thrown when connection was already established (or in the process of being established) from an incoming connection
+            {
+                return;
+            }
 
-                    if (authTicket == null)
-                    {
-                        Logger.Error("Failed to get auth session ticket, aborting connection to {steamId}", steamId);
-                        Disconnect(steamId);
-                        return;
-                    }
-
-                    remotePlayer.AuthTicket = authTicket;
-
-                    messages.Send(steamId, new HandshakeRequest
-                    {
-                        AuthSessionTicket = authTicket.Data
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "An unhandled exception was raised when connecting to {steamId}", steamId);
-                    throw;
-                }
-            });
+            connectionManagers.TryAdd(identity, connectionManager);
         }
         
         public void Disconnect(RemotePlayer player) => Disconnect(player.SteamId);
-        public void Disconnect(SteamId steamId)
+        public void Disconnect(NetIdentity identity)
         {
-            if (ConnectedPlayers.TryGetValue(steamId, out var player))
-            {
-                Logger.Verbose("Disconnecting from {steamId}", player.SteamId);
-                player.Destroy();
-                //ConnectedPlayers.Remove(steamId);
-
-                ConnectedPlayers.TryRemove(steamId, out _);
-                recentlyDisconnectedPeers.Add((DateTime.UtcNow, steamId));
-
-                messages.Send(steamId, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
-                SteamNetworking.CloseP2PSessionWithUser(steamId);
-                player.AuthTicket?.Dispose();
-                SteamUser.EndAuthSession(player.SteamId);
-            }
+            playerConnections[identity].connection.Flush();
+            playerConnections[identity].connection.Close();
         }
 
         public void DisconnectAll()
         {
-            Logger.Verbose("Disconnecting all P2P clients");
-            
-            foreach (var kv in ConnectedPlayers)
+            foreach (var identity in playerConnections.Keys)
             {
-                messages.Send(kv.Key, new Disconnected(), P2PSend.UnreliableNoDelay, 1);
-                kv.Value.Destroy();
-                SteamNetworking.CloseP2PSessionWithUser(kv.Key);
-                kv.Value.AuthTicket!.Dispose();
-                SteamUser.EndAuthSession(kv.Key);
-
-                recentlyDisconnectedPeers.Add((DateTime.UtcNow, kv.Key));
-            }
-
-            ConnectedPlayers.Clear();
-        }
-
-        private async Task ProcessMessages()
-        {
-            try
-            {
-                var context = new Context(messages, this);
-                
-                while (await messages.Next() is {} message)
-                {
-                    if (message is not PlayerStateChanged)
-                        Logger.Verbose("Incoming message {message}", message.GetType().Name);
-
-                    await processor.HandleMessage(message, context);
-                }
-
-                Logger.Verbose("Finished message processing");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "An unhandled exception was raised in the message handler thread");
-                throw;
+                Disconnect(identity);
             }
         }
 
         /// <summary>
         /// Executes the action on the game thread on the next update and waits for it to be executed.
         /// </summary>
-        public async Task ExecuteOnGameThread(Action action)
+        public Task ExecuteOnGameThread(Action action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
             var tcs = new TaskCompletionSource<bool>(false);
             pendingGameThreadActions.Enqueue((action, tcs));
-            await tcs.Task;
+            return tcs.Task;
         }
 
         public void Update(float delta)
         {
+            p2pListener.Receive();
+
+            foreach (var manager in connectionManagers.Values)
+            {
+                manager.Receive();
+            }
+            
             while (pendingGameThreadActions.Count > 0)
             {
                 (Action action, TaskCompletionSource<bool> tcs) = pendingGameThreadActions.Dequeue();
                 action();
                 tcs.SetResult(true);
             }
-            
-            if (recentlyDisconnectedPeers.Count > 0)
-            {
-                var now = DateTime.UtcNow;
-                var toRemove = new List<(DateTime, SteamId)>();
-                
-                foreach ((DateTime, SteamId) item in recentlyDisconnectedPeers)
-                {
-                    if ((now - item.Item1).TotalSeconds > 1d)
-                    {
-                        toRemove.Add(item);
-                    }
-                }
-
-                recentlyDisconnectedPeers.RemoveWhere(item => toRemove.Contains(item));
-            }
         }
 
-        internal void Broadcast(GameMessage message, P2PSend sendType = P2PSend.Reliable) => BroadcastAsync(message, sendType).Wait();
-        internal async Task BroadcastAsync(GameMessage message, P2PSend sendType = P2PSend.Reliable)
+        internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable)
         {
-            byte[] bytes = messages.Encode(message);
-            
-            foreach (RemotePlayer client in ConnectedPlayers.Values)
+            foreach (var (_, messages) in playerConnections.Values)
             {
-                if (client.State != PlayerNetworkState.Connected)
-                    continue;
-                
-                messages.Send(client.SteamId, bytes, sendType);
+                messages.Send(message, sendType);
             }
         }
     }

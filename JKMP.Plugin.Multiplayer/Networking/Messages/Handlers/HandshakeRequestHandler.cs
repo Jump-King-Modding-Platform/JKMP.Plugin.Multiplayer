@@ -14,13 +14,13 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         
         public async Task HandleMessage(HandshakeRequest message, Context context)
         {
-            var authResult = SteamUser.BeginAuthSession(message.AuthSessionTicket, message.Sender);
+            var authResult = SteamUser.BeginAuthSession(message.AuthSessionTicket, context.Messages.Identity);
 
-            Logger.Verbose("{steamId} auth result: {authResult}", message.Sender, authResult);
+            Logger.Verbose("{steamId} auth result: {authResult}", context.Messages.Identity, authResult);
 
             if (authResult != BeginAuthResult.OK)
             {
-                context.Messages.Send(message.Sender, new HandshakeResponse
+                context.Messages.Send(new HandshakeResponse
                 {
                     Success = false,
                     ErrorMessage = $"Steam auth result = {authResult}"
@@ -28,7 +28,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
 
                 await context.P2PManager.ExecuteOnGameThread(() =>
                 {
-                    context.P2PManager.Disconnect(message.Sender);
+                    context.P2PManager.Disconnect(context.Messages.Identity);
                 });
                 return;
             }
@@ -46,7 +46,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 };
             });
             
-            context.Messages.Send(message.Sender, new HandshakeResponse
+            context.Messages.Send(new HandshakeResponse
             {
                 Success = true,
                 PlayerState = playerState

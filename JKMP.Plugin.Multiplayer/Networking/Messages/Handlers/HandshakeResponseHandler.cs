@@ -14,21 +14,23 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         
         public async Task HandleMessage(HandshakeResponse message, Context context)
         {
-            Logger.Verbose("Received handshake response from {steamId}: {success} (error?: {errorMessage})", message.Sender, message.Success, message.ErrorMessage);
+            Logger.Verbose("Received handshake response from {identity}: {success} (error?: {errorMessage})", context.Messages.Identity, message.Success, message.ErrorMessage);
 
             if (message.Success)
             {
-                SteamFriends.SetPlayedWith(message.Sender);
+                if (context.Messages.Identity.IsSteamId)
+                    SteamFriends.SetPlayedWith(context.Messages.Identity);
 
-                var userInfo = await SteamUtil.GetUserInfo(message.Sender);
+                var userInfo = await SteamUtil.GetUserInfo(context.Messages.Identity);
 
                 if (!userInfo.HasValue)
                     throw new NotImplementedException("User info is null, this shouldn't happen");
                 
                 await context.P2PManager.ExecuteOnGameThread(() =>
                 {
-                    RemotePlayer player = context.P2PManager.ConnectedPlayers[message.Sender];
+                    var player = new RemotePlayer(context.Messages.Identity);
                     player.InitializeFromHandshakeResponse(message, userInfo.Value);
+                    context.P2PManager.ConnectedPlayers.TryAdd(context.Messages.Identity, player);
                 });
             }
         }
