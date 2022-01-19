@@ -13,10 +13,12 @@ namespace Matchmaking.Client.Messages.Handlers
         {
             Logger.Verbose("Received server status. Total players: {totalPlayers}, group players: {groupPlayers}", message.TotalPlayers, message.GroupPlayers);
 
-            return context.MatchmakingClient.ExecuteOnMainThread(() =>
+            context.MatchmakingClient.ExecuteOnMainThread(() =>
             {
                 context.MatchmakingClient.Events.OnServerStatusUpdateReceived(new ServerStatus(message.TotalPlayers, message.GroupPlayers));
             });
+            
+            return Task.CompletedTask;
         }
     }
 }
