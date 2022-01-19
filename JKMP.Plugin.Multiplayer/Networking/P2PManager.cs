@@ -146,8 +146,15 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                         if (message == null)
                             break;
-                        
-                        await processor.HandleMessage(message, context);
+
+                        try
+                        {
+                            await processor.HandleMessage(message, context);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "An unhandled exception was raised when handling message {message}", message);
+                        }
                     }
 
                     await Task.Delay(1).ConfigureAwait(false);
