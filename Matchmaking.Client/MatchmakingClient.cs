@@ -156,7 +156,6 @@ namespace Matchmaking.Client
                 return;
             }
 
-            Logger.Verbose("Sending position update");
             messages.Send(new PositionUpdate
             {
                 Position = position
