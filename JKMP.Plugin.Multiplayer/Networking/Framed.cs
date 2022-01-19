@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Collections;
 using Serilog;
 using Steamworks;
 using Steamworks.Data;
@@ -30,7 +31,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private readonly P2PManager.PeerManager peerManager;
         private readonly byte[] sendBuffer = new byte[4096];
         private readonly byte[] recvBuffer = new byte[4096];
-        private readonly Queue<TData> queuedMessages = new();
+        private readonly FixedQueue<TData> queuedMessages = new(maxCount: 30);
 
         private static readonly ILogger Logger = LogManager.CreateLogger<Framed<TCodec, TData>>();
 
