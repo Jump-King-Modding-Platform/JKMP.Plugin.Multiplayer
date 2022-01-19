@@ -158,6 +158,12 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public void Dispose()
         {
             processIncomingMessagesCts.Cancel();
+
+            while (pendingGameThreadActions.Count > 0)
+            {
+                var (_, tcs) = pendingGameThreadActions.Dequeue();
+                tcs.TrySetResult(false);
+            }
             
             p2pListener.Close();
 
@@ -230,10 +236,10 @@ namespace JKMP.Plugin.Multiplayer.Networking
         /// <summary>
         /// Executes the action on the game thread on the next update and waits for it to be executed.
         /// </summary>
-        public Task ExecuteOnGameThread(Action action)
+        public Task<bool> ExecuteOnGameThread(Action action)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
-            var tcs = new TaskCompletionSource<bool>(false);
+            var tcs = new TaskCompletionSource<bool>();
             pendingGameThreadActions.Enqueue((action, tcs));
             return tcs.Task;
         }
@@ -251,7 +257,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             {
                 (Action action, TaskCompletionSource<bool> tcs) = pendingGameThreadActions.Dequeue();
                 action();
-                tcs.SetResult(true);
+                tcs.TrySetResult(true);
             }
         }
 
