@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EntityComponent;
 using HarmonyLib;
 using JKMP.Core.Configuration;
+using JKMP.Core.Configuration.UI;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Configuration;
 using JKMP.Plugin.Multiplayer.Game;
@@ -46,8 +47,19 @@ namespace JKMP.Plugin.Multiplayer
 
         public override void OnLoaded()
         {
-            matchmakingConfig = Configs.LoadConfig<MatchmakingConfig>("Matchmaking");
-            MatchmakingManager.Password = matchmakingConfig.Password;
+            var configMenu = Configs.CreateConfigMenu<MatchmakingConfig>("Matchmaking", "Matchmaking");
+            matchmakingConfig = configMenu.Values;
+            MatchmakingManager.Password = configMenu.Values.Password;
+            
+            configMenu.PropertyChanged += OnMatchmakingConfigChanged;
+        }
+
+        private void OnMatchmakingConfigChanged(object sender, IConfigMenu.PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(matchmakingConfig.Password))
+            {
+                matchmakingConfig!.Password = matchmakingConfig.Password;
+            }
         }
 
         public bool SaveMatchmakingConfig()
