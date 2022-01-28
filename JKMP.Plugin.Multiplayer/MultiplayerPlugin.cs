@@ -49,34 +49,6 @@ namespace JKMP.Plugin.Multiplayer
         {
             var configMenu = Configs.CreateConfigMenu<MatchmakingConfig>("Matchmaking", "Matchmaking");
             matchmakingConfig = configMenu.Values;
-            MatchmakingManager.Password = configMenu.Values.Password;
-            
-            configMenu.PropertyChanged += OnMatchmakingConfigChanged;
-        }
-
-        private void OnMatchmakingConfigChanged(object sender, IConfigMenu.PropertyChangedEventArgs args)
-        {
-            if (args.PropertyName == nameof(matchmakingConfig.Password))
-            {
-                matchmakingConfig!.Password = matchmakingConfig.Password;
-            }
-        }
-
-        public bool SaveMatchmakingConfig()
-        {
-            // Set password to UI value
-            matchmakingConfig!.Password = MatchmakingManager.Password ?? "";
-
-            try
-            {
-                Configs.SaveConfig(matchmakingConfig, "Matchmaking");
-                return true;
-            }
-            catch
-            {
-                // Ignore, errors are logged to console for eventual troubleshooting
-                return false;
-            }
         }
 
         public override void Initialize()
