@@ -39,6 +39,7 @@ namespace JKMP.Plugin.Multiplayer
         private GameEntity? mpEntity;
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
+        private UiConfig? uiConfig;
 
         public MultiplayerPlugin()
         {
@@ -47,8 +48,11 @@ namespace JKMP.Plugin.Multiplayer
 
         public override void OnLoaded()
         {
-            var configMenu = Configs.CreateConfigMenu<MatchmakingConfig>("Matchmaking", "Matchmaking");
-            matchmakingConfig = configMenu.Values;
+            var matchmakingConfigMenu = Configs.CreateConfigMenu<MatchmakingConfig>("Matchmaking", "Matchmaking");
+            matchmakingConfig = matchmakingConfigMenu.Values;
+
+            var uiConfigMenu = Configs.CreateConfigMenu<UiConfig>("UI", "UI");
+            uiConfig = uiConfigMenu.Values;
         }
 
         public override void Initialize()
@@ -64,7 +68,11 @@ namespace JKMP.Plugin.Multiplayer
             };
 
             GameEvents.LoadContent += Content.LoadContent;
-            GameEvents.GameInitialize += UIManager.Initialize;
+            GameEvents.GameInitialize += () =>
+            {
+                UIManager.Initialize();
+                UIManager.SetScale(uiConfig!.Scale);
+            };
 
             GameEvents.RunStarted += args =>
             {
