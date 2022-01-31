@@ -4,7 +4,7 @@
         <Proportion Type="Fill" />
         <Proportion Type="Auto" />
     </HorizontalStackPanel.Proportions>
-    <Label Id="Channel" Font="Fonts/OpenSans-Bold.ttf:16" VerticalAlignment="Center" HorizontalAlignment="Center" Width="40" Margin="5, 0" />
+    <Label Id="Channel" Font="Fonts/OpenSans-Bold.ttf:17" VerticalAlignment="Center" HorizontalAlignment="Center" Width="40" Margin="5, 0" />
     <TextBox Padding="4, 3, 0, 0" Id="InputText" VerticalAlignment="Stretch" Text="" Font="Fonts/OpenSans.ttf:22" />
     <TextButton Id="SendButton" Text="→" VerticalAlignment="Stretch" Width="50" />
 </HorizontalStackPanel>

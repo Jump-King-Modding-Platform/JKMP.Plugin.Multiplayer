@@ -92,5 +92,15 @@ namespace JKMP.Plugin.Multiplayer.Game.UI
         {
             desktop.Render();
         }
+
+        /// <summary>
+        /// Sets the global scale of all widgets. Make sure to call this before adding any widgets, otherwise widgets will not scale correctly.
+        /// </summary>
+        /// <param name="scale"></param>
+        public static void SetScale(float scale)
+        {
+            MyraEnvironment.LayoutScale = scale;
+            MyraEnvironment.FontResolutionFactor = scale;
+        }
     }
 }

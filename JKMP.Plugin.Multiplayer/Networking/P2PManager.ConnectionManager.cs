@@ -10,7 +10,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
     {
         private class ConnectionManager : Steamworks.ConnectionManager
         {
-            private PeerManager owner;
+            private PeerManager? owner;
 
             public void SetOwner(PeerManager owner)
             {
@@ -23,25 +23,25 @@ namespace JKMP.Plugin.Multiplayer.Networking
             public override void OnConnecting(ConnectionInfo info)
             {
                 base.OnConnecting(info);
-                owner.OnConnecting(Connection, info);
+                owner?.OnConnecting(Connection, info);
             }
 
             public override void OnConnected(ConnectionInfo info)
             {
                 base.OnConnected(info);
-                owner.OnConnected(Connection, info);
+                owner?.OnConnected(Connection, info);
             }
 
             public override void OnDisconnected(ConnectionInfo info)
             {
                 base.OnDisconnected(info);
-                owner.OnDisconnected(Connection, info);
+                owner?.OnDisconnected(Connection, info);
             }
 
             public override void OnMessage(IntPtr data, int size, long messageNum, long recvTime, int channel)
             {
                 base.OnMessage(data, size, messageNum, recvTime, channel);
-                owner.OnIncomingMessage(Connection, ConnectionInfo.Identity, data, size, messageNum, recvTime, channel);
+                owner?.OnIncomingMessage(Connection, ConnectionInfo.Identity, data, size, messageNum, recvTime, channel);
             }
         }
     }

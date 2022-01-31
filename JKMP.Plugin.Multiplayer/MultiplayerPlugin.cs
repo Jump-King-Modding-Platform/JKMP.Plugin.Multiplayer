@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EntityComponent;
 using HarmonyLib;
 using JKMP.Core.Configuration;
+using JKMP.Core.Configuration.UI;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Configuration;
 using JKMP.Plugin.Multiplayer.Game;
@@ -29,7 +30,7 @@ namespace JKMP.Plugin.Multiplayer
     // ReSharper disable once UnusedType.Global
     public class MultiplayerPlugin : Core.Plugins.Plugin
     {
-        internal static MultiplayerPlugin Instance { get; private set; }
+        internal static MultiplayerPlugin Instance { get; private set; } = null!;
         
         private readonly Harmony harmony = new("com.jkmp.plugin.multiplayer");
 
@@ -38,6 +39,7 @@ namespace JKMP.Plugin.Multiplayer
         private GameEntity? mpEntity;
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
+        private UiConfig? uiConfig;
 
         public MultiplayerPlugin()
         {
@@ -46,25 +48,11 @@ namespace JKMP.Plugin.Multiplayer
 
         public override void OnLoaded()
         {
-            matchmakingConfig = Configs.LoadConfig<MatchmakingConfig>("Matchmaking");
-            MatchmakingManager.Password = matchmakingConfig.Password;
-        }
+            var matchmakingConfigMenu = Configs.CreateConfigMenu<MatchmakingConfig>("Matchmaking", "Matchmaking");
+            matchmakingConfig = matchmakingConfigMenu.Values;
 
-        public bool SaveMatchmakingConfig()
-        {
-            // Set password to UI value
-            matchmakingConfig!.Password = MatchmakingManager.Password ?? "";
-
-            try
-            {
-                Configs.SaveConfig(matchmakingConfig, "Matchmaking");
-                return true;
-            }
-            catch
-            {
-                // Ignore, errors are logged to console for eventual troubleshooting
-                return false;
-            }
+            var uiConfigMenu = Configs.CreateConfigMenu<UiConfig>("UI", "UI");
+            uiConfig = uiConfigMenu.Values;
         }
 
         public override void Initialize()
@@ -80,7 +68,11 @@ namespace JKMP.Plugin.Multiplayer
             };
 
             GameEvents.LoadContent += Content.LoadContent;
-            GameEvents.GameInitialize += UIManager.Initialize;
+            GameEvents.GameInitialize += () =>
+            {
+                UIManager.Initialize();
+                UIManager.SetScale(uiConfig!.Scale);
+            };
 
             GameEvents.RunStarted += args =>
             {
