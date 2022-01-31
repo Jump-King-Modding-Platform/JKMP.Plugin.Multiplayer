@@ -30,7 +30,7 @@ namespace JKMP.Plugin.Multiplayer
     // ReSharper disable once UnusedType.Global
     public class MultiplayerPlugin : Core.Plugins.Plugin
     {
-        internal static MultiplayerPlugin Instance { get; private set; }
+        internal static MultiplayerPlugin Instance { get; private set; } = null!;
         
         private readonly Harmony harmony = new("com.jkmp.plugin.multiplayer");
 
