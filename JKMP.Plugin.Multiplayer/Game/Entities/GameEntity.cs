@@ -44,7 +44,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             Sound = new();
             chatWidget = UIManager.AddWidget(new Chat());
             localPlayer = EntityManager.instance.Find<PlayerEntity>();
-            localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent());
+            localPlayer.AddComponents(new PlayerStateTransmitter(P2P), new AudioListenerComponent(), new PlayerPauseManager());
             statusPanel = UIManager.AddWidget(new StatusPanel());
             
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;
