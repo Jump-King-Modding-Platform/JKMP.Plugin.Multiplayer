@@ -7,5 +7,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
         PlayerStateChanged,
         LocalChatMessage,
         Disconnected,
+        VoiceTransmission,
     }
 }

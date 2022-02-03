@@ -146,7 +146,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                     while (messages.HasQueuedMessages)
                     {
-                        context ??= new Context(messages, this);
+                        ConnectedPlayers.TryGetValue(kv.Key, out var player);
+                        context ??= new Context(messages, this, player);
 
                         GameMessage? message = await messages.Next();
 
