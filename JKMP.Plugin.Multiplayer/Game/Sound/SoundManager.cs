@@ -27,16 +27,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
                 return;
             }
 
-            var soundPrefs = ISettingManager<SoundPrefsRuntime, SoundPrefs>.instance.GetPrefs();
-
-            if (!soundPrefs.sfx_on)
-                return;
-
             var instance = sound.CreateInstance();
             playingSounds.Add(instance);
 
-            instance.Apply3D(GlobalListener, emitter);
-            instance.Volume = volume * soundPrefs.master;
+            instance.Apply2DPanAndVolume(GlobalListener, emitter, SoundUtil.SoundType.Sfx, volume);
             instance.Play();
         }
 
