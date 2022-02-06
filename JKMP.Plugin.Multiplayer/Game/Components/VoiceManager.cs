@@ -55,9 +55,16 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         // This is a workaround.
         private SoundEffect? dummySoundEffect;
         
-        private readonly byte[]? transmitBuffer = new byte[(int)SteamUser.OptimalSampleRate * 5];
-
+        private byte[]? transmitBuffer;
         private bool isSpeaking;
+        private float timeSinceTalked;
+
+        private readonly SoundManager soundManager;
+
+        public VoiceManager()
+        {
+            soundManager = EntityManager.instance.Find<GameEntity>()?.Sound ?? throw new InvalidOperationException("GameEntity or SoundManager not found");
+        }
 
         protected override void Init()
         {
@@ -67,6 +74,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (IsLocalPlayer)
             {
+                transmitBuffer = new byte[(int)SteamUser.OptimalSampleRate * 5];
                 transmitStream = new MemoryStream(transmitBuffer, true);
             }
             else
@@ -74,9 +82,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 sound = new DynamicSoundEffectInstance((int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
                 dummySoundEffect = new SoundEffect(new byte[] { 0, 0 }, (int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
                 AccessTools.Field(typeof(DynamicSoundEffectInstance), "_effect").SetValue(sound, dummySoundEffect);
-                sound.Volume = 1f; // todo: make this configurable
                 audioEmitter = new AudioEmitter();
-                localAudioListener = EntityManager.instance.Find<PlayerEntity>().GetComponent<AudioListenerComponent>().Listener;
             }
         }
 
@@ -90,6 +96,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         protected override void Update(float delta)
         {
             IsSpeaking = InputManager.GameInputEnabled && InputManager.KeyDown(Keys.V);
+            timeSinceTalked += delta;
 
             if (IsLocalPlayer)
             {
@@ -98,15 +105,15 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (!IsLocalPlayer)
             {
-                IsSpeaking = sound!.State == SoundState.Playing;
+                IsSpeaking = sound!.State == SoundState.Playing && timeSinceTalked < 0.25f;
 
                 if (IsSpeaking)
                 {
                     audioEmitter!.Position = SoundUtil.ScalePosition(transform!.Position);
-
-                    if (localAudioListener != null)
+                    
+                    if (soundManager.GlobalListener != null)
                     {
-                        sound.Apply3D(localAudioListener, audioEmitter);
+                        sound.Apply2DPanAndVolume(soundManager.GlobalListener, audioEmitter, SoundUtil.SoundType.Voice, 1f, 360, 540);
                     }
                 }
             }
@@ -119,6 +126,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             
             if (SteamUser.HasVoiceData)
             {
+                timeSinceTalked = 0;
                 transmitStream!.Seek(0, SeekOrigin.Begin);
                 int bytesWritten = SteamUser.ReadVoiceData(transmitStream);
 
@@ -138,13 +146,18 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
                 throw new InvalidOperationException("Cannot receive voice on the local player.");
 
-            // todo: catch exceptions in case the voice data is corrupted or otherwise invalid
+            // Verify that the buffer length matches the format (mono) alignment
+            if (data.Length % 2 != 0)
+                return;
+
             sound!.SubmitBuffer(data.ToArray());
 
             if (sound.State != SoundState.Playing)
             {
                 sound.Play();
             }
+
+            timeSinceTalked = 0;
         }
     }
 }
