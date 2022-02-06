@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using EntityComponent;
 using HarmonyLib;
-using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Networking;
@@ -11,7 +11,6 @@ using JumpKing.Player;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Input;
 using Steamworks;
-using Steamworks.Data;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
 {
@@ -42,6 +41,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 }
             }
         }
+
+        /// <summary>
+        /// Gets whether the local player is actually transmitting voice audio.
+        /// </summary>
+        public bool IsTransmitting => IsLocalPlayer && timeSinceTalked < 0.25f;
 
         private Transform? transform;
         private BodyComp? body;

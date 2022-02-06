@@ -35,7 +35,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         private const float PositionUpdateInterval = 30; // Send a position update every 30 seconds
 
         private static readonly ILogger Logger = LogManager.CreateLogger<GameEntity>();
-        private PlayerEntity localPlayer = null!;
 
         protected override void OnFirstUpdate()
         {
@@ -43,13 +42,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             P2P = new();
             Sound = new();
             chatWidget = UIManager.AddWidget(new Chat());
-            localPlayer = EntityManager.instance.Find<PlayerEntity>();
-            localPlayer.AddComponents(
-                new PlayerStateTransmitter(P2P),
-                new AudioListenerComponent(),
-                new PlayerPauseManager(),
-                new VoiceManager()
-            );
+            EntityManager.instance.AddObject(new LocalPlayer(P2P));
             statusPanel = UIManager.AddWidget(new StatusPanel());
             
             MatchmakingManager.Instance.Events.NearbyClientsReceived += OnNearbyClientsReceived;

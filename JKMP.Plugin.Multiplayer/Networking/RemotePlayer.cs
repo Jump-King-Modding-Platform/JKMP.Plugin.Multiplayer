@@ -15,11 +15,10 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public readonly SteamId SteamId;
         public PlayerNetworkState State { get; private set; } = PlayerNetworkState.Handshaking;
 
-        public VoiceManager? VoiceManager => voice;
+        public VoiceManager? VoiceManager { get; private set; }
 
         private FakePlayer? fakePlayer;
         private RemotePlayerInterpolator? interpolator;
-        private VoiceManager? voice;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<RemotePlayer>();
 
@@ -49,10 +48,10 @@ namespace JKMP.Plugin.Multiplayer.Networking
             State = PlayerNetworkState.Connected;
 
             interpolator = new();
-            voice = new();
             fakePlayer = new();
-            fakePlayer.AddComponents(interpolator, voice);
+            fakePlayer.AddComponents(interpolator);
             fakePlayer.SetName(userInfo.Name);
+            VoiceManager = fakePlayer.GetComponent<VoiceManager>();
 
             if (userInfo.IsFriend)
             {
