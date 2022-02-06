@@ -17,7 +17,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
     {
         private PlayerStateChanged? lastState;
         private PlayerStateChanged? nextState;
-        private float elapsedTimeSinceLastState;
 
         private AudioEmitter audioEmitter = null!;
         private Transform plrTransform = null!;
@@ -78,7 +77,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             
             lastState = nextState;
             nextState = newState ?? throw new ArgumentNullException(nameof(newState));
-            elapsedTimeSinceLastState = 0;
         }
 
         protected override void Update(float delta)
@@ -97,8 +95,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 Vector2 position = Vector2.Lerp(FakePlayer.Transform.Position, nextState.Position, 30f * delta);
                 FakePlayer.SetPosition(position);
                 UpdateAudioEmitter();
-
-                elapsedTimeSinceLastState += delta;
             }
 
             if (FakePlayer.Sprite is SpriteAnimation)
@@ -127,13 +123,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                     case PlayerState.Jump:
                         soundManager.PlaySound(Content.PlayerSounds[surfaceType].Jump, audioEmitter, 0.5f);
                         break;
-                    case PlayerState.Land:
-                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, audioEmitter, 0.5f);
-
-                        if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
-                            soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, audioEmitter, 0.5f);
-
-                        break;
                     case PlayerState.Knocked:
                         soundManager.PlaySound(Content.PlayerSounds[surfaceType].Bump, audioEmitter, 0.5f);
                         break;
@@ -144,6 +133,18 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                             soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Splat, audioEmitter, 0.5f);
 
                         break;
+                }
+
+                if ((stateA.State == PlayerState.Falling || stateA.State == PlayerState.Knocked) &&
+                    stateB.State != PlayerState.Falling &&
+                    stateB.State != PlayerState.Knocked &&
+                    stateB.State != PlayerState.Splat
+                   )
+                {
+                    soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, audioEmitter, 0.5f);
+
+                    if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
+                        soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, audioEmitter, 0.5f);
                 }
             }
         }
