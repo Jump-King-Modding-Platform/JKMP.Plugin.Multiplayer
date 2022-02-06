@@ -11,6 +11,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
             RegisterHandler(new PlayerStateChangedHandler());
             RegisterHandler(new LocalChatMessageHandler());
             RegisterHandler(new DisconnectedMessageHandler());
+            RegisterHandler(new VoiceTransmissionHandler());
         }
     }
 }

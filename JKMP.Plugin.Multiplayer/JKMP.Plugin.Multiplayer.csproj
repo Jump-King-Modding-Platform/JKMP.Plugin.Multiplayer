@@ -9,6 +9,7 @@
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
         <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Plugin.Multiplayer</RepositoryUrl>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <PlatformTarget>x86</PlatformTarget>
@@ -30,6 +31,9 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Remove="Content\obj\**" />
+      <None Update="Content\Multiplayer\Textures\UI\VoiceIcon.xnb">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Content" />
@@ -51,6 +55,8 @@
             <CoreFiles Include="$(TargetDir)StbImageSharp.dll" />
             <CoreFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
             <CoreFiles Include="$(TargetDir)info.lundin.math.dll" />
+            <CoreFiles Include="$(TargetDir)System.Memory.dll" />
+            <CoreFiles Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
         </ItemGroup>
         
         <ItemGroup>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using JumpKing;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -45,14 +46,27 @@ namespace JKMP.Plugin.Multiplayer.Game
             }
         }
 
+        public class UIContent
+        {
+            public Texture2D VoiceIcon { get; }
+            
+            public UIContent(ContentManager content)
+            {
+                VoiceIcon = content.Load<Texture2D>("Multiplayer/Textures/UI/VoiceIcon");
+            }
+        }
+
         public static Dictionary<SurfaceType, PlayerSoundEffects> PlayerSounds { get; } = new();
 
         public static FontContent Fonts { get; private set; } = null!;
+
+        public static UIContent UI { get; private set; } = null!;
 
         internal static void LoadContent(ContentManager content)
         {
             LoadSounds(content);
             Fonts = new(content);
+            UI = new(content);
         }
 
         private static void LoadSounds(ContentManager content)

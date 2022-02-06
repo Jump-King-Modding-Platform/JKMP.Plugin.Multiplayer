@@ -22,9 +22,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
         private readonly Transform transform;
         private readonly FollowingTextRenderer nameDisplay;
         private readonly FollowingTextRenderer messageDisplay;
+        private readonly VoiceManager voice;
 
         public FakePlayer()
         {
+            voice = new VoiceManager();
             sprite = JKContentManager.PlayerSprites.idle;
             transform = new();
             nameDisplay = new(Content.Fonts.LocalChatFont)
@@ -39,17 +41,27 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 MessageFadeTime = 0.5f,
                 MaxWidth = 200
             };
-            AddComponents(transform, nameDisplay, messageDisplay);
+
+            AddComponents(transform, nameDisplay, messageDisplay, voice);
         }
 
         public void SetPosition(Vector2 position)
         {
             transform.Position = position;
         }
-        
+
         public override void Draw()
         {
             sprite.Draw(Camera.TransformVector2(transform.Position + new Vector2(9, 26)), flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+
+            // Draw voice icon left of the name if speaking
+            if (voice.IsSpeaking)
+            {
+                var textSize = Content.Fonts.LocalChatFont.MeasureString(nameDisplay.Text);
+                var drawPos = Camera.TransformVector2(transform.Position + new Vector2((-textSize.X / 2f) - 7, -15));
+
+                Game1.spriteBatch.Draw(Content.UI.VoiceIcon, drawPos, nameDisplay.Color);
+            }
         }
 
         public void SetSprite(Sprite newSprite)

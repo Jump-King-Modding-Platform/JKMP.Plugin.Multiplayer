@@ -48,6 +48,8 @@ jobs:
             JKMP.Plugin.Multiplayer/bin/Release/net462/StbTrueTypeSharp.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/StbImageSharp.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/info.lundin.math.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/System.Memory.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/System.Runtime.CompilerServices.Unsafe.dll
             out/dist/
           dest: out/JKMP.Plugin.Multiplayer.zip
       - name: Create release
