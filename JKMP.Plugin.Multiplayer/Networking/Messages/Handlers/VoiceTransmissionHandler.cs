@@ -13,6 +13,9 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         
         public Task HandleMessage(VoiceTransmission message, Context context)
         {
+            if (message.Data!.Length == 0)
+                return Task.CompletedTask;
+            
             int numBytes;
             
             unsafe
@@ -25,9 +28,6 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                     }
                 }
             }
-
-            if (numBytes <= 0)
-                return Task.CompletedTask;
 
             return context.P2PManager.ExecuteOnGameThread(() =>
             {
