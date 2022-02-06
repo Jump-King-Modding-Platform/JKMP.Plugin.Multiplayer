@@ -52,7 +52,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private MemoryStream? transmitStream;
         private DynamicSoundEffectInstance? sound;
         private AudioEmitter? audioEmitter;
-        private AudioListener? localAudioListener;
         
         // Used by Apply3D internally to get information about the sound.
         // There's a monogame crash where Apply3D throws NRE when called on a DynamicSoundEffectInstance.
