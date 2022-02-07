@@ -149,6 +149,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
                 throw new InvalidOperationException("Cannot receive voice on the local player.");
 
+            if (data.Length == 0)
+                return;
+            
             // Verify that the buffer length matches the format (mono) alignment
             if (data.Length % 2 != 0)
                 return;
