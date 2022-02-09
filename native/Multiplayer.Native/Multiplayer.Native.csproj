@@ -5,6 +5,8 @@
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <Nullable>enable</Nullable>
     <LangVersion>9</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>JKMP.Plugin.Multiplayer.Native</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +17,7 @@
 
   <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild">
     <ItemGroup>
-      <NativeFiles Include="$(SolutionDir)native/multiplayer_native/target/i686-pc-windows-msvc/$(Configuration.toLower())/multiplayer_native.dll" />
+      <NativeFiles Include="$(SolutionDir)native/multiplayer_native/bindings_generator/target/i686-pc-windows-msvc/$(Configuration.toLower())/deps/multiplayer_native.dll" />
     </ItemGroup>
     
     <ItemGroup>

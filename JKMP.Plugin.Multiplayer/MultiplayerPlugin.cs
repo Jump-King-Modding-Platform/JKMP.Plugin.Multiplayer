@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
@@ -15,6 +16,7 @@ using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Native.AudioCapture;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
@@ -77,6 +79,16 @@ namespace JKMP.Plugin.Multiplayer
                 SoundEffect.DistanceScale = 75;
                 SoundEffect.DopplerScale = 10f;
                 SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
+
+                var test = new AudioContext();
+                var devices = test.GetOutputDevices();
+
+                foreach (var device in devices)
+                {
+                    Logger.Debug("Audio device: {deviceName}", device.Name);
+                }
+
+                test.SetActiveDeviceToDefault();
             };
 
             GameEvents.RunStarted += args =>
