@@ -24,6 +24,7 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" />
+      <ProjectReference Include="..\native\Multiplayer.Native\Multiplayer.Native.csproj" />
       <ProjectReference Include="..\Resources\Resources.csproj" />
     </ItemGroup>
     <ItemGroup>
@@ -57,6 +58,8 @@
             <CoreFiles Include="$(TargetDir)info.lundin.math.dll" />
             <CoreFiles Include="$(TargetDir)System.Memory.dll" />
             <CoreFiles Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+            <CoreFiles Include="$(TargetDir)multiplayer_native.dll" />
+            <CoreFiles Include="$(TargetDir)Multiplayer.Native.dll" />
         </ItemGroup>
         
         <ItemGroup>

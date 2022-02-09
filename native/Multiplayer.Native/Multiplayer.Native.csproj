@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <LangVersion>9</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="multiplayer_native.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <NativeFiles Include="$(SolutionDir)native/multiplayer_native/target/i686-pc-windows-msvc/$(Configuration.toLower())/multiplayer_native.dll" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <BindingsFiles Include="$(SolutionDir)native/multiplayer_native/bindings_generator/bindings/Bindings.cs" />
+    </ItemGroup>
+    
+    <Message Importance="high" Text="Building native library..." />
+    <Exec Command="cargo run" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" />
+    
+    <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(ProjectDir)" />
+    <Copy SourceFiles="@(BindingsFiles)" DestinationFolder="$(ProjectDir)" />
+  </Target>
+
+</Project>
