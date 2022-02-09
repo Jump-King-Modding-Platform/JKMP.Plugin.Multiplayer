@@ -46,12 +46,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
         internal void InitializeFromHandshakeResponse(HandshakeResponse response, Friend userInfo)
         {
             State = PlayerNetworkState.Connected;
-
-            interpolator = new();
+            
             fakePlayer = new();
-            fakePlayer.AddComponents(interpolator);
             fakePlayer.SetName(userInfo.Name);
             VoiceManager = fakePlayer.GetComponent<VoiceManager>();
+            interpolator = fakePlayer.GetComponent<RemotePlayerInterpolator>();
 
             if (userInfo.IsFriend)
             {

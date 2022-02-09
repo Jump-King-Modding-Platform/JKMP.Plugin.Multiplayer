@@ -8,6 +8,7 @@ using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing.Player;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Input;
 using Steamworks;
@@ -51,7 +52,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private BodyComp? body;
         private MemoryStream? transmitStream;
         private DynamicSoundEffectInstance? sound;
-        private AudioEmitter? audioEmitter;
         
         // Used by Apply3D internally to get information about the sound.
         // There's a monogame crash where Apply3D throws NRE when called on a DynamicSoundEffectInstance.
@@ -60,9 +60,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         
         private byte[]? transmitBuffer;
         private bool isSpeaking;
-        private float timeSinceTalked;
+        private float timeSinceTalked = 0.25f;
 
         private readonly SoundManager soundManager;
+
+        private AudioEmitter? AudioEmitter => audioEmitterComponent?.AudioEmitter;
+        private AudioEmitterComponent? audioEmitterComponent;
 
         public VoiceManager()
         {
@@ -82,10 +85,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             }
             else
             {
+                audioEmitterComponent = GetComponent<AudioEmitterComponent>() ?? throw new InvalidOperationException("AudioEmitterComponent not found");
+                
                 sound = new DynamicSoundEffectInstance((int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
+                
                 dummySoundEffect = new SoundEffect(new byte[] { 0, 0 }, (int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
                 AccessTools.Field(typeof(DynamicSoundEffectInstance), "_effect").SetValue(sound, dummySoundEffect);
-                audioEmitter = new AudioEmitter();
             }
         }
 
@@ -112,12 +117,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
                 if (IsSpeaking)
                 {
-                    audioEmitter!.Position = SoundUtil.ScalePosition(transform!.Position);
-                    
                     if (soundManager.GlobalListener != null)
                     {
-                        sound.Apply2DPanAndVolume(soundManager.GlobalListener, audioEmitter, SoundUtil.SoundType.Voice, 1f, 360, 540);
+                        sound.Apply3D(soundManager.GlobalListener, AudioEmitter);
                     }
+                }
+                else
+                {
+                    sound.Stop();
                 }
             }
         }
@@ -126,7 +133,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             if (!IsLocalPlayer)
                 throw new InvalidOperationException("Cannot transmit voice on a non-local player.");
-            
+
             if (SteamUser.HasVoiceData)
             {
                 timeSinceTalked = 0;

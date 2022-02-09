@@ -18,9 +18,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private PlayerStateChanged? lastState;
         private PlayerStateChanged? nextState;
 
-        private AudioEmitter audioEmitter = null!;
+        private AudioEmitter AudioEmitter => audioEmitterComponent.AudioEmitter;
+        private AudioEmitterComponent audioEmitterComponent = null!;
         private Transform plrTransform = null!;
         private SoundManager soundManager = null!;
+
+        private Vector2 lastPosition;
 
         private FakePlayer FakePlayer => (FakePlayer)gameObject;
 
@@ -65,9 +68,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         protected override void Init()
         {
-            audioEmitter = new AudioEmitter();
             plrTransform = GetComponent<Transform>() ?? throw new NotSupportedException("Transform component not found");
             soundManager = EntityManager.instance.Find<GameEntity>()?.Sound ?? throw new InvalidOperationException("GameEntity or SoundManager not found");
+            audioEmitterComponent = GetComponent<AudioEmitterComponent>() ?? throw new NotSupportedException("AudioEmitterComponent component not found");
+            lastPosition = plrTransform.Position;
         }
 
         internal void UpdateState(PlayerStateChanged newState)
@@ -94,7 +98,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
                 Vector2 position = Vector2.Lerp(FakePlayer.Transform.Position, nextState.Position, 30f * delta);
                 FakePlayer.SetPosition(position);
-                UpdateAudioEmitter();
             }
 
             if (FakePlayer.Sprite is SpriteAnimation)
@@ -102,11 +105,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 var spriteAnimation = (SpriteAnimation)FakePlayer.Sprite;
                 spriteAnimation.Update(delta);
             }
-        }
 
-        private void UpdateAudioEmitter()
-        {
-            audioEmitter.Position = SoundUtil.ScalePosition(plrTransform.Position);
+            lastPosition = plrTransform.Position;
         }
 
         private void PlayStateSounds(PlayerStateChanged stateA, PlayerStateChanged stateB)
@@ -121,16 +121,16 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 switch (stateB.State)
                 {
                     case PlayerState.Jump:
-                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Jump, audioEmitter, 0.5f);
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Jump, AudioEmitter, 0.5f);
                         break;
                     case PlayerState.Knocked:
-                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Bump, audioEmitter, 0.5f);
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Bump, AudioEmitter, 0.5f);
                         break;
                     case PlayerState.Splat:
-                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Splat, audioEmitter, 0.5f);
+                        soundManager.PlaySound(Content.PlayerSounds[surfaceType].Splat, AudioEmitter, 0.5f);
 
                         if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
-                            soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Splat, audioEmitter, 0.5f);
+                            soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Splat, AudioEmitter, 0.5f);
 
                         break;
                 }
@@ -141,10 +141,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                     stateB.State != PlayerState.Splat
                    )
                 {
-                    soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, audioEmitter, 0.5f);
+                    soundManager.PlaySound(Content.PlayerSounds[surfaceType].Land, AudioEmitter, 0.5f);
 
                     if (stateB.WearingShoes && surfaceType != Content.SurfaceType.Water)
-                        soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, audioEmitter, 0.5f);
+                        soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, AudioEmitter, 0.5f);
                 }
             }
         }

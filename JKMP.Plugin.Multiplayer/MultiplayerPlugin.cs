@@ -22,6 +22,7 @@ using JumpKing;
 using JumpKing.Player;
 using Matchmaking.Client;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Serilog;
 using Steamworks;
 
@@ -72,6 +73,10 @@ namespace JKMP.Plugin.Multiplayer
             {
                 UIManager.Initialize();
                 UIManager.SetScale(uiConfig!.Scale);
+
+                SoundEffect.DistanceScale = 75;
+                SoundEffect.DopplerScale = 10f;
+                SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
             };
 
             GameEvents.RunStarted += args =>
