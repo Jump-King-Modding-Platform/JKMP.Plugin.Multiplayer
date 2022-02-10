@@ -1,7 +1,7 @@
 use crate::{audio_capture::device_information::DeviceInformation, MyFFIError};
 
-use cpal::traits::{DeviceTrait, HostTrait};
-use cpal::{Device, Host};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{Device, Host, Stream, StreamConfig, StreamError, SupportedStreamConfig};
 
 use interoptopus::{
     callback, ffi_service, ffi_service_ctor, ffi_type, patterns::slice::FFISlice, Error,
@@ -12,11 +12,31 @@ use interoptopus::{
 pub struct AudioContext {
     host: Host,
     active_device: Option<Device>,
+    input_stream: Option<Stream>,
+    config: Option<SupportedStreamConfig>,
+}
+
+#[ffi_type]
+#[repr(C)]
+pub enum CaptureError {
+    DeviceNotAvailable,
+    BackendSpecific,
+}
+
+impl From<StreamError> for CaptureError {
+    fn from(err: StreamError) -> Self {
+        match err {
+            StreamError::DeviceNotAvailable => CaptureError::DeviceNotAvailable,
+            StreamError::BackendSpecific { .. } => CaptureError::BackendSpecific,
+        }
+    }
 }
 
 callback!(GetOutputDevicesCallback(
     devices: FFISlice<DeviceInformation>
 ));
+callback!(OnCapturedDataCallback(data: FFISlice<i16>));
+callback!(OnCaptureErrorCallback(error: CaptureError));
 
 #[allow(clippy::vec_init_then_push)]
 #[ffi_service(error = "MyFFIError", prefix = "audio_context_")]
@@ -26,6 +46,8 @@ impl AudioContext {
         Ok(Self {
             host: cpal::default_host(),
             active_device: None,
+            input_stream: None,
+            config: None,
         })
     }
 
@@ -103,10 +125,70 @@ impl AudioContext {
         Ok(())
     }
 
-    fn set_active_device_internal(&mut self, device: Option<Device>) {
-        if let Some(device) = device {
-            println!("Setting active device to {}", device.name().unwrap());
-            self.active_device = Some(device);
+    pub fn start_capture(
+        &mut self,
+        on_data: OnCapturedDataCallback,
+        on_error: OnCaptureErrorCallback,
+    ) -> Result<(), MyFFIError> {
+        if self.active_device.is_none() || self.input_stream.is_some() {
+            return Err(MyFFIError::InvalidState);
         }
+
+        let device = self.active_device.as_ref().unwrap();
+        let config = device.default_input_config().unwrap().config();
+
+        println!("{:?}", config);
+
+        let stream = device.build_input_stream(
+            &config,
+            move |data: &[i16], _| {
+                on_data.call(FFISlice::from_slice(data));
+            },
+            move |err: StreamError| {
+                on_error.call(CaptureError::from(err));
+            },
+        );
+
+        if stream.is_err() {
+            return Err(MyFFIError::OtherError);
+        }
+
+        self.input_stream = Some(stream.unwrap());
+
+        if self.input_stream.as_ref().unwrap().play().is_err() {
+            return Err(MyFFIError::OtherError);
+        }
+
+        Ok(())
+    }
+
+    pub fn stop_capture(&mut self) -> Result<(), MyFFIError> {
+        if self.active_device.is_none() {
+            return Err(MyFFIError::InvalidState);
+        }
+
+        if self.input_stream.is_none() {
+            return Ok(());
+        }
+
+        let _ = self.input_stream.as_ref().unwrap().pause();
+        self.input_stream = None;
+
+        Ok(())
+    }
+
+    fn set_active_device_internal(&mut self, device: Option<Device>) {
+        if self.input_stream.is_some() {
+            self.stop_capture().unwrap();
+        }
+
+        let device_name = device.as_ref().map(|device| device.name().unwrap());
+
+        self.config = device
+            .as_ref()
+            .map(|device| device.default_input_config().unwrap());
+        self.active_device = device;
+
+        println!("Active device set to {:?}, {:?}", device_name, self.config);
     }
 }

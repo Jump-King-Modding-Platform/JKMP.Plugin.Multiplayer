@@ -43,6 +43,9 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
+        private AudioContext? test;
+
+        private DynamicSoundEffectInstance? micPlayback;
 
         public MultiplayerPlugin()
         {
@@ -80,7 +83,7 @@ namespace JKMP.Plugin.Multiplayer
                 SoundEffect.DopplerScale = 10f;
                 SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
 
-                var test = new AudioContext();
+                test = new AudioContext();
                 var devices = test.GetOutputDevices();
 
                 foreach (var device in devices)
@@ -89,6 +92,27 @@ namespace JKMP.Plugin.Multiplayer
                 }
 
                 test.SetActiveDeviceToDefault();
+
+                micPlayback = new(48000, AudioChannels.Stereo);
+
+                bool startedCapture = test.StartCapture((in ReadOnlySpan<short> data) =>
+                {
+                    unsafe
+                    {
+                        fixed (short* ptr = &data.GetPinnableReference())
+                        {
+                            Span<byte> bytes = new(ptr, data.Length * sizeof(short));
+                            micPlayback.SubmitBuffer(bytes.ToArray());
+
+                            micPlayback.Play();
+                        }
+                    }
+                }, error =>
+                {
+                    Logger.Warning("An error occured while capturing audio: {error}", error);
+                });
+
+                Logger.Debug("Started audio capture: {startedCapture}", startedCapture);
             };
 
             GameEvents.RunStarted += args =>

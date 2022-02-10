@@ -15,6 +15,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+  </ItemGroup>
+
   <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <NativeFiles Include="$(SolutionDir)native/multiplayer_native/bindings_generator/target/i686-pc-windows-msvc/$(Configuration.toLower())/deps/multiplayer_native.dll" />
