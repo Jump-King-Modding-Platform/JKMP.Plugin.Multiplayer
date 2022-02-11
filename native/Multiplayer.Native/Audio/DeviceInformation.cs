@@ -1,4 +1,4 @@
-namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
+namespace JKMP.Plugin.Multiplayer.Native.Audio
 {
     public class DeviceInformation
     {

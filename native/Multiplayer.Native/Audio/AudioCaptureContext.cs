@@ -8,7 +8,7 @@ using NativeAudioContext = JKMP.Plugin.Multiplayer.Native.AudioContext;
 
 namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
 {
-    public class AudioContext : IDisposable
+    public class AudioCaptureContext : IDisposable
     {
         private readonly NativeAudioContext context;
 
@@ -19,16 +19,16 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
         private readonly OnCapturedDataCallback internalOnData;
         private readonly OnCaptureErrorCallback internalOnError;
 
-        public AudioContext()
+        public AudioCaptureContext()
         {
             context = NativeAudioContext.New();
             internalOnData = OnData;
             internalOnError = OnError;
         }
 
-        public ICollection<DeviceInformation> GetOutputDevices()
+        public ICollection<Audio.DeviceInformation> GetOutputDevices()
         {
-            List<DeviceInformation> result = new List<DeviceInformation>();
+            List<Audio.DeviceInformation> result = new List<Audio.DeviceInformation>();
             
             context.GetOutputDevices(slice =>
             {
@@ -37,7 +37,7 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
                     unsafe
                     {
                         string name = Encoding.UTF8.GetString((byte*)deviceInfo.name_utf8, deviceInfo.name_len);
-                        result.Add(new DeviceInformation(name, deviceInfo.default_config));
+                        result.Add(new Audio.DeviceInformation(name, deviceInfo.default_config));
                     }
                 }
             });
@@ -68,7 +68,7 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
             }
         }
 
-        public bool SetActiveDevice(DeviceInformation device) => SetActiveDevice(device.Name);
+        public bool SetActiveDevice(Audio.DeviceInformation device) => SetActiveDevice(device.Name);
 
         public bool SetActiveDeviceToDefault()
         {
@@ -83,9 +83,9 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
             }
         }
 
-        public DeviceInformation? GetActiveDeviceInfo()
+        public Audio.DeviceInformation? GetActiveDeviceInfo()
         {
-            DeviceInformation? result = null;
+            Audio.DeviceInformation? result = null;
 
             try
             {
@@ -94,7 +94,7 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
                     unsafe
                     {
                         string name = Encoding.UTF8.GetString((byte*)info.name_utf8, info.name_len);
-                        result = new DeviceInformation(name, info.default_config);
+                        result = new Audio.DeviceInformation(name, info.default_config);
                     }
                 });
 

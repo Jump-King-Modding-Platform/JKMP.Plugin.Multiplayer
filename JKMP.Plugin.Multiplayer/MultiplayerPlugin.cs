@@ -16,6 +16,7 @@ using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Native.Audio;
 using JKMP.Plugin.Multiplayer.Native.AudioCapture;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
@@ -43,7 +44,7 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
-        private AudioContext? test;
+        private AudioCaptureContext? test;
 
         private DynamicSoundEffectInstance? micPlayback;
 
@@ -83,7 +84,7 @@ namespace JKMP.Plugin.Multiplayer
                 SoundEffect.DopplerScale = 10f;
                 SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
 
-                test = new AudioContext();
+                test = new AudioCaptureContext();
                 var devices = test.GetOutputDevices();
 
                 foreach (var device in devices)
