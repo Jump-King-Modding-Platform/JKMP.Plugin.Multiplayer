@@ -97,15 +97,24 @@ namespace JKMP.Plugin.Multiplayer
 
                 micPlayback = new((int)deviceInfo.Config.SampleRate, AudioChannels.Mono);
 
-                bool startedCapture = test.StartCapture((in ReadOnlySpan<short> data) =>
+                bool startedCapture = test.StartCapture((in ReadOnlySpan<short> uncompressedData) =>
                 {
+                    // Compress audio
+                    Span<byte> compressedBuffer = new(new byte[uncompressedData.Length]);
+                    int numBytes = AudioCompression.Compress(uncompressedData, compressedBuffer);
+                    Span<byte> compressedData = compressedBuffer.Slice(0, numBytes);
+
+                    // Decompress audio
+                    Span<short> decompressedBuffer = new(new short[10240]);
+                    numBytes = AudioCompression.Decompress(compressedData, decompressedBuffer);
+                    Span<short> decompressedData = decompressedBuffer.Slice(0, numBytes);
+                    
                     unsafe
                     {
-                        fixed (short* ptr = &data.GetPinnableReference())
+                        fixed (short* ptr = &decompressedData.GetPinnableReference())
                         {
-                            Span<byte> bytes = new(ptr, data.Length * sizeof(short));
+                            Span<byte> bytes = new(ptr, decompressedData.Length * sizeof(short));
                             micPlayback.SubmitBuffer(bytes.ToArray());
-
                             micPlayback.Play();
                         }
                     }

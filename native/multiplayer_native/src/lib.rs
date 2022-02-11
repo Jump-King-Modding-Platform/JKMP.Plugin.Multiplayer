@@ -1,5 +1,6 @@
 extern crate core;
 
+use audio_capture::compression::*;
 use audio_capture::context::{AudioContext, DeviceInformation};
 use interoptopus::{ffi_type, patterns::result::FFIError, Error};
 
@@ -30,6 +31,12 @@ pub enum MyFFIError {
     /// Returned when the state of the given context or parameter is invalid.
     /// For example, if you try to start capturing audio from an AudioContext without selecting an input device first.
     InvalidState = 6,
+
+    /// Returned when an input buffer is too small.
+    InputBufferTooSmall = 7,
+
+    // Returned when an output buffer is too small.
+    OutputBufferTooSmall = 8,
 }
 
 impl FFIError for MyFFIError {
@@ -55,4 +62,10 @@ impl From<Error> for MyFFIError {
     }
 }
 
-interoptopus::inventory!(inventory, [], [], [DeviceInformation], [AudioContext]);
+interoptopus::inventory!(
+    inventory,
+    [],
+    [opus_compress, opus_decompress],
+    [DeviceInformation],
+    [AudioContext]
+);
