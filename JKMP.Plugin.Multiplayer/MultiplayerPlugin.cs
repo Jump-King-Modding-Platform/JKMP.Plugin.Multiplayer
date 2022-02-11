@@ -92,8 +92,9 @@ namespace JKMP.Plugin.Multiplayer
                 }
 
                 test.SetActiveDeviceToDefault();
+                var deviceInfo = test.GetActiveDeviceInfo()!;
 
-                micPlayback = new(48000, AudioChannels.Stereo);
+                micPlayback = new((int)deviceInfo.Config.SampleRate, AudioChannels.Mono);
 
                 bool startedCapture = test.StartCapture((in ReadOnlySpan<short> data) =>
                 {

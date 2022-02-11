@@ -190,6 +190,8 @@ impl AudioContext {
         Ok(())
     }
 
+    /// Starts capturing audio data. The data in the callback is always mono 16bit PCM regardless
+    /// of the number of channels on the input device.
     pub fn start_capture(
         &mut self,
         on_data: OnCapturedDataCallback,
@@ -207,7 +209,22 @@ impl AudioContext {
         let stream = device.build_input_stream(
             &config,
             move |data: &[i16], _| {
-                on_data.call(FFISlice::from_slice(data));
+                let channels = config.channels;
+                let mono_data = match channels {
+                    1 => data.to_vec(),
+
+                    // I love me some unnecessary optimisations
+                    2 => convert_channels_to_mono_const::<2>(data),
+                    3 => convert_channels_to_mono_const::<3>(data),
+                    4 => convert_channels_to_mono_const::<4>(data),
+                    5 => convert_channels_to_mono_const::<5>(data),
+                    6 => convert_channels_to_mono_const::<6>(data),
+                    7 => convert_channels_to_mono_const::<7>(data),
+                    8 => convert_channels_to_mono_const::<8>(data),
+                    _ => convert_channels_to_mono(data, channels as usize),
+                };
+
+                on_data.call(FFISlice::from_slice(&mono_data[..]));
             },
             move |err: StreamError| {
                 on_error.call(CaptureError::from(err));
@@ -256,4 +273,40 @@ impl AudioContext {
 
         println!("Active device set to {:?}, {:?}", device_name, self.config);
     }
+}
+
+fn convert_channels_to_mono_const<const C: usize>(data: &[i16]) -> Vec<i16> {
+    let mut mono_data = Vec::<i16>::with_capacity(data.len() / C);
+
+    for i in 0..data.len() / C {
+        let mut total: i32 = 0;
+
+        for j in 0..C {
+            unsafe {
+                total += *data.get_unchecked(i * C + j) as i32;
+            }
+        }
+
+        mono_data.push((total / C as i32) as i16);
+    }
+
+    mono_data
+}
+
+fn convert_channels_to_mono(data: &[i16], channels: usize) -> Vec<i16> {
+    let mut mono_data = Vec::<i16>::with_capacity(data.len() / channels);
+
+    for i in 0..data.len() / channels {
+        let mut total: i32 = 0;
+
+        for j in 0..channels {
+            unsafe {
+                total += *data.get_unchecked(i * channels + j) as i32;
+            }
+        }
+
+        mono_data.push((total / channels as i32) as i16);
+    }
+
+    mono_data
 }
