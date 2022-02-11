@@ -1,6 +1,6 @@
 extern crate core;
 
-use audio_capture::{context::AudioContext, device_information::DeviceInformation};
+use audio_capture::context::{AudioContext, DeviceInformation};
 use interoptopus::{ffi_type, patterns::result::FFIError, Error};
 
 pub mod audio_capture;

@@ -1,7 +1,7 @@
-use crate::{audio_capture::device_information::DeviceInformation, MyFFIError};
+use crate::MyFFIError;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{Device, Host, Stream, StreamConfig, StreamError, SupportedStreamConfig};
+use cpal::{Device, Host, Stream, StreamError, SupportedStreamConfig};
 
 use interoptopus::{
     callback, ffi_service, ffi_service_ctor, ffi_type, patterns::slice::FFISlice, Error,
@@ -32,11 +32,55 @@ impl From<StreamError> for CaptureError {
     }
 }
 
+#[ffi_type]
+#[repr(C)]
+pub struct DeviceInformation {
+    pub name_utf8: *const u8,
+    pub name_len: i32,
+    pub default_config: DeviceConfig,
+}
+
+impl DeviceInformation {
+    pub fn new(name_bytes: &[u8], default_config: DeviceConfig) -> Self {
+        Self {
+            name_utf8: name_bytes.as_ptr(),
+            name_len: name_bytes.len() as i32,
+            default_config,
+        }
+    }
+}
+
+#[ffi_type]
+#[repr(C)]
+pub struct DeviceConfig {
+    /// The number of channels, usually 1 (mono) or 2 (stereo).
+    pub channels: u16,
+
+    /// The sample rate, in Hz. For example, 44100 Hz.
+    pub sample_rate: u32,
+}
+
+impl DeviceConfig {
+    pub fn new(channels: u16, sample_rate: u32) -> Self {
+        Self {
+            channels,
+            sample_rate,
+        }
+    }
+}
+
+impl From<SupportedStreamConfig> for DeviceConfig {
+    fn from(config: SupportedStreamConfig) -> Self {
+        DeviceConfig::new(config.channels(), config.sample_rate().0)
+    }
+}
+
 callback!(GetOutputDevicesCallback(
     devices: FFISlice<DeviceInformation>
 ));
 callback!(OnCapturedDataCallback(data: FFISlice<i16>));
 callback!(OnCaptureErrorCallback(error: CaptureError));
+callback!(GetActiveDeviceCallback(device: Option<&DeviceInformation>));
 
 #[allow(clippy::vec_init_then_push)]
 #[ffi_service(error = "MyFFIError", prefix = "audio_context_")]
@@ -68,12 +112,18 @@ impl AudioContext {
 
         for device in devices {
             let name = device.name();
+            let config = device.default_input_config();
 
-            if let Ok(name) = name {
-                names.push(name);
-                let name = names.last().unwrap();
-                result.push(DeviceInformation::new(name.as_bytes()));
+            if name.is_err() || config.is_err() {
+                continue;
             }
+
+            let name = name.unwrap();
+            let config = config.unwrap();
+
+            names.push(name);
+            let name = names.last().unwrap();
+            result.push(DeviceInformation::new(name.as_bytes(), config.into()));
         }
 
         callback.call(result.as_slice().into());
@@ -121,6 +171,21 @@ impl AudioContext {
     pub fn set_active_device_to_default(&mut self) -> Result<(), MyFFIError> {
         let device = self.host.default_input_device();
         self.set_active_device_internal(device);
+
+        Ok(())
+    }
+
+    pub fn get_active_device(&self, callback: GetActiveDeviceCallback) -> Result<(), MyFFIError> {
+        let device_info = match self.active_device.as_ref() {
+            Some(device) => {
+                let name = device.name().unwrap();
+                let config = device.default_input_config().unwrap();
+                Some(DeviceInformation::new(name.as_bytes(), config.into()))
+            }
+            None => None,
+        };
+
+        callback.call(device_info.as_ref());
 
         Ok(())
     }

@@ -37,7 +37,7 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
                     unsafe
                     {
                         string name = Encoding.UTF8.GetString((byte*)deviceInfo.name_utf8, deviceInfo.name_len);
-                        result.Add(new DeviceInformation(name));
+                        result.Add(new DeviceInformation(name, deviceInfo.default_config));
                     }
                 }
             });
@@ -83,9 +83,36 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
             }
         }
 
+        public DeviceInformation? GetActiveDeviceInfo()
+        {
+            DeviceInformation? result = null;
+
+            try
+            {
+                context.GetActiveDevice((ref Native.DeviceInformation info) =>
+                {
+                    unsafe
+                    {
+                        string name = Encoding.UTF8.GetString((byte*)info.name_utf8, info.name_len);
+                        result = new DeviceInformation(name, info.default_config);
+                    }
+                });
+
+                return result;
+            }
+            catch (InteropException<MyFFIError> err)
+            {
+                return null;
+            }
+        }
+
         // Spans are not allowed to be used as type arguments, so instead of Func<Span<T>> we use a delegate
         public delegate void OnDataDelegate(in ReadOnlySpan<short> data);
 
+        /// <summary>
+        /// Starts capturing audio data. The data in the callback is always mono 16bit PCM regardless
+        /// of the number of channels on the input device.
+        /// </summary>
         public bool StartCapture(OnDataDelegate onData, Action<CaptureError> onError)
         {
             this.onData = onData;
@@ -98,7 +125,6 @@ namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
             }
             catch (InteropException<MyFFIError> err)
             {
-                Console.WriteLine(err.Error);
                 return false;
             }
         }
