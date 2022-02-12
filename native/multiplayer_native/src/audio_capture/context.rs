@@ -82,7 +82,6 @@ callback!(OnCapturedDataCallback(data: FFISlice<i16>));
 callback!(OnCaptureErrorCallback(error: CaptureError));
 callback!(GetActiveDeviceCallback(device: Option<&DeviceInformation>));
 
-#[allow(clippy::vec_init_then_push)]
 #[ffi_service(error = "MyFFIError", prefix = "audio_context_")]
 impl AudioContext {
     #[ffi_service_ctor]

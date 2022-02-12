@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using NativeAudioContext = JKMP.Plugin.Multiplayer.Native.AudioContext;
 
-namespace JKMP.Plugin.Multiplayer.Native.AudioCapture
+namespace JKMP.Plugin.Multiplayer.Native.Audio
 {
     public class AudioCaptureContext : IDisposable
     {

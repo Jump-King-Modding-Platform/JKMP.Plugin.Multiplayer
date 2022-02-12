@@ -17,7 +17,6 @@ using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Native.Audio;
-using JKMP.Plugin.Multiplayer.Native.AudioCapture;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
@@ -44,7 +43,8 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
-        private AudioCaptureContext? test;
+        private AudioCaptureContext? audioCapture;
+        private OpusContext? opus;
 
         private DynamicSoundEffectInstance? micPlayback;
 
@@ -84,29 +84,44 @@ namespace JKMP.Plugin.Multiplayer
                 SoundEffect.DopplerScale = 10f;
                 SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
 
-                test = new AudioCaptureContext();
-                var devices = test.GetOutputDevices();
+                audioCapture = new AudioCaptureContext();
+                var devices = audioCapture.GetOutputDevices();
 
                 foreach (var device in devices)
                 {
                     Logger.Debug("Audio device: {deviceName}", device.Name);
                 }
 
-                test.SetActiveDeviceToDefault();
-                var deviceInfo = test.GetActiveDeviceInfo()!;
+                audioCapture.SetActiveDeviceToDefault();
+                var deviceInfo = audioCapture.GetActiveDeviceInfo()!;
 
+                opus = new(deviceInfo.Config.SampleRate);
                 micPlayback = new((int)deviceInfo.Config.SampleRate, AudioChannels.Mono);
 
-                bool startedCapture = test.StartCapture((in ReadOnlySpan<short> uncompressedData) =>
+                bool startedCapture = audioCapture.StartCapture((in ReadOnlySpan<short> uncompressedData) =>
                 {
                     // Compress audio
                     Span<byte> compressedBuffer = new(new byte[uncompressedData.Length]);
-                    int numBytes = AudioCompression.Compress(uncompressedData, compressedBuffer);
+                    int numBytes = opus.Compress(uncompressedData, compressedBuffer);
+                    
+                    if (numBytes < 0)
+                    {
+                        Logger.Error("Failed to compress audio data: {error}", numBytes);
+                        return;
+                    }
+                    
                     Span<byte> compressedData = compressedBuffer.Slice(0, numBytes);
 
                     // Decompress audio
                     Span<short> decompressedBuffer = new(new short[10240]);
-                    numBytes = AudioCompression.Decompress(compressedData, decompressedBuffer);
+                    numBytes = opus.Decompress(compressedData, decompressedBuffer);
+                    
+                    if (numBytes < 0)
+                    {
+                        Logger.Error("Failed to decompress audio data: {error}", numBytes);
+                        return;
+                    }
+
                     Span<short> decompressedData = decompressedBuffer.Slice(0, numBytes);
                     
                     unsafe
