@@ -14,6 +14,8 @@ pub struct OpusContext {
 
 #[ffi_service(error = "MyFFIError", prefix = "opus_context_")]
 impl OpusContext {
+    /// Creates a new OpusContext.
+    /// IF the sample rate is unsupported, InvalidParam is returned.
     #[ffi_service_ctor]
     pub fn new(sample_rate: u32) -> Result<Self, Error> {
         let sample_rate = convert_sample_rate(sample_rate);
@@ -30,7 +32,7 @@ impl OpusContext {
     }
 
     /// Compresses the audio data. The audio data is assumed to be signed PCM 16-bit mono.
-    /// The data in the callback is compressed using opus codec with the specified parameters.
+    /// The data in the callback is compressed using opus codec.
     /// Returns the number of bytes written to the buffer.
     /// If the output buffer is not large enough -1 is returned.
     /// If the sample rate is not supported -2 is returned.
@@ -53,22 +55,21 @@ impl OpusContext {
     /// The data is decompressed into the out_data_audio slice.
     /// Returns the number of bytes written to the buffer.
     /// If the output buffer is not large enough -1 is returned.
-    /// If the sample rate is not supported -2 is returned.
-    /// If the input or output length exceeds the maximum value of int32, -3 is returned.
+    /// If the input or output length exceeds the maximum value of int32, -2 is returned.
     #[no_mangle]
     #[ffi_service_method(on_panic = "return_default")]
     pub fn decompress(&mut self, data: FFISlice<u8>, mut out_audio_data: FFISliceMut<i16>) -> i32 {
         let packet = Packet::try_from(data.as_slice());
 
         if packet.is_err() {
-            return -3;
+            return -2;
         }
 
         let packet = packet.unwrap();
         let out_signal = MutSignals::try_from(out_audio_data.as_slice_mut());
 
         if out_signal.is_err() {
-            return -3;
+            return -2;
         }
 
         let out_signal = out_signal.unwrap();
