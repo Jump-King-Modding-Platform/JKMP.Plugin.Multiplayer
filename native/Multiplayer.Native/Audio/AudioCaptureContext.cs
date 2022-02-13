@@ -107,7 +107,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
         public delegate void OnDataDelegate(ReadOnlySpan<short> data);
 
         /// <summary>
-        /// Starts capturing audio data. The data in the callback is always mono 16bit PCM regardless
+        /// Starts capturing audio data. The data in the callback is always 48kHz mono 16bit PCM regardless
         /// of the number of channels on the input device.
         /// </summary>
         public bool StartCapture(OnDataDelegate onData, Action<CaptureError> onError)

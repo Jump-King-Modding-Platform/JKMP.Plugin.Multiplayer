@@ -6,6 +6,7 @@ use cpal::{Device, Host, Stream, StreamConfig, StreamError, SupportedStreamConfi
 use interoptopus::{
     callback, ffi_service, ffi_service_ctor, ffi_type, patterns::slice::FFISlice, Error,
 };
+use samplerate::ConverterType;
 
 #[ffi_type]
 #[repr(C)]
@@ -192,8 +193,8 @@ impl AudioContext {
         Ok(())
     }
 
-    /// Starts capturing audio data. The data in the callback is always mono 16bit PCM regardless
-    /// of the number of channels on the input device.
+    /// Starts capturing audio data. The data in the callback is always 48kHz mono 16bit PCM regardless
+    /// of the number of channels or sample rate on the input device.
     pub fn start_capture(
         &mut self,
         on_data: OnCapturedDataCallback,
@@ -209,7 +210,7 @@ impl AudioContext {
         let stream = device.build_input_stream(
             &config,
             move |data: &[i16], _| {
-                let mono_data = match config.channels {
+                let mut mono_data = match config.channels {
                     1 => data.to_vec(),
 
                     // I love me some unnecessary optimisations
@@ -222,6 +223,31 @@ impl AudioContext {
                     8 => convert_channels_to_mono_const::<8>(data),
                     _ => convert_channels_to_mono(data, config.channels as usize),
                 };
+
+                // Resample to 48kHz if necessary
+                if config.sample_rate.0 != 48000 {
+                    // Convert to f32
+                    let mono_data_f32 = mono_data
+                        .iter()
+                        .map(|x| *x as f32 / i16::MAX as f32)
+                        .collect::<Vec<f32>>();
+
+                    // Resample to 48kHz
+                    let mono_data_f32 = samplerate::convert(
+                        config.sample_rate.0,
+                        48000,
+                        1,
+                        ConverterType::SincMediumQuality,
+                        &mono_data_f32,
+                    )
+                    .unwrap();
+
+                    // Convert back to i16
+                    mono_data = mono_data_f32
+                        .iter()
+                        .map(|x| (*x * i16::MAX as f32) as i16)
+                        .collect::<Vec<i16>>();
+                }
 
                 on_data.call(FFISlice::from_slice(&mono_data[..]));
             },

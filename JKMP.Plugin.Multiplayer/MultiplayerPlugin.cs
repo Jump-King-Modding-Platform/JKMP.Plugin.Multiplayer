@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
@@ -93,11 +94,10 @@ namespace JKMP.Plugin.Multiplayer
                 }
 
                 audioCapture.SetActiveDeviceToDefault();
-                var deviceInfo = audioCapture.GetActiveDeviceInfo()!;
 
-                opus = new(deviceInfo.Config.SampleRate);
-                micPlayback = new((int)deviceInfo.Config.SampleRate, AudioChannels.Mono);
-
+                opus = new(48000);
+                micPlayback = new(48000, AudioChannels.Mono);
+                
                 bool startedCapture = audioCapture.StartCapture(uncompressedData =>
                 {
                     // Compress audio
@@ -135,7 +135,7 @@ namespace JKMP.Plugin.Multiplayer
                     }
                 }, error =>
                 {
-                    Logger.Warning("An error occured while capturing audio: {error}", error);
+                    Logger.Warning("An error occurred while capturing audio: {error}", error);
                 });
 
                 Logger.Debug("Started audio capture: {startedCapture}", startedCapture);
