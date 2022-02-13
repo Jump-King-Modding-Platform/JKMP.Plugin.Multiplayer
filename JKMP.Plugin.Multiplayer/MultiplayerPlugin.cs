@@ -100,8 +100,6 @@ namespace JKMP.Plugin.Multiplayer
 
                 bool startedCapture = audioCapture.StartCapture(uncompressedData =>
                 {
-                    Logger.Debug("Got {uncompressedDataLength} bytes", uncompressedData.Length);
-                    
                     // Compress audio
                     Span<byte> compressedBuffer = new(new byte[uncompressedData.Length]);
                     int numBytes = opus.Compress(uncompressedData, compressedBuffer);
