@@ -104,7 +104,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
         }
 
         // Spans are not allowed to be used as type arguments, so instead of Func<Span<T>> we use a delegate
-        public delegate void OnDataDelegate(in ReadOnlySpan<short> data);
+        public delegate void OnDataDelegate(ReadOnlySpan<short> data);
 
         /// <summary>
         /// Starts capturing audio data. The data in the callback is always mono 16bit PCM regardless

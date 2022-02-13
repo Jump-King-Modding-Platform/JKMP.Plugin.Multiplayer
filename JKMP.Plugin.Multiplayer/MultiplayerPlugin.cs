@@ -98,8 +98,10 @@ namespace JKMP.Plugin.Multiplayer
                 opus = new(deviceInfo.Config.SampleRate);
                 micPlayback = new((int)deviceInfo.Config.SampleRate, AudioChannels.Mono);
 
-                bool startedCapture = audioCapture.StartCapture((in ReadOnlySpan<short> uncompressedData) =>
+                bool startedCapture = audioCapture.StartCapture(uncompressedData =>
                 {
+                    Logger.Debug("Got {uncompressedDataLength} bytes", uncompressedData.Length);
+                    
                     // Compress audio
                     Span<byte> compressedBuffer = new(new byte[uncompressedData.Length]);
                     int numBytes = opus.Compress(uncompressedData, compressedBuffer);
@@ -113,7 +115,7 @@ namespace JKMP.Plugin.Multiplayer
                     Span<byte> compressedData = compressedBuffer.Slice(0, numBytes);
 
                     // Decompress audio
-                    Span<short> decompressedBuffer = new(new short[10240]);
+                    Span<short> decompressedBuffer = new(new short[uncompressedData.Length]);
                     numBytes = opus.Decompress(compressedData, decompressedBuffer);
                     
                     if (numBytes < 0)

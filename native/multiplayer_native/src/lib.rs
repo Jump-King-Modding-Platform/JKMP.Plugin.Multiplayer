@@ -35,8 +35,14 @@ pub enum MyFFIError {
     /// Returned when an input buffer is too small.
     InputBufferTooSmall = 7,
 
-    // Returned when an output buffer is too small.
+    /// Returned when an output buffer is too small.
     OutputBufferTooSmall = 8,
+
+    /// Returned when a selected or specified device was disconnected.
+    DeviceLost = 9,
+
+    /// Returned when a specified device could not be found.
+    DeviceNotFound = 10,
 }
 
 impl FFIError for MyFFIError {
