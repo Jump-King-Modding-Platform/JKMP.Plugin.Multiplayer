@@ -32,11 +32,8 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             {
                 foreach (Native.DeviceInformation deviceInfo in slice)
                 {
-                    unsafe
-                    {
-                        string name = Encoding.UTF8.GetString((byte*)deviceInfo.name_utf8, deviceInfo.name_len);
-                        result.Add(new Audio.DeviceInformation(name, deviceInfo.default_config));
-                    }
+                    string name = Encoding.UTF8.GetString(deviceInfo.name_utf8.Copied);
+                    result.Add(new Audio.DeviceInformation(name, deviceInfo.default_config));
                 }
             });
 
@@ -89,16 +86,13 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             {
                 context.GetActiveDevice((ref Native.DeviceInformation info) =>
                 {
-                    unsafe
-                    {
-                        string name = Encoding.UTF8.GetString((byte*)info.name_utf8, info.name_len);
-                        result = new Audio.DeviceInformation(name, info.default_config);
-                    }
+                    string name = Encoding.UTF8.GetString(info.name_utf8.Copied);
+                    result = new Audio.DeviceInformation(name, info.default_config);
                 });
 
                 return result;
             }
-            catch (InteropException<MyFFIError> err)
+            catch (InteropException<MyFFIError>)
             {
                 return null;
             }
@@ -121,7 +115,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
                 context.StartCapture(internalOnData, internalOnError);
                 return true;
             }
-            catch (InteropException<MyFFIError> err)
+            catch (InteropException<MyFFIError>)
             {
                 return false;
             }

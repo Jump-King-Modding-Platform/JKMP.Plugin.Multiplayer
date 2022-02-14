@@ -1,7 +1,7 @@
 use crate::MyFFIError;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{Device, Host, Stream, StreamConfig, StreamError, SupportedStreamConfig};
+use cpal::{BuildStreamError, Device, Host, PlayStreamError, Stream, StreamConfig, StreamError};
 
 use interoptopus::{
     callback, ffi_service, ffi_service_ctor, ffi_type, patterns::slice::FFISlice, Error,
@@ -26,17 +26,15 @@ impl From<StreamError> for CaptureError {
 
 #[ffi_type]
 #[repr(C)]
-pub struct DeviceInformation {
-    pub name_utf8: *const u8,
-    pub name_len: i32,
+pub struct DeviceInformation<'a> {
+    pub name_utf8: FFISlice<'a, u8>,
     pub default_config: DeviceConfig,
 }
 
-impl DeviceInformation {
-    pub fn new(name_bytes: &[u8], default_config: DeviceConfig) -> Self {
+impl<'a> DeviceInformation<'a> {
+    pub fn new(name_bytes: &'a [u8], default_config: DeviceConfig) -> Self {
         Self {
-            name_utf8: name_bytes.as_ptr(),
-            name_len: name_bytes.len() as i32,
+            name_utf8: FFISlice::<'a>::from_slice(name_bytes),
             default_config,
         }
     }
@@ -94,10 +92,7 @@ impl AudioContext {
     }
 
     pub fn get_output_devices(&self, callback: GetOutputDevicesCallback) -> Result<(), MyFFIError> {
-        let mut result = Vec::<DeviceInformation>::new();
-
-        // Store name strings temporarily so they don't get deallocated before the callback has been called
-        let mut names = Vec::<String>::new();
+        let mut result = Vec::new();
 
         let devices = self.host.input_devices();
 
@@ -106,25 +101,27 @@ impl AudioContext {
             return Ok(());
         }
 
-        let devices = devices.unwrap();
+        let devices = devices.unwrap().collect::<Vec<_>>();
 
-        for device in devices {
-            let name = device.name();
+        // Store name strings temporarily so they don't get deallocated before the callback has been called
+        let mut names = Vec::with_capacity(devices.len());
+
+        for device in &devices {
+            if let Ok(name) = device.name() {
+                names.push(name);
+            }
+        }
+
+        for (index, device) in devices.iter().enumerate() {
+            let name = names.get(index);
             let config = device.default_input_config();
 
-            if name.is_err() || config.is_err() {
-                continue;
+            if let (Some(name), Ok(config)) = (name, config) {
+                result.push(DeviceInformation::new(
+                    name.as_bytes(),
+                    config.config().into(),
+                ));
             }
-
-            let name = name.unwrap();
-            let config = config.unwrap();
-
-            names.push(name);
-            let name = names.last().unwrap();
-            result.push(DeviceInformation::new(
-                name.as_bytes(),
-                config.config().into(),
-            ));
         }
 
         callback.call(result.as_slice().into());
@@ -158,13 +155,10 @@ impl AudioContext {
             }
         }
 
-        if new_device.is_none() {
-            return Err(MyFFIError::DeviceNotFound);
+        match new_device {
+            Some(new_device) => self.set_active_device_internal(Some(new_device)),
+            None => Err(MyFFIError::DeviceNotFound),
         }
-
-        let new_device = new_device.unwrap();
-
-        self.set_active_device_internal(Some(new_device))
     }
 
     pub fn set_active_device_to_default(&mut self) -> Result<(), MyFFIError> {
@@ -174,9 +168,10 @@ impl AudioContext {
     }
 
     pub fn get_active_device(&self, callback: GetActiveDeviceCallback) -> Result<(), MyFFIError> {
+        let name: String;
         let device_info = match self.active_device.as_ref() {
             Some(device) => {
-                let name = device.name().unwrap();
+                name = device.name().unwrap();
                 let config = device.default_input_config().unwrap();
                 Some(DeviceInformation::new(
                     name.as_bytes(),
@@ -251,7 +246,7 @@ impl AudioContext {
                 buffer.append(&mut mono_data);
 
                 while buffer.len() >= 480 {
-                    let chunk: Vec<i16> = buffer.drain(0..480).collect();
+                    let chunk: Vec<i16> = buffer.drain(..480).collect();
                     on_data.call(FFISlice::from_slice(&chunk[..]));
                 }
             },
@@ -260,17 +255,22 @@ impl AudioContext {
             },
         );
 
-        if stream.is_err() {
-            return Err(MyFFIError::DeviceLost);
+        match stream {
+            Ok(stream) => match stream.play() {
+                Ok(_) => {
+                    self.input_stream = Some(stream);
+                    Ok(())
+                }
+                Err(err) => match err {
+                    PlayStreamError::DeviceNotAvailable => Err(MyFFIError::DeviceLost),
+                    _ => Err(MyFFIError::OtherError),
+                },
+            },
+            Err(err) => match err {
+                BuildStreamError::DeviceNotAvailable => Err(MyFFIError::DeviceLost),
+                _ => Err(MyFFIError::OtherError),
+            },
         }
-
-        if stream.as_ref().unwrap().play().is_err() {
-            return Err(MyFFIError::DeviceLost);
-        }
-
-        self.input_stream = Some(stream.unwrap());
-
-        Ok(())
     }
 
     pub fn stop_capture(&mut self) -> Result<(), MyFFIError> {
@@ -292,11 +292,9 @@ impl AudioContext {
             return Err(MyFFIError::InvalidState);
         }
 
-        let device_name = device.as_ref().map(|device| device.name().unwrap());
+        let device_name = device.as_ref().map(|device| device.name());
+        let config = device.as_ref().map(|device| device.default_input_config());
 
-        let config = device
-            .as_ref()
-            .map(|device| device.default_input_config().unwrap());
         self.active_device = device;
 
         println!("Active device set to {:?}, {:?}", device_name, config);
