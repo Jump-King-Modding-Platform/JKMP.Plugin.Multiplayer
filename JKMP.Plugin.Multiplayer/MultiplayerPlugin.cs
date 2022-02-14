@@ -44,10 +44,6 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
-        private AudioCaptureContext? audioCapture;
-        private OpusContext? opus;
-
-        private DynamicSoundEffectInstance? micPlayback;
 
         public MultiplayerPlugin()
         {
@@ -84,61 +80,6 @@ namespace JKMP.Plugin.Multiplayer
                 SoundEffect.DistanceScale = 75;
                 SoundEffect.DopplerScale = 10f;
                 SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
-
-                audioCapture = new AudioCaptureContext();
-                var devices = audioCapture.GetOutputDevices();
-
-                foreach (var device in devices)
-                {
-                    Logger.Debug("Audio device: {deviceName}", device.Name);
-                }
-
-                audioCapture.SetActiveDeviceToDefault();
-
-                opus = new(48000);
-                micPlayback = new(48000, AudioChannels.Mono);
-                
-                bool startedCapture = audioCapture.StartCapture(uncompressedData =>
-                {
-                    // Compress audio
-                    Span<byte> compressedBuffer = new(new byte[uncompressedData.Length]);
-                    int numBytes = opus.Compress(uncompressedData, compressedBuffer);
-                    
-                    if (numBytes < 0)
-                    {
-                        Logger.Error("Failed to compress audio data: {error}", numBytes);
-                        return;
-                    }
-                    
-                    Span<byte> compressedData = compressedBuffer.Slice(0, numBytes);
-
-                    // Decompress audio
-                    Span<short> decompressedBuffer = new(new short[uncompressedData.Length]);
-                    numBytes = opus.Decompress(compressedData, decompressedBuffer);
-                    
-                    if (numBytes < 0)
-                    {
-                        Logger.Error("Failed to decompress audio data: {error}", numBytes);
-                        return;
-                    }
-
-                    Span<short> decompressedData = decompressedBuffer.Slice(0, numBytes);
-                    
-                    unsafe
-                    {
-                        fixed (short* ptr = &decompressedData.GetPinnableReference())
-                        {
-                            Span<byte> bytes = new(ptr, decompressedData.Length * sizeof(short));
-                            micPlayback.SubmitBuffer(bytes.ToArray());
-                            micPlayback.Play();
-                        }
-                    }
-                }, error =>
-                {
-                    Logger.Warning("An error occurred while capturing audio: {error}", error);
-                });
-
-                Logger.Debug("Started audio capture: {startedCapture}", startedCapture);
             };
 
             GameEvents.RunStarted += args =>
