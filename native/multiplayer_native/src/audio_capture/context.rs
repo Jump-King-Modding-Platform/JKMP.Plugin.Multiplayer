@@ -264,11 +264,11 @@ impl AudioContext {
             return Err(MyFFIError::DeviceLost);
         }
 
-        self.input_stream = Some(stream.unwrap());
-
-        if self.input_stream.as_ref().unwrap().play().is_err() {
+        if stream.as_ref().unwrap().play().is_err() {
             return Err(MyFFIError::DeviceLost);
         }
+
+        self.input_stream = Some(stream.unwrap());
 
         Ok(())
     }
