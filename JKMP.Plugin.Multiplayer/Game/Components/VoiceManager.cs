@@ -67,8 +67,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private DynamicSoundEffectInstance? sound;
         private AudioCaptureContext? captureContext;
         private readonly OpusContext opusContext;
-        private readonly Memory<short> decodeBuffer = new short[4096];
-        private readonly Memory<byte> encodeBuffer = new byte[1024]; // This needs a significantly smaller buffer size compared to decodeBuffer.
+        private static readonly Memory<short> DecodeBuffer = new short[4096];
+        private static readonly Memory<byte> EncodeBuffer = new byte[1024]; // This needs a significantly smaller buffer size compared to decodeBuffer.
         private readonly Queue<byte[]> pendingOutgoingVoiceData = new();
         private float timeSinceTransmittedVoice;
         private const double TransmissionInterval = 0.05f; // Transmit voice every 50ms
@@ -164,12 +164,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             
             lock (pendingOutgoingVoiceData)
             {
-                int numBytes = opusContext.Compress(data, encodeBuffer.Span);
+                int numBytes = opusContext.Compress(data, EncodeBuffer.Span);
 
                 if (numBytes <= 0)
                     return;
 
-                Span<byte> compressedData = encodeBuffer.Span.Slice(0, numBytes);
+                Span<byte> compressedData = EncodeBuffer.Span.Slice(0, numBytes);
                 pendingOutgoingVoiceData.Enqueue(compressedData.ToArray());
             }
         }
@@ -213,14 +213,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (data.Length == 0)
                 return;
 
-            int numElements = opusContext.Decompress(data, decodeBuffer.Span);
+            int numElements = opusContext.Decompress(data, DecodeBuffer.Span);
 
             if (numElements <= 0)
                 return;
 
             unsafe
             {
-                fixed (short* decodeButterPtr = &decodeBuffer.Span.GetPinnableReference())
+                fixed (short* decodeButterPtr = &DecodeBuffer.Span.GetPinnableReference())
                 {
                     var pcmData = new Span<byte>(decodeButterPtr, numElements * sizeof(short));
 
