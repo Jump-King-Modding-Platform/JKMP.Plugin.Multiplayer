@@ -1,17 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using EntityComponent;
 using HarmonyLib;
+using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Native;
+using JKMP.Plugin.Multiplayer.Native.Audio;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Input;
+using Serilog;
 using Steamworks;
+using OpusContext = JKMP.Plugin.Multiplayer.Native.Audio.OpusContext;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
 {
@@ -36,9 +42,16 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
                 isSpeaking = value;
 
-                if (IsLocalPlayer)
+                if (IsLocalPlayer && captureContext != null)
                 {
-                    SteamUser.VoiceRecord = value;
+                    if (value)
+                    {
+                        captureContext.StartCapture(OnVoiceData, OnVoiceError);
+                    }
+                    else
+                    {
+                        captureContext.StopCapture();
+                    }
                 }
             }
         }
@@ -50,15 +63,21 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         private Transform? transform;
         private BodyComp? body;
-        private MemoryStream? transmitStream;
+        
         private DynamicSoundEffectInstance? sound;
+        private AudioCaptureContext? captureContext;
+        private readonly OpusContext opusContext;
+        private readonly Memory<short> decodeBuffer = new short[4096];
+        private readonly Memory<byte> encodeBuffer = new byte[1024]; // This needs a significantly smaller buffer size compared to decodeBuffer.
+        private readonly Queue<byte[]> pendingOutgoingVoiceData = new();
+        private float timeSinceTransmittedVoice;
+        private const double TransmissionInterval = 0.05f; // Transmit voice every 50ms
         
         // Used by Apply3D internally to get information about the sound.
         // There's a monogame crash where Apply3D throws NRE when called on a DynamicSoundEffectInstance.
         // This is a workaround.
         private SoundEffect? dummySoundEffect;
         
-        private byte[]? transmitBuffer;
         private bool isSpeaking;
         private float timeSinceTalked = 0.25f;
 
@@ -67,9 +86,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private AudioEmitter? AudioEmitter => audioEmitterComponent?.AudioEmitter;
         private AudioEmitterComponent? audioEmitterComponent;
 
+        private static readonly ILogger Logger = LogManager.CreateLogger<VoiceManager>();
+
         public VoiceManager()
         {
             soundManager = EntityManager.instance.Find<GameEntity>()?.Sound ?? throw new InvalidOperationException("GameEntity or SoundManager not found");
+            opusContext = new(48000);
         }
 
         protected override void Init()
@@ -80,14 +102,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (IsLocalPlayer)
             {
-                transmitBuffer = new byte[(int)SteamUser.OptimalSampleRate * 5];
-                transmitStream = new MemoryStream(transmitBuffer, true);
+                captureContext = new AudioCaptureContext();
+                captureContext.SetActiveDeviceToDefault();
+                var info = captureContext.GetActiveDeviceInfo();
+
+                Logger.Information("Capture device: {@Device}", info);
             }
             else
             {
                 audioEmitterComponent = GetComponent<AudioEmitterComponent>() ?? throw new InvalidOperationException("AudioEmitterComponent not found");
                 
-                sound = new DynamicSoundEffectInstance((int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
+                sound = new DynamicSoundEffectInstance(48000, AudioChannels.Mono);
                 
                 dummySoundEffect = new SoundEffect(new byte[] { 0, 0 }, (int)SteamUser.OptimalSampleRate, AudioChannels.Mono);
                 AccessTools.Field(typeof(DynamicSoundEffectInstance), "_effect").SetValue(sound, dummySoundEffect);
@@ -99,6 +124,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             IsSpeaking = false;
             sound?.Dispose();
             dummySoundEffect?.Dispose();
+            captureContext?.Dispose();
+            opusContext.Dispose();
         }
 
         protected override void Update(float delta)
@@ -108,7 +135,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (IsLocalPlayer)
             {
-                TransmitVoice();
+                TransmitVoice(delta);
             }
 
             if (!IsLocalPlayer)
@@ -129,24 +156,51 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             }
         }
 
-        private void TransmitVoice()
+        private void OnVoiceData(ReadOnlySpan<short> data)
+        {
+            Logger.Verbose("Voice data length: {Length}", data.Length);
+            
+            timeSinceTalked = 0;
+            
+            lock (pendingOutgoingVoiceData)
+            {
+                int numBytes = opusContext.Compress(data, encodeBuffer.Span);
+
+                if (numBytes <= 0)
+                    return;
+
+                Span<byte> compressedData = encodeBuffer.Span.Slice(0, numBytes);
+                pendingOutgoingVoiceData.Enqueue(compressedData.ToArray());
+            }
+        }
+
+        private void OnVoiceError(CaptureError captureError)
+        {
+            Logger.Warning("Voice capture error: {captureError}", captureError);
+        }
+
+        private void TransmitVoice(float delta)
         {
             if (!IsLocalPlayer)
                 throw new InvalidOperationException("Cannot transmit voice on a non-local player.");
 
-            if (SteamUser.HasVoiceData)
-            {
-                timeSinceTalked = 0;
-                transmitStream!.Seek(0, SeekOrigin.Begin);
-                int bytesWritten = SteamUser.ReadVoiceData(transmitStream);
+            timeSinceTransmittedVoice += delta;
 
-                if (bytesWritten > 0)
+            if (timeSinceTransmittedVoice >= TransmissionInterval)
+            {
+                timeSinceTransmittedVoice = 0;
+
+                lock (pendingOutgoingVoiceData)
                 {
-                    Span<byte> bytes = new Span<byte>(transmitBuffer, 0, bytesWritten);
-                    P2PManager.Instance?.Broadcast(new VoiceTransmission
+                    if (pendingOutgoingVoiceData.Count > 0)
                     {
-                        Data = bytes.ToArray()
-                    });
+                        P2PManager.Instance?.Broadcast(new VoiceTransmission
+                        {
+                            Data = pendingOutgoingVoiceData
+                        });
+
+                        pendingOutgoingVoiceData.Clear();
+                    }
                 }
             }
         }
@@ -158,16 +212,25 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (data.Length == 0)
                 return;
-            
-            // Verify that the buffer length matches the format (mono) alignment
-            if (data.Length % 2 != 0)
+
+            int numElements = opusContext.Decompress(data, decodeBuffer.Span);
+
+            if (numElements <= 0)
                 return;
 
-            sound!.SubmitBuffer(data.ToArray());
-
-            if (sound.State != SoundState.Playing)
+            unsafe
             {
-                sound.Play();
+                fixed (short* decodeButterPtr = &decodeBuffer.Span.GetPinnableReference())
+                {
+                    var pcmData = new Span<byte>(decodeButterPtr, numElements * sizeof(short));
+
+                    sound!.SubmitBuffer(pcmData.ToArray());
+
+                    if (sound.State != SoundState.Playing)
+                    {
+                        sound.Play();
+                    }
+                }
             }
 
             timeSinceTalked = 0;
