@@ -73,7 +73,6 @@ pub struct AudioContext {
     host: Host,
     active_device: Option<Device>,
     input_stream: Option<Stream>,
-    config: Option<SupportedStreamConfig>,
 }
 
 callback!(GetOutputDevicesCallback(
@@ -91,7 +90,6 @@ impl AudioContext {
             host: cpal::default_host(),
             active_device: None,
             input_stream: None,
-            config: None,
         })
     }
 
@@ -205,7 +203,7 @@ impl AudioContext {
         }
 
         let device = self.active_device.as_ref().unwrap();
-        let config = self.config.as_ref().unwrap().config();
+        let config = device.default_input_config().unwrap().config();
         let mut buffer = Vec::<i16>::new();
 
         let stream = device.build_input_stream(
@@ -296,12 +294,12 @@ impl AudioContext {
 
         let device_name = device.as_ref().map(|device| device.name().unwrap());
 
-        self.config = device
+        let config = device
             .as_ref()
             .map(|device| device.default_input_config().unwrap());
         self.active_device = device;
 
-        println!("Active device set to {:?}, {:?}", device_name, self.config);
+        println!("Active device set to {:?}, {:?}", device_name, config);
         Ok(())
     }
 }
