@@ -158,8 +158,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         private void OnVoiceData(ReadOnlySpan<short> data)
         {
-            Logger.Verbose("Voice data length: {Length}", data.Length);
-            
             timeSinceTalked = 0;
             
             lock (pendingOutgoingVoiceData)
