@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Mime;
 using System.Text;
 using NativeAudioContext = JKMP.Plugin.Multiplayer.Native.AudioContext;
 
@@ -108,7 +109,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
 
         /// <summary>
         /// Starts capturing audio data. The data in the callback is always 48kHz mono 16bit PCM regardless
-        /// of the number of channels on the input device.
+        /// of the number of channels or sample rate on the input device.
         /// </summary>
         public bool StartCapture(OnDataDelegate onData, Action<CaptureError> onError)
         {
@@ -123,6 +124,17 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             catch (InteropException<MyFFIError> err)
             {
                 return false;
+            }
+        }
+
+        public void StopCapture()
+        {
+            try
+            {
+                context.StopCapture();
+            }
+            catch (InteropException<MyFFIError>)
+            {
             }
         }
 
