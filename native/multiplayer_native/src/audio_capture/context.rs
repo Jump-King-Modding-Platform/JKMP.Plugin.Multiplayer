@@ -206,6 +206,7 @@ impl AudioContext {
 
         let device = self.active_device.as_ref().unwrap();
         let config = self.config.as_ref().unwrap().config();
+        let mut buffer = Vec::<i16>::new();
 
         let stream = device.build_input_stream(
             &config,
@@ -249,7 +250,12 @@ impl AudioContext {
                         .collect::<Vec<i16>>();
                 }
 
-                on_data.call(FFISlice::from_slice(&mono_data[..]));
+                buffer.append(&mut mono_data);
+
+                while buffer.len() >= 480 {
+                    let chunk: Vec<i16> = buffer.drain(0..480).collect();
+                    on_data.call(FFISlice::from_slice(&chunk[..]));
+                }
             },
             move |err: StreamError| {
                 on_error.call(CaptureError::from(err));
