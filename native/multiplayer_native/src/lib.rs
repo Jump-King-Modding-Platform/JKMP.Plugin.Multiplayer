@@ -1,7 +1,7 @@
 extern crate core;
 
-use audio_capture::compression::OpusContext;
-use audio_capture::context::{AudioContext, DeviceInformation};
+use audio_capture::capture_context::AudioContext;
+use audio_capture::opus_context::OpusContext;
 use interoptopus::{ffi_type, patterns::result::FFIError, Error};
 
 pub mod audio_capture;
@@ -68,10 +68,4 @@ impl From<Error> for MyFFIError {
     }
 }
 
-interoptopus::inventory!(
-    inventory,
-    [],
-    [],
-    [DeviceInformation],
-    [AudioContext, OpusContext]
-);
+interoptopus::inventory!(inventory, [], [], [], [AudioContext, OpusContext]);

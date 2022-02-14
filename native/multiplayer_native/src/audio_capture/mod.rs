@@ -1,2 +1,2 @@
-pub mod compression;
-pub mod context;
+pub mod capture_context;
+pub mod opus_context;
