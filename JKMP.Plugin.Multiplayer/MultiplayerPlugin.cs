@@ -44,6 +44,7 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
+        private VoiceConfig? voiceConfig;
 
         public MultiplayerPlugin()
         {
@@ -57,6 +58,9 @@ namespace JKMP.Plugin.Multiplayer
 
             var uiConfigMenu = Configs.CreateConfigMenu<UiConfig>("UI", "UI");
             uiConfig = uiConfigMenu.Values;
+
+            var voiceConfigMenu = Configs.CreateConfigMenu<VoiceConfig>("Voice", "Voice");
+            voiceConfig = voiceConfigMenu.Values;
         }
 
         public override void Initialize()
