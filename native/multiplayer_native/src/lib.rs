@@ -2,7 +2,9 @@ extern crate core;
 
 use audio_capture::capture_context::AudioContext;
 use audio_capture::opus_context::OpusContext;
-use interoptopus::{ffi_type, patterns::result::FFIError, Error};
+use interoptopus::{
+    ffi_type, pattern, patterns::result::FFIError, Error, Inventory, InventoryBuilder,
+};
 
 pub mod audio_capture;
 
@@ -68,4 +70,9 @@ impl From<Error> for MyFFIError {
     }
 }
 
-interoptopus::inventory!(inventory, [], [], [], [AudioContext, OpusContext]);
+pub fn ffi_inventory() -> Inventory {
+    InventoryBuilder::new()
+        .register(pattern!(AudioContext))
+        .register(pattern!(OpusContext))
+        .inventory()
+}

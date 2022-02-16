@@ -1,9 +1,9 @@
 use interoptopus::util::NamespaceMappings;
 use interoptopus::{Error, Interop};
-use interoptopus_backend_csharp::{CSharpVisibility, Config, Generator, Unsafe};
+use interoptopus_backend_csharp::{overloads, CSharpVisibility, Config, Generator, Unsafe};
 
 fn main() -> Result<(), Error> {
-    let library = multiplayer_native::inventory();
+    let inventory = multiplayer_native::ffi_inventory();
 
     Generator::new(
         Config {
@@ -15,8 +15,9 @@ fn main() -> Result<(), Error> {
             visibility_types: CSharpVisibility::ForcePublic,
             ..Config::default()
         },
-        library,
+        inventory,
     )
+    .add_overload_writer(overloads::DotNet::new())
     .write_file("bindings/Bindings.cs")?;
 
     Ok(())

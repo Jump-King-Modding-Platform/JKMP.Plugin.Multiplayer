@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-multiplayer_native = { path = "../" }
-interoptopus = "0.13.15"
-interoptopus_backend_csharp = "0.13.14"
+multiplayer_native = { path = ".." }
+interoptopus = "0.14.0"
+interoptopus_backend_csharp = "0.14.0"

@@ -134,7 +134,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
 
         private void OnData(Slicei16 slice)
         {
-            onData?.Invoke(slice.AsReadOnlySpan());
+            onData?.Invoke(slice.ReadOnlySpan);
         }
 
         private void OnError(CaptureError error)
