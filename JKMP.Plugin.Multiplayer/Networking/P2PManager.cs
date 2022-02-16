@@ -191,6 +191,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
             
             foreach (var player in ConnectedPlayers)
             {
+                // Check if the player's entity is still alive.
+                // It's false when the player is quitting to menu/desktop and there are remote players connected
+                // due to the fact that the GameEntity calls P2PManager.Dispose and also the player's entity is destroyed by EntityManager.
                 if (player.Value.EntityIsAlive)
                     player.Value.Destroy();
             }
