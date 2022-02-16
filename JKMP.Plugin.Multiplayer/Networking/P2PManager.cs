@@ -191,7 +191,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
             
             foreach (var player in ConnectedPlayers)
             {
-                player.Value.Destroy();
+                if (player.Value.EntityIsAlive)
+                    player.Value.Destroy();
             }
             
             ConnectedPlayers.Clear();

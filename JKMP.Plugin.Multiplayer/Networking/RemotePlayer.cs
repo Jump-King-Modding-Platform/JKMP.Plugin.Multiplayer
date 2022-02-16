@@ -16,6 +16,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public PlayerNetworkState State { get; private set; } = PlayerNetworkState.Handshaking;
 
         public VoiceManager? VoiceManager { get; private set; }
+        
+        public bool EntityIsAlive => fakePlayer?.IsAlive ?? false;
 
         private FakePlayer? fakePlayer;
         private RemotePlayerInterpolator? interpolator;
