@@ -32,11 +32,19 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         public void Destroy()
         {
-            fakePlayer?.Destroy();
-            fakePlayer = null;
+            // Check if the entity is still alive.
+            // It's false when the player is quitting to menu/desktop and there are remote players connected
+            // due to the fact that the GameEntity calls P2PManager.Dispose (which destroys all RemotePlayers)
+            // and also the player's entity is destroyed by EntityManager.
+            if (fakePlayer?.IsAlive == true)
+            {
+                fakePlayer?.Destroy();
+                fakePlayer = null;
+            }
+
             P2PManager.Instance!.Events.IncomingChatMessage -= OnIncomingChatMessage;
         }
-
+        
         /// <summary>
         /// Shows the given message above the player's head.
         /// </summary>
