@@ -78,7 +78,7 @@ callback!(GetOutputDevicesCallback(
 ));
 callback!(OnCapturedDataCallback(data: FFISlice<i16>));
 callback!(OnCaptureErrorCallback(error: CaptureError));
-callback!(GetActiveDeviceCallback(device: Option<&DeviceInformation>));
+callback!(GetDeviceCallback(device: Option<&DeviceInformation>));
 
 #[ffi_service(error = "MyFFIError", prefix = "audio_context_")]
 impl AudioContext {
@@ -91,7 +91,7 @@ impl AudioContext {
         })
     }
 
-    pub fn get_output_devices(&self, callback: GetOutputDevicesCallback) -> Result<(), MyFFIError> {
+    pub fn get_input_devices(&self, callback: GetOutputDevicesCallback) -> Result<(), MyFFIError> {
         let mut result = Vec::new();
 
         let devices = self.host.input_devices();
@@ -167,9 +167,30 @@ impl AudioContext {
         self.set_active_device_internal(device)
     }
 
-    pub fn get_active_device(&self, callback: GetActiveDeviceCallback) -> Result<(), MyFFIError> {
+    pub fn get_active_device(&self, callback: GetDeviceCallback) -> Result<(), MyFFIError> {
         let name: String;
         let device_info = match self.active_device.as_ref() {
+            Some(device) => {
+                name = device.name().unwrap();
+                let config = device.default_input_config().unwrap();
+                Some(DeviceInformation::new(
+                    name.as_bytes(),
+                    config.config().into(),
+                ))
+            }
+            None => None,
+        };
+
+        callback.call(device_info.as_ref());
+
+        Ok(())
+    }
+
+    pub fn get_default_device(&self, callback: GetDeviceCallback) -> Result<(), MyFFIError> {
+        let device = self.host.default_input_device();
+
+        let name: String;
+        let device_info = match device {
             Some(device) => {
                 name = device.name().unwrap();
                 let config = device.default_input_config().unwrap();

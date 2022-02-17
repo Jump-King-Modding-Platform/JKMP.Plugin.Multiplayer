@@ -24,11 +24,11 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             internalOnError = OnError;
         }
 
-        public ICollection<Audio.DeviceInformation> GetOutputDevices()
+        public ICollection<Audio.DeviceInformation> GetInputDevices()
         {
             List<Audio.DeviceInformation> result = new List<Audio.DeviceInformation>();
             
-            context.GetOutputDevices(slice =>
+            context.GetInputDevices(slice =>
             {
                 foreach (Native.DeviceInformation deviceInfo in slice)
                 {
@@ -78,16 +78,34 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             }
         }
 
-        public Audio.DeviceInformation? GetActiveDeviceInfo()
+        public DeviceInformation? GetActiveDeviceInfo()
         {
-            Audio.DeviceInformation? result = null;
-
             try
             {
+                DeviceInformation? result = null;
                 context.GetActiveDevice((ref Native.DeviceInformation info) =>
                 {
                     string name = Encoding.UTF8.GetString(info.name_utf8.Copied);
                     result = new Audio.DeviceInformation(name, info.default_config);
+                });
+
+                return result;
+            }
+            catch (InteropException<MyFFIError>)
+            {
+                return null;
+            }
+        }
+
+        public DeviceInformation? GetDefaultInputDevice()
+        {
+            try
+            {
+                DeviceInformation? result = null;
+                context.GetDefaultDevice((ref Native.DeviceInformation info) =>
+                {
+                    string name = Encoding.UTF8.GetString(info.name_utf8.Copied);
+                    result = new DeviceInformation(name, info.default_config);
                 });
 
                 return result;
