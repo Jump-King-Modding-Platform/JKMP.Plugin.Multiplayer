@@ -130,6 +130,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
             {
                 captureContext = new AudioCaptureContext();
+                captureContext.SetVolume(Volume);
                 VolumeChanged += OnVolumeChanged;
             }
             else
