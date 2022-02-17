@@ -9,6 +9,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
 {
     public class VoicePlayback : IDisposable
     {
+        public bool IsCapturing => captureContext.IsCapturing;
+        
         private readonly AudioCaptureContext captureContext;
         private readonly OpusContext opusContext;
         private readonly DynamicSoundEffectInstance sound;
@@ -21,6 +23,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
             captureContext = new ();
             opusContext = new(48000);
             sound = new(48000, AudioChannels.Mono);
+
+            VoiceManager.VolumeChanged += OnVolumeChanged;
         }
 
         public void Dispose()
@@ -28,6 +32,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
             captureContext.Dispose();
             opusContext.Dispose();
             sound.Dispose();
+            VoiceManager.VolumeChanged -= OnVolumeChanged;
+        }
+
+        private void OnVolumeChanged(double volume)
+        {
+            captureContext.SetVolume(volume);
         }
 
         public bool StartPlayback()

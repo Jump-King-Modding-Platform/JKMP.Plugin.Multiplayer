@@ -32,7 +32,22 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         /// <summary>
         /// Gets or sets the volume. The effective value is clamped between 0 and 2.5, however the value is not clamped when set.
         /// </summary>
-        public static double Volume { get; set; } = 1.0;
+        public static double Volume
+        {
+            get => volume;
+            set
+            {
+                if (value.Equals(volume))
+                    return;
+
+                volume = value;
+                VolumeChanged?.Invoke(value);
+            }
+        }
+        
+        private static double volume = 1.0;
+
+        public static Action<double>? VolumeChanged { get; set; }
 
         /// <summary>
         /// Gets whether this voice manager is managing the local player.
@@ -115,6 +130,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
             {
                 captureContext = new AudioCaptureContext();
+                VolumeChanged += OnVolumeChanged;
             }
             else
             {
@@ -134,6 +150,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             dummySoundEffect?.Dispose();
             captureContext?.Dispose();
             opusContext.Dispose();
+
+            if (IsLocalPlayer)
+            {
+                VolumeChanged -= OnVolumeChanged;
+            }
+        }
+        
+        private void OnVolumeChanged(double volume)
+        {
+            if (IsLocalPlayer)
+                captureContext?.SetVolume(volume);
         }
 
         protected override void Update(float delta)

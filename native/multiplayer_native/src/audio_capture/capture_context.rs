@@ -1,4 +1,5 @@
 use crate::MyFFIError;
+use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BuildStreamError, Device, Host, PlayStreamError, Stream, StreamConfig, StreamError};
@@ -72,7 +73,7 @@ pub struct AudioContext {
     host: Host,
     active_device: Option<Device>,
     input_stream: Option<Stream>,
-    volume: f64,
+    volume: Arc<Mutex<f64>>,
 }
 
 callback!(GetOutputDevicesCallback(
@@ -90,7 +91,7 @@ impl AudioContext {
             host: cpal::default_host(),
             active_device: None,
             input_stream: None,
-            volume: 0.0,
+            volume: Arc::new(Mutex::new(1.0)),
         })
     }
 
@@ -224,7 +225,7 @@ impl AudioContext {
         let device = self.active_device.as_ref().unwrap();
         let config = device.default_input_config().unwrap().config();
         let mut buffer = Vec::<i16>::new();
-        let volume = self.volume;
+        let volume_mtx = self.volume.clone();
 
         let stream = device.build_input_stream(
             &config,
@@ -242,6 +243,8 @@ impl AudioContext {
                     8 => convert_channels_to_mono_const::<8>(data),
                     _ => convert_channels_to_mono(data, config.channels as usize),
                 };
+
+                let volume = *volume_mtx.lock().unwrap();
 
                 // Adjust volume
                 if volume != 1.0 {
@@ -345,12 +348,16 @@ impl AudioContext {
     /// Sets the volume of the input device.
     /// Input value is clamped between 0 and 2.5.
     /// A value of 0 would be silence, a value of 1 would be the default volume, and a value of 2.5 would be 250% volume.
-    /// Note that changing volume while capturing does not go into effect until you stop and start capturing again.
     pub fn set_volume(&mut self, mut volume: f64) -> Result<(), MyFFIError> {
-        volume = volume.clamp(-6.014, 6.014);
-        self.volume = volume;
+        volume = volume.clamp(0.0, 2.5);
+        *self.volume.lock().unwrap() = volume;
 
         Ok(())
+    }
+
+    #[ffi_service_method(on_panic = "return_default")]
+    pub fn get_volume(&self) -> f64 {
+        *self.volume.lock().unwrap()
     }
 }
 
