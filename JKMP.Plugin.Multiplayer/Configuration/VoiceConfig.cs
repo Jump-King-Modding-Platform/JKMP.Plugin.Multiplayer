@@ -7,6 +7,7 @@ namespace JKMP.Plugin.Multiplayer.Configuration
     public class VoiceConfig
     {
         [AudioInputSelectField(Name = "Microphone")]
+        [JsonIgnore]
         public DeviceInformation? SelectedDevice { get; set; }
         
         [AudioInputTestField(Name = "Test microphone")]
