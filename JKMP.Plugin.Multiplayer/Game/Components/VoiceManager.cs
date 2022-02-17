@@ -24,6 +24,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
     public class VoiceManager : Component
     {
         /// <summary>
+        /// Gets or sets the device by name that is used for voice input.
+        /// If set to null, the default device will be used.
+        /// </summary>
+        public static string? SelectedDeviceName { get; set; }
+
+        /// <summary>
         /// Gets whether this voice manager is managing the local player.
         /// </summary>
         public bool IsLocalPlayer { get; private set; }
@@ -46,7 +52,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 {
                     if (value)
                     {
-                        captureContext.StartCapture(OnVoiceData, OnVoiceError);
+                        if (UpdateSelectedInputDevice())
+                            captureContext.StartCapture(OnVoiceData, OnVoiceError);
                     }
                     else
                     {
@@ -103,10 +110,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
             {
                 captureContext = new AudioCaptureContext();
-                captureContext.SetActiveDeviceToDefault();
-                var info = captureContext.GetActiveDeviceInfo();
-
-                Logger.Information("Capture device: {@Device}", info);
             }
             else
             {
@@ -201,6 +204,22 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                     }
                 }
             }
+        }
+
+        private bool UpdateSelectedInputDevice()
+        {
+            if (captureContext == null)
+                return false;
+
+            bool hasDevice = SelectedDeviceName == null ? captureContext.SetActiveDeviceToDefault() : captureContext.SetActiveDevice(SelectedDeviceName);
+
+            if (hasDevice)
+            {
+                return true;
+            }
+
+            Logger.Warning("Selected capture device {deviceName} not found (null means default).", SelectedDeviceName);
+            return false;
         }
 
         public void ReceiveVoice(Span<byte> data)
