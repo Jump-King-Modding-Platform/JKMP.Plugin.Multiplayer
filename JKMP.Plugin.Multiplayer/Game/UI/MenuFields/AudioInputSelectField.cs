@@ -7,6 +7,7 @@ using BehaviorTree;
 using HarmonyLib;
 using JKMP.Core.Configuration.Attributes;
 using JKMP.Core.Configuration.Attributes.PropertyCreators;
+using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Native.Audio;
 using JumpKing;
 using JumpKing.Controller;
@@ -38,14 +39,13 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         /// </summary>
         public DeviceInformation? SelectedDevice => devices.Count > 0 ? devices[selectedDeviceIndex] : null;
 
-        public Action<DeviceInformation>? OnDeviceSelected { get; set; }
+        public Action<DeviceInformation?> OnDeviceSelected { get; set; }
 
         private readonly SpriteFont nameFont;
         private readonly SpriteFont valueFont;
         
         private readonly AudioCaptureContext captureContext;
         private readonly List<DeviceInformation> devices;
-        private readonly DeviceInformation? defaultDevice;
         private int selectedDeviceIndex;
 
         private Vector2 nameSize;
@@ -90,13 +90,17 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
             nameFont = JKContentManager.Font.MenuFont;
             valueFont = JKContentManager.Font.MenuFontSmall;
             Name = name;
-            this.name = name; // Shut up the compiler about non nullable fields being null
+            this.name = name; // Stops the compiler from warning about non nullable field being null
             
             captureContext = new();
 
-            defaultDevice = captureContext.GetDefaultInputDevice();
+            var defaultDevice = captureContext.GetDefaultInputDevice();
             devices = captureContext.GetInputDevices().ToList();
-            selectedDeviceIndex = 0;
+
+            if (defaultDevice != null)
+                devices.Insert(0, new DeviceInformation("Default", defaultDevice.Config));
+            
+            selectedDeviceIndex = VoiceManager.SelectedDeviceName == null ? 0 : devices.FindIndex(d => d.Name == VoiceManager.SelectedDeviceName);
             
             valueSize = valueFont.MeasureString(GetDrawText(selected: true));
         }
@@ -132,7 +136,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
                 }
 
                 valueSize = valueFont.MeasureString(GetDrawText(selected: true));
-                OnDeviceSelected?.Invoke(SelectedDevice!);
+                OnDeviceSelected?.Invoke(selectedDeviceIndex == 0 ? null : SelectedDevice);
 
                 return BTresult.Success;
             }
@@ -163,14 +167,17 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
 
     internal class AudioInputSelectFieldCreator : ConfigPropertyCreator<AudioInputSelectFieldAttribute>
     {
-        public override ICollection<Type> SupportedTypes => new[] { typeof(DeviceInformation) };
+        public override ICollection<Type> SupportedTypes => new[] { typeof(DeviceInformation), typeof(string) };
         
         public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, AudioInputSelectFieldAttribute attribute, List<IDrawable> drawables)
         {
             var field = new AudioInputSelectField(fieldName);
 
-            field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val);
-            
+            if (propertyInfo.PropertyType == typeof(DeviceInformation))
+                field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val);
+            else
+                field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val?.Name ?? "");
+
             return field;
         }
     }
