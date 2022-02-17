@@ -30,6 +30,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         public static string? SelectedDeviceName { get; set; }
 
         /// <summary>
+        /// Gets or sets the volume. The effective value is clamped between 0 and 2.5, however the value is not clamped when set.
+        /// </summary>
+        public static double Volume { get; set; } = 1.0;
+
+        /// <summary>
         /// Gets whether this voice manager is managing the local player.
         /// </summary>
         public bool IsLocalPlayer { get; private set; }
@@ -217,6 +222,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             {
                 return true;
             }
+
+            captureContext.SetVolume(Volume);
 
             Logger.Warning("Selected capture device {deviceName} not found (null means default).", SelectedDeviceName);
             return false;

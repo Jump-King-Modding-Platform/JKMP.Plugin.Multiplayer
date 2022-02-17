@@ -40,6 +40,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
             if (!hasDevice)
                 return false;
 
+            captureContext.SetVolume(VoiceManager.Volume);
             return captureContext.StartCapture(OnVoiceData, OnVoiceError);
         }
 

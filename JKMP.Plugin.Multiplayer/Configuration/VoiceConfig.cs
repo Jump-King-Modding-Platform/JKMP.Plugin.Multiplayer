@@ -1,3 +1,4 @@
+using JKMP.Core.Configuration.Attributes;
 using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Game.UI.MenuFields;
 using JKMP.Plugin.Multiplayer.Native.Audio;
@@ -7,8 +8,6 @@ namespace JKMP.Plugin.Multiplayer.Configuration
 {
     public class VoiceConfig
     {
-        private string? selectedDeviceName;
-
         [AudioInputSelectField(Name = "Microphone")]
         public string? SelectedDeviceName
         {
@@ -20,8 +19,22 @@ namespace JKMP.Plugin.Multiplayer.Configuration
             }
         }
 
+        [SliderField(Name = "Volume", MinValue = 0.5f, MaxValue = 2.5f, StepSize = 0.1f)]
+        public float Volume
+        {
+            get => volume;
+            set
+            {
+                volume = value;
+                VoiceManager.Volume = value;
+            }
+        }
+
         [AudioInputTestField(Name = "Test microphone")]
         [JsonIgnore]
         private bool UnusedInputTest { get; set; }
+        
+        private string? selectedDeviceName;
+        private float volume = 1f;
     }
 }

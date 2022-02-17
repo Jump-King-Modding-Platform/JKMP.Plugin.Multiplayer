@@ -72,6 +72,7 @@ pub struct AudioContext {
     host: Host,
     active_device: Option<Device>,
     input_stream: Option<Stream>,
+    volume: f64,
 }
 
 callback!(GetOutputDevicesCallback(
@@ -89,6 +90,7 @@ impl AudioContext {
             host: cpal::default_host(),
             active_device: None,
             input_stream: None,
+            volume: 0.0,
         })
     }
 
@@ -222,6 +224,7 @@ impl AudioContext {
         let device = self.active_device.as_ref().unwrap();
         let config = device.default_input_config().unwrap().config();
         let mut buffer = Vec::<i16>::new();
+        let volume = self.volume;
 
         let stream = device.build_input_stream(
             &config,
@@ -240,9 +243,20 @@ impl AudioContext {
                     _ => convert_channels_to_mono(data, config.channels as usize),
                 };
 
+                // Adjust volume
+                if volume != 1.0 {
+                    for sample in mono_data.iter_mut() {
+                        let mut new_sample = *sample as f64;
+
+                        new_sample *= volume;
+
+                        *sample = (new_sample.round() as i16).clamp(i16::MIN, i16::MAX);
+                    }
+                }
+
                 // Resample to 48kHz if necessary
                 if config.sample_rate.0 != 48000 {
-                    // Convert to f32
+                    // Convert to f32 and adjust gain
                     let mono_data_f32 = mono_data
                         .iter()
                         .map(|x| *x as f32 / i16::MAX as f32)
@@ -326,6 +340,17 @@ impl AudioContext {
     #[ffi_service_method(on_panic = "return_default")]
     pub fn is_capturing(&self) -> bool {
         self.input_stream.is_some()
+    }
+
+    /// Sets the volume of the input device.
+    /// Input value is clamped between 0 and 2.5.
+    /// A value of 0 would be silence, a value of 1 would be the default volume, and a value of 2.5 would be 250% volume.
+    /// Note that changing volume while capturing does not go into effect until you stop and start capturing again.
+    pub fn set_volume(&mut self, mut volume: f64) -> Result<(), MyFFIError> {
+        volume = volume.clamp(-6.014, 6.014);
+        self.volume = volume;
+
+        Ok(())
     }
 }
 
