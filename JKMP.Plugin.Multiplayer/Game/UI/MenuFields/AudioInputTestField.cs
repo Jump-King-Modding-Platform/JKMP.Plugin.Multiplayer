@@ -51,36 +51,36 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         {
             var padState = MenuController.instance.GetPadState();
 
-            if (padState.confirm || padState.cancel || padState.pause)
+            if (padState.confirm)
             {
                 MenuController.instance.ConsumePadPresses();
 
-                if (padState.confirm && last_result != BTresult.Running)
+                if (padState.confirm)
                 {
-                    bool success = playback.StartPlayback();
-                    LogManager.TempLogger.Debug("Start playback of {deviceName} success: {success}", VoiceManager.SelectedDeviceName, success);
-                    
-                    return BTresult.Running;
-                }
+                    if (!playback.IsCapturing)
+                    {
+                        bool success = playback.StartPlayback();
+                        LogManager.TempLogger.Debug("Start playback of {deviceName} success: {success}", VoiceManager.SelectedDeviceName, success);
 
-                if (last_result == BTresult.Running)
-                {
-                    playback.StopPlayback();
-                    LogManager.TempLogger.Debug("Stop playback of {deviceName}", VoiceManager.SelectedDeviceName);
-                    
-                    return BTresult.Failure;
+                        if (success)
+                        {
+                            return BTresult.Success;
+                        }
+                    }
+                    else
+                    {
+                        playback.StopPlayback();
+                        return BTresult.Success;
+                    }
                 }
             }
-
-            if (last_result == BTresult.Running)
-                return BTresult.Running;
             
             return BTresult.Failure;
         }
 
         public void Draw(int x, int y, bool selected)
         {
-            TextHelper.DrawString(font, name, new Vector2(x, y), last_result == BTresult.Running ? Color.White : Color.LightGray, Vector2.Zero);
+            TextHelper.DrawString(font, name, new Vector2(x, y), playback.IsCapturing ? Color.White : Color.LightGray, Vector2.Zero);
         }
 
         public Point GetSize() => nameSize.ToPoint();
