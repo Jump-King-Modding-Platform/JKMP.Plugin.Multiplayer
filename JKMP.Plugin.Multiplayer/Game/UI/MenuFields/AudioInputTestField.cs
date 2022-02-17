@@ -5,6 +5,7 @@ using BehaviorTree;
 using JKMP.Core.Configuration.Attributes;
 using JKMP.Core.Configuration.Attributes.PropertyCreators;
 using JumpKing.PauseMenu;
+using JumpKing.PauseMenu.BT;
 using Microsoft.Xna.Framework;
 using IDrawable = JumpKing.Util.IDrawable;
 
@@ -28,6 +29,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         }
     }
 
+    [SettingsOptionCreator(typeof(AudioInputTestFieldCreator))]
     internal class AudioInputTestFieldAttribute : SettingsOptionAttribute
     {
     }
@@ -39,7 +41,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         
         public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, AudioInputTestFieldAttribute attribute, List<IDrawable> drawables)
         {
-            throw new NotImplementedException();
+            return new TextInfo("AudioInputTestField", Color.White);
         }
     }
 }
