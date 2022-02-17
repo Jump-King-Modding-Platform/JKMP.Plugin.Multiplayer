@@ -8,6 +8,11 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
 {
     public class AudioCaptureContext : IDisposable
     {
+        /// <summary>
+        /// Gets whether the capture context is currently capturing audio.
+        /// </summary>
+        public bool IsCapturing => context.IsCapturing();
+        
         private readonly NativeAudioContext context;
 
         private OnDataDelegate? onData;

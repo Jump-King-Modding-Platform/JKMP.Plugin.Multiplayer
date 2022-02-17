@@ -4,7 +4,8 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{BuildStreamError, Device, Host, PlayStreamError, Stream, StreamConfig, StreamError};
 
 use interoptopus::{
-    callback, ffi_service, ffi_service_ctor, ffi_type, patterns::slice::FFISlice, Error,
+    callback, ffi_service, ffi_service_ctor, ffi_service_method, ffi_type,
+    patterns::slice::FFISlice, Error,
 };
 use samplerate::ConverterType;
 
@@ -320,6 +321,11 @@ impl AudioContext {
 
         println!("Active device set to {:?}, {:?}", device_name, config);
         Ok(())
+    }
+
+    #[ffi_service_method(on_panic = "return_default")]
+    pub fn is_capturing(&self) -> bool {
+        self.input_stream.is_some()
     }
 }
 
