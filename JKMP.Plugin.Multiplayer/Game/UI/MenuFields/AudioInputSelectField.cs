@@ -39,7 +39,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         /// </summary>
         public DeviceInformation? SelectedDevice => devices.Count > 0 ? devices[selectedDeviceIndex] : null;
 
-        public Action<DeviceInformation?> OnDeviceSelected { get; set; }
+        public Action<DeviceInformation?>? OnDeviceSelected { get; set; }
 
         private readonly SpriteFont nameFont;
         private readonly SpriteFont valueFont;
@@ -174,7 +174,7 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
             var field = new AudioInputSelectField(fieldName);
 
             if (propertyInfo.PropertyType == typeof(DeviceInformation))
-                field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val);
+                field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val!);
             else
                 field.OnDeviceSelected += (val) => ValueChanged?.Invoke(val?.Name ?? "");
 
