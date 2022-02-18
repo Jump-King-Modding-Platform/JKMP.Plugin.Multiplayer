@@ -167,9 +167,9 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
         }
 
         /// <summary>
-        /// Sets the gain of the input device.
+        /// Sets the volume of the input device.
         /// Input value is clamped between 0 and 2.5.
-        /// A value of 0 would be silence, a value of 1 would be the default gain, and a value of 2.5 would be 250% volume.
+        /// A value of 0 would be silence, a value of 1 would be the default volume, and a value of 2.5 would be 250% volume.
         /// </summary>
         public void SetVolume(double gain)
         {
