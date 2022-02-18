@@ -11,6 +11,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
     public class VoicePlayback : IDisposable
     {
         public bool IsCapturing => captureContext.IsCapturing;
+        public float CapturedVolume { get; private set; }
         
         private readonly AudioCaptureContext captureContext;
         private readonly OpusContext opusContext;
@@ -57,6 +58,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
 
         private void OnVoiceData(ReadOnlySpan<short> data, float maxVolume)
         {
+            CapturedVolume = maxVolume;
+            
             var numBytes = opusContext.Compress(data, compressedBuffer.Span);
 
             if (numBytes <= 0)
@@ -93,6 +96,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
         {
             captureContext.StopCapture();
             sound.Stop();
+            CapturedVolume = 0;
         }
     }
 }

@@ -38,10 +38,23 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
         private Vector2 nameSize;
         
         private readonly VoicePlayback playback;
+        private readonly Sprite sliderLeft;
+        private readonly Sprite sliderRight;
+        private readonly Sprite sliderCursor;
+        private readonly Sprite sliderLine;
+
+        private float maxVolume;
+        private float timeSinceMaxVolumeRaised;
+        private bool lastPeaked;
 
         public AudioInputTestField(string name)
         {
             font = JKContentManager.Font.MenuFont;
+            sliderLeft = JKContentManager.GUI.SliderLeft;
+            sliderRight = JKContentManager.GUI.SliderRight;
+            sliderCursor = JKContentManager.GUI.SliderCursor;
+            sliderLine = JKContentManager.GUI.SliderLine;
+            
             Name = name;
             this.name = name; // Stops the compiler from warning about non nullable field being null
             playback = new();
@@ -80,10 +93,65 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
 
         public void Draw(int x, int y, bool selected)
         {
-            TextHelper.DrawString(font, name, new Vector2(x, y), playback.IsCapturing ? Color.White : Color.LightGray, Vector2.Zero);
+            UpdateVolumeSlider(1f / PlayerValues.FPS);
+
+            var color = lastPeaked ? Color.Red : Color.White;
+            
+            TextHelper.DrawString(font, name, new Vector2(x, y), playback.IsCapturing ? color : Color.LightGray, Vector2.Zero);
+            
+            // Draw volume indicator
+            float totalWidth = 133;
+            float volume = playback.CapturedVolume;
+            Vector2 drawPos = new Vector2(x, y + nameSize.Y + 3);
+            sliderLeft.Draw(drawPos);
+            sliderRight.Draw(drawPos + new Vector2(totalWidth - sliderRight.source.Width, 0));
+            
+            // Draw volume line
+            {
+                float maxWidth = (totalWidth - sliderLeft.source.Width - sliderRight.source.Width + 1);
+                
+                int x2 = (int)drawPos.X + sliderLeft.source.Width - 1;
+                int y2 = (int)drawPos.Y;
+                int width = (int)(maxWidth * volume);
+                int height = sliderLeft.source.Height;
+                Game1.spriteBatch.Draw(JKContentManager.Pixel.texture, new Rectangle(x2, y2, width, height), color);
+                
+                // Draw max volume line
+                width = 1;
+                x2 += (int)(maxWidth * maxVolume);
+
+                Game1.spriteBatch.Draw(JKContentManager.Pixel.texture, new Rectangle(x2, y2, width, height), lastPeaked ? Color.Red : Color.White);
+            }
         }
 
-        public Point GetSize() => nameSize.ToPoint();
+        private void UpdateVolumeSlider(float delta)
+        {
+            if (playback.CapturedVolume > maxVolume)
+            {
+                maxVolume = playback.CapturedVolume;
+                timeSinceMaxVolumeRaised = 0;
+                lastPeaked = maxVolume >= 1f;
+            }
+            else
+            {
+                timeSinceMaxVolumeRaised += delta;
+            }
+            
+            if (timeSinceMaxVolumeRaised > 0.8f)
+            {
+                maxVolume -= delta * 0.25f;
+                maxVolume = MathHelper.Clamp(maxVolume, playback.CapturedVolume, 1);
+            }
+
+            LogManager.TempLogger.Verbose("{maxVolume}", maxVolume);
+        }
+
+        public Point GetSize()
+        {
+            var size = nameSize.ToPoint();
+            size.Y += 3 + sliderLeft.source.Height;
+            return size;
+        }
     }
 
     [SettingsOptionCreator(typeof(AudioInputTestFieldCreator))]
