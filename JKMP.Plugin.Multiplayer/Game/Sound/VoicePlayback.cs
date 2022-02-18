@@ -1,4 +1,5 @@
 using System;
+using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Components;
 using JKMP.Plugin.Multiplayer.Native;
 using JKMP.Plugin.Multiplayer.Native.Audio;
@@ -54,7 +55,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
             return captureContext.StartCapture(OnVoiceData, OnVoiceError);
         }
 
-        private void OnVoiceData(ReadOnlySpan<short> data)
+        private void OnVoiceData(ReadOnlySpan<short> data, float maxVolume)
         {
             var numBytes = opusContext.Compress(data, compressedBuffer.Span);
 

@@ -122,7 +122,7 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
         }
 
         // Spans are not allowed to be used as type arguments, so instead of Func<Span<T>> we use a delegate
-        public delegate void OnDataDelegate(ReadOnlySpan<short> data);
+        public delegate void OnDataDelegate(ReadOnlySpan<short> data, float maxVolume);
 
         /// <summary>
         /// Starts capturing audio data. The data in the callback is always 48kHz mono 16bit PCM regardless
@@ -155,9 +155,9 @@ namespace JKMP.Plugin.Multiplayer.Native.Audio
             }
         }
 
-        private void OnData(Slicei16 slice)
+        private void OnData(Slicei16 slice, float maxVolume)
         {
-            onData?.Invoke(slice.ReadOnlySpan);
+            onData?.Invoke(slice.ReadOnlySpan, maxVolume);
         }
 
         private void OnError(CaptureError error)

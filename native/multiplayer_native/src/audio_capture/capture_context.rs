@@ -79,7 +79,7 @@ pub struct AudioContext {
 callback!(GetOutputDevicesCallback(
     devices: FFISlice<DeviceInformation>
 ));
-callback!(OnCapturedDataCallback(data: FFISlice<i16>));
+callback!(OnCapturedDataCallback(data: FFISlice<i16>, max_volume: f32));
 callback!(OnCaptureErrorCallback(error: CaptureError));
 callback!(GetDeviceCallback(device: Option<&DeviceInformation>));
 
@@ -245,15 +245,21 @@ impl AudioContext {
                 };
 
                 let volume = *volume_mtx.lock().unwrap();
+                let mut max_volume = 0;
 
-                // Adjust volume
-                if volume != 1.0 {
-                    for sample in mono_data.iter_mut() {
-                        let mut new_sample = *sample as f64;
+                // Adjust volume and find max volume
+                for sample in mono_data.iter_mut() {
+                    let new_sample = *sample as f64 * volume;
 
-                        new_sample *= volume;
+                    *sample = new_sample.round().clamp(i16::MIN as f64, i16::MAX as f64) as i16;
 
-                        *sample = (new_sample.round() as i16).clamp(i16::MIN, i16::MAX);
+                    let sample_abs = match sample.checked_abs() {
+                        Some(sample) => sample,
+                        None => i16::MAX,
+                    };
+
+                    if sample_abs > max_volume {
+                        max_volume = sample_abs;
                     }
                 }
 
@@ -286,7 +292,10 @@ impl AudioContext {
 
                 while buffer.len() >= 480 {
                     let chunk: Vec<i16> = buffer.drain(..480).collect();
-                    on_data.call(FFISlice::from_slice(&chunk[..]));
+                    on_data.call(
+                        FFISlice::from_slice(&chunk[..]),
+                        max_volume as f32 / i16::MAX as f32,
+                    );
                 }
             },
             move |err: StreamError| {

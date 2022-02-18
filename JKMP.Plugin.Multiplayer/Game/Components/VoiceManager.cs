@@ -205,7 +205,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             }
         }
 
-        private void OnVoiceData(ReadOnlySpan<short> data)
+        private void OnVoiceData(ReadOnlySpan<short> data, float maxVolume)
         {
             timeSinceTalked = 0;
             
