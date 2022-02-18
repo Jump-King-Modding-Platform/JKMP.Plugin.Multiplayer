@@ -8,7 +8,10 @@ use interoptopus::{
     callback, ffi_service, ffi_service_ctor, ffi_service_method, ffi_type,
     patterns::slice::FFISlice, Error,
 };
+
 use samplerate::ConverterType;
+
+use ringbuffer::{AllocRingBuffer, RingBuffer, RingBufferExt, RingBufferWrite};
 
 #[ffi_type]
 #[repr(C)]
@@ -226,6 +229,7 @@ impl AudioContext {
         let config = device.default_input_config().unwrap().config();
         let mut buffer = Vec::<i16>::new();
         let volume_mtx = self.volume.clone();
+        let mut vol_buffer = AllocRingBuffer::with_capacity(16); // Used to return the average volume from the past 16 'frames'.
 
         let stream = device.build_input_stream(
             &config,
@@ -263,6 +267,8 @@ impl AudioContext {
                     }
                 }
 
+                vol_buffer.push(max_volume);
+
                 // Resample to 48kHz if necessary
                 if config.sample_rate.0 != 48000 {
                     // Convert to f32 and adjust gain
@@ -294,7 +300,9 @@ impl AudioContext {
                     let chunk: Vec<i16> = buffer.drain(..480).collect();
                     on_data.call(
                         FFISlice::from_slice(&chunk[..]),
-                        max_volume as f32 / i16::MAX as f32,
+                        ((vol_buffer.iter().map(|v| *v as i32).sum::<i32>() as f32)
+                            / vol_buffer.len() as f32)
+                            / i16::MAX as f32,
                     );
                 }
             },
