@@ -44,8 +44,18 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 VolumeChanged?.Invoke(value);
             }
         }
-        
+
+        /// <summary>
+        /// Gets or sets the volume of other players. The value is clamped between 0 and 1.
+        /// </summary>
+        public static float PlayerVolume
+        {
+            get => playerVolume;
+            set => playerVolume = MathHelper.Clamp(value, 0, 1);
+        }
+
         private static double volume = 1.0;
+        private static float playerVolume = 1f;
 
         public static Action<double>? VolumeChanged { get; set; }
 
@@ -176,7 +186,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             if (!IsLocalPlayer)
             {
-                IsSpeaking = sound!.State == SoundState.Playing && timeSinceTalked < 0.25f;
+                if (timeSinceTalked >= 0.25f)
+                    sound!.Stop();
+
+                IsSpeaking = sound!.State == SoundState.Playing;
 
                 if (IsSpeaking)
                 {
@@ -280,6 +293,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
                     if (sound.State != SoundState.Playing)
                     {
+                        sound.Volume = PlayerVolume;
                         sound.Play();
                     }
                 }

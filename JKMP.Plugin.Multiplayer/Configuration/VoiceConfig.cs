@@ -19,7 +19,7 @@ namespace JKMP.Plugin.Multiplayer.Configuration
             }
         }
 
-        [SliderField(Name = "Volume", MinValue = 0.5f, MaxValue = 2.5f, StepSize = 0.1f)]
+        [SliderField(Name = "Input", Description = "The volume of your microphone", MinValue = 0.5f, MaxValue = 2.5f, StepSize = 0.1f)]
         public float Volume
         {
             get => volume;
@@ -30,11 +30,23 @@ namespace JKMP.Plugin.Multiplayer.Configuration
             }
         }
 
+        [SliderField(Name = "Output", Description = "The volume of other players", MinValue = 0, MaxValue = 1, StepSize = 0.1f)]
+        public float PlayerVolume
+        {
+            get => playerVolume;
+            set
+            {
+                playerVolume = volume;
+                VoiceManager.PlayerVolume = value;
+            }
+        }
+
         [AudioInputTestField(Name = "Test microphone")]
         [JsonIgnore]
         private bool UnusedInputTest { get; set; }
         
         private string? selectedDeviceName;
         private float volume = 1f;
+        private float playerVolume = 1f;
     }
 }
