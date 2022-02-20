@@ -13,25 +13,17 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
         
         public Task HandleMessage(VoiceTransmission message, Context context)
         {
-            if (message.Data!.Length == 0)
+            if (message.Data!.Count == 0)
                 return Task.CompletedTask;
-            
-            int numBytes;
-            
-            unsafe
-            {
-                fixed (byte* dataBytes = message.Data)
-                {
-                    fixed (byte* recvBytes = recvBuffer)
-                    {
-                        numBytes = SteamUser.DecompressVoice((IntPtr)dataBytes, message.Data!.Length, (IntPtr)recvBytes, recvBuffer.Length);
-                    }
-                }
-            }
 
             return context.P2PManager.ExecuteOnGameThread(() =>
             {
-                context.Player?.VoiceManager?.ReceiveVoice(new Span<byte>(recvBuffer, 0, numBytes));
+                foreach (byte[]? voicePacket in message.Data)
+                {
+                    context.Player?.VoiceManager?.ReceiveVoice(voicePacket.AsSpan());
+                }
+                
+                //context.Player?.VoiceManager?.ReceiveVoice(message.Data.AsSpan());
             });
         }
     }

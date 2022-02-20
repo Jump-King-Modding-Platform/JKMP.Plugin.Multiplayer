@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Matchmaking.Client", "Match
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources", "Resources\Resources.csproj", "{B5D21A62-D011-4DD4-BFC1-6345C9866278}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multiplayer.Native", "native\Multiplayer.Native\Multiplayer.Native.csproj", "{AF5C8492-5937-4098-B787-7C685AD0FA78}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -30,5 +32,9 @@ Global
 		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Debug|x86.Build.0 = Debug|Any CPU
 		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Release|x86.ActiveCfg = Release|Any CPU
 		{B5D21A62-D011-4DD4-BFC1-6345C9866278}.Release|x86.Build.0 = Release|Any CPU
+		{AF5C8492-5937-4098-B787-7C685AD0FA78}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AF5C8492-5937-4098-B787-7C685AD0FA78}.Debug|x86.Build.0 = Debug|Any CPU
+		{AF5C8492-5937-4098-B787-7C685AD0FA78}.Release|x86.ActiveCfg = Release|Any CPU
+		{AF5C8492-5937-4098-B787-7C685AD0FA78}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

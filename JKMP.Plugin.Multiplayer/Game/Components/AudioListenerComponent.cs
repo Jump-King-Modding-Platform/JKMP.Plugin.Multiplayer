@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
@@ -13,7 +14,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 {
     public class AudioListenerComponent : Component
     {
-        public AudioListener Listener { get; } = new();
+        public AudioListener Listener { get; }
 
         private Transform? transform;
         private BodyComp? bodyComp;
@@ -21,6 +22,15 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private Vector2 Position => transform?.Position ?? bodyComp!.position;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<AudioListenerComponent>();
+
+        public AudioListenerComponent()
+        {
+            Listener = new()
+            {
+                Forward = new Vector3(0, 0, -1),
+                Up = Vector3.Up
+            };
+        }
         
         protected override void Init()
         {
@@ -64,7 +74,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         protected override void LateUpdate(float delta)
         {
-            Listener.Position = SoundUtil.ScalePosition(Position);
+            Listener.Position = new Vector3(Position.X, Position.Y, -50);
+
+            if (bodyComp != null)
+                Listener.Velocity = new Vector3(bodyComp.velocity.X, bodyComp.velocity.Y, 0);
         }
     }
 }

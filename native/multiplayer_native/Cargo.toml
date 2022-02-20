@@ -1,0 +1,18 @@
+[package]
+name = "multiplayer_native"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+interoptopus = "0.14.0"
+cpal = "0.13.5"
+audiopus = "0.3.0-rc.0"
+anyhow = "1.0.53"
+samplerate = "0.2.4"
+ringbuffer = "0.8.2"

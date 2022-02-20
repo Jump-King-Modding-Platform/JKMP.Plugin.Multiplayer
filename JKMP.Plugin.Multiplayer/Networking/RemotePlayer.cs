@@ -16,6 +16,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
         public PlayerNetworkState State { get; private set; } = PlayerNetworkState.Handshaking;
 
         public VoiceManager? VoiceManager { get; private set; }
+        
+        public bool EntityIsAlive => fakePlayer?.IsAlive ?? false;
 
         private FakePlayer? fakePlayer;
         private RemotePlayerInterpolator? interpolator;
@@ -30,11 +32,19 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         public void Destroy()
         {
-            fakePlayer?.Destroy();
-            fakePlayer = null;
+            // Check if the entity is still alive.
+            // It's false when the player is quitting to menu/desktop and there are remote players connected
+            // due to the fact that the GameEntity calls P2PManager.Dispose (which destroys all RemotePlayers)
+            // and also the player's entity is destroyed by EntityManager.
+            if (fakePlayer?.IsAlive == true)
+            {
+                fakePlayer?.Destroy();
+                fakePlayer = null;
+            }
+
             P2PManager.Instance!.Events.IncomingChatMessage -= OnIncomingChatMessage;
         }
-
+        
         /// <summary>
         /// Shows the given message above the player's head.
         /// </summary>
@@ -46,12 +56,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
         internal void InitializeFromHandshakeResponse(HandshakeResponse response, Friend userInfo)
         {
             State = PlayerNetworkState.Connected;
-
-            interpolator = new();
+            
             fakePlayer = new();
-            fakePlayer.AddComponents(interpolator);
             fakePlayer.SetName(userInfo.Name);
             VoiceManager = fakePlayer.GetComponent<VoiceManager>();
+            interpolator = fakePlayer.GetComponent<RemotePlayerInterpolator>();
 
             if (userInfo.IsFriend)
             {

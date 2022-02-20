@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
@@ -15,6 +17,7 @@ using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Native.Audio;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
 using JKMP.Plugin.Multiplayer.Steam.Events;
@@ -22,6 +25,7 @@ using JumpKing;
 using JumpKing.Player;
 using Matchmaking.Client;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Serilog;
 using Steamworks;
 
@@ -40,6 +44,7 @@ namespace JKMP.Plugin.Multiplayer
         private TitleScreenEntity? titleScreenEntity;
         private MatchmakingConfig? matchmakingConfig;
         private UiConfig? uiConfig;
+        private VoiceConfig? voiceConfig;
 
         public MultiplayerPlugin()
         {
@@ -53,6 +58,9 @@ namespace JKMP.Plugin.Multiplayer
 
             var uiConfigMenu = Configs.CreateConfigMenu<UiConfig>("UI", "UI");
             uiConfig = uiConfigMenu.Values;
+
+            var voiceConfigMenu = Configs.CreateConfigMenu<VoiceConfig>("Voice", "Voice");
+            voiceConfig = voiceConfigMenu.Values;
         }
 
         public override void Initialize()
@@ -72,6 +80,10 @@ namespace JKMP.Plugin.Multiplayer
             {
                 UIManager.Initialize();
                 UIManager.SetScale(uiConfig!.Scale);
+
+                SoundEffect.DistanceScale = 75;
+                SoundEffect.DopplerScale = 10f;
+                SoundEffect.SpeedOfSound = PlayerValues.MAX_FALL;
             };
 
             GameEvents.RunStarted += args =>

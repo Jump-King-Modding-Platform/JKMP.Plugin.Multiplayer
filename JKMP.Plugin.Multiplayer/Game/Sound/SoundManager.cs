@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using JKMP.Core.Logging;
 using JumpKing.PlayerPreferences;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Serilog;
 
@@ -10,7 +9,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
 {
     internal class SoundManager
     {
-        internal AudioListener? GlobalListener { get; set; }
+        public const int MaxPlayingSounds = 64;
+
+        public SoundPrefs SoundPrefs => SoundUtil.SoundPrefs;
+        
+        public AudioListener? GlobalListener { get; set; }
+
+        public int NumPlayingSounds => playingSounds.Count;
+        public int AvailableSoundCount => Math.Max(0, NumPlayingSounds - MaxPlayingSounds);
 
         private readonly List<SoundEffectInstance> playingSounds = new();
 
@@ -27,10 +33,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
                 return;
             }
 
+            if (!SoundPrefs.sfx_on)
+                return;
+
             var instance = sound.CreateInstance();
             playingSounds.Add(instance);
 
-            instance.Apply2DPanAndVolume(GlobalListener, emitter, SoundUtil.SoundType.Sfx, volume);
+            instance.Apply3D(GlobalListener, emitter);
+            instance.Volume = volume * SoundPrefs.master;
             instance.Play();
         }
 
@@ -46,6 +56,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Sound
                     playingSounds.RemoveAt(i);
                 }
             }
+        }
+
+        public void StopOldestSound()
+        {
+            if (playingSounds.Count == 0)
+                return;
+            
+            var oldest = playingSounds[0];
+            oldest.Stop();
+            oldest.Dispose();
+            playingSounds.RemoveAt(0);
         }
     }
 }

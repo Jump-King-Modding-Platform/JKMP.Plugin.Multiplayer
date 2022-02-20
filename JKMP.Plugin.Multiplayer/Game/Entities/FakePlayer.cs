@@ -42,7 +42,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
                 MaxWidth = 200
             };
 
-            AddComponents(transform, nameDisplay, messageDisplay, voice);
+            AddComponents(transform, nameDisplay, messageDisplay, voice, new AudioEmitterComponent(), new RemotePlayerInterpolator());
         }
 
         public void SetPosition(Vector2 position)
