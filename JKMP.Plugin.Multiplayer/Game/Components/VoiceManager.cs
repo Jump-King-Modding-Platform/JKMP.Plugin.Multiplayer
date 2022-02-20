@@ -285,9 +285,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
             unsafe
             {
-                fixed (short* decodeButterPtr = &DecodeBuffer.Span.GetPinnableReference())
+                fixed (short* decodeBufferPtr = &DecodeBuffer.Span.GetPinnableReference())
                 {
-                    var pcmData = new Span<byte>(decodeButterPtr, numElements * sizeof(short));
+                    var pcmData = new Span<byte>(decodeBufferPtr, numElements * sizeof(short));
 
                     sound!.SubmitBuffer(pcmData.ToArray());
 
