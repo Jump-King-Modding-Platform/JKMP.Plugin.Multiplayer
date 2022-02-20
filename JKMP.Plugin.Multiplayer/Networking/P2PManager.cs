@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using JKMP.Core.Logging;
@@ -30,6 +31,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private readonly PeerManager peerManager;
         private readonly SocketManager p2pListener;
+        private readonly GameMessagesCodec codec;
         private readonly ConcurrentDictionary<NetIdentity, (Connection connection, Framed<GameMessagesCodec, GameMessage> messages)> playerConnections = new();
         private readonly ConcurrentDictionary<NetIdentity, Steamworks.ConnectionManager> connectionManagers = new();
         private readonly ConcurrentDictionary<NetIdentity, AuthTicket> authTickets = new();
@@ -40,6 +42,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             processor = new();
             Events = new();
             peerManager = new();
+            codec = new();
 
             peerManager.Connecting += OnPeerConnecting;
             peerManager.Connected += OnPeerConnected;
@@ -277,9 +280,14 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable)
         {
+            var memStream = new MemoryStream();
+            using var writer = new BinaryWriter(memStream);
+            codec.Encode(message, writer);
+            var bytes = memStream.ToArray();
+
             foreach (var (_, messages) in playerConnections.Values)
             {
-                messages.Send(message, sendType);
+                messages.Send(bytes, sendType);
             }
         }
     }
