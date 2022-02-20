@@ -142,8 +142,6 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
                 maxVolume -= delta * 0.25f;
                 maxVolume = MathHelper.Clamp(maxVolume, playback.CapturedVolume, 1);
             }
-
-            LogManager.TempLogger.Verbose("{maxVolume}", maxVolume);
         }
 
         public Point GetSize()
