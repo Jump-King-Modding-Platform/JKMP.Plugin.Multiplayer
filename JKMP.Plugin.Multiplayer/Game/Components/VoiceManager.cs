@@ -124,6 +124,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private AudioEmitterComponent? audioEmitterComponent;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<VoiceManager>();
+        private string? lastSelectedDeviceName;
 
         public VoiceManager()
         {
@@ -257,14 +258,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (captureContext == null)
                 return false;
 
+            if (lastSelectedDeviceName == SelectedDeviceName)
+                return true;
+
             bool hasDevice = SelectedDeviceName == null ? captureContext.SetActiveDeviceToDefault() : captureContext.SetActiveDevice(SelectedDeviceName);
 
             if (hasDevice)
             {
+                lastSelectedDeviceName = SelectedDeviceName;
+                captureContext.SetVolume(Volume);
                 return true;
             }
-
-            captureContext.SetVolume(Volume);
 
             Logger.Warning("Selected capture device {deviceName} not found (null means default).", SelectedDeviceName);
             return false;
