@@ -15,7 +15,7 @@ pub struct OpusContext {
 #[ffi_service(error = "MyFFIError", prefix = "opus_context_")]
 impl OpusContext {
     /// Creates a new OpusContext.
-    /// IF the sample rate is unsupported, InvalidParam is returned.
+    /// If the sample rate is unsupported, Unsupported is returned.
     #[ffi_service_ctor]
     pub fn new(sample_rate: u32) -> Result<Self, Error> {
         let sample_rate = convert_sample_rate(sample_rate);
