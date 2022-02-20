@@ -73,14 +73,15 @@ namespace JKMP.Plugin.Multiplayer.Networking
             if (playerConnections.TryRemove(info.Identity, out var tuple))
             {
                 tuple.messages.Dispose();
-                if (ConnectedPlayers.TryGetValue(info.Identity, out var player))
-                {
-                    player.Destroy();
-
-                    if (authTickets.TryRemove(info.Identity, out var authTicket))
-                        authTicket.Dispose();
-                }
             }
+
+            if (ConnectedPlayers.TryRemove(info.Identity, out var player))
+            {
+                player.Destroy();
+            }
+
+            if (authTickets.TryRemove(info.Identity, out var authTicket))
+                authTicket.Dispose();
             
             connectionManagers.TryRemove(info.Identity, out _);
         }
@@ -109,6 +110,12 @@ namespace JKMP.Plugin.Multiplayer.Networking
                             {
                                 Logger.Error("Failed to get auth ticket, aborting connection to {identity}", identity);
                                 Disconnect(identity);
+                                
+                                if (ConnectedPlayers.TryRemove(identity, out var player))
+                                {
+                                    player.Destroy();
+                                }
+                                
                                 return;
                             }
 
