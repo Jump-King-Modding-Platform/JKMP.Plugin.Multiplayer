@@ -40,6 +40,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private readonly FixedQueue<(GameMessage, Framed<GameMessagesCodec>)> pendingMessages = new(maxCount: 300);
         private readonly CancellationTokenSource processIncomingMessagesCts = new();
         private readonly object connectLock = new();
+        private readonly byte[] sendBuffer = new byte[8192];
 
         public P2PManager()
         {
@@ -306,7 +307,10 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable)
         {
-            var memStream = new MemoryStream();
+            if (playerConnections.Count == 0)
+                return;
+            
+            var memStream = new MemoryStream(sendBuffer, 0, sendBuffer.Length, true, true);
             using var writer = new BinaryWriter(memStream);
             codec.Encode(message, writer);
             var bytes = memStream.GetReadOnlySpan();
