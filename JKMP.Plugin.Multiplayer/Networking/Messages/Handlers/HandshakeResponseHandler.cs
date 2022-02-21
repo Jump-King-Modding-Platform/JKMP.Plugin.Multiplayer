@@ -30,7 +30,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 {
                     var player = new RemotePlayer(context.Messages.Identity);
                     player.InitializeFromHandshakeResponse(message, userInfo.Value);
-                    context.P2PManager.ConnectedPlayers.TryAdd(context.Messages.Identity, player);
+                    context.P2PManager.ConnectedPlayers.Add(context.Messages.Identity, player);
                 });
             }
         }
