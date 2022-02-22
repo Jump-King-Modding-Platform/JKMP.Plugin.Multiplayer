@@ -61,8 +61,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex, "Error decoding message");
-                    throw;
+                    Logger.Error(ex, "Error decoding message from {identity}", ident);
+                    conn.Close();
                 }
             }
         }
