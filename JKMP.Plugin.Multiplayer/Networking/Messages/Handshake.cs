@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using JKMP.Plugin.Multiplayer.Memory;
 using Matchmaking.Client;
 
 namespace JKMP.Plugin.Multiplayer.Networking.Messages
@@ -21,6 +22,11 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         {
             ulong length = reader.ReadVarInt();
             AuthSessionTicket = reader.ReadBytes((int)length);
+        }
+
+        public override void Reset()
+        {
+            AuthSessionTicket = null;
         }
     }
 
@@ -66,8 +72,20 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
             }
             else
             {
-                PlayerState = new();
+                PlayerState = Pool.Get<PlayerStateChanged>();
                 PlayerState.Deserialize(reader);
+            }
+        }
+
+        public override void Reset()
+        {
+            Success = default;
+            ErrorMessage = default;
+
+            if (PlayerState != default)
+            {
+                Pool.Release(PlayerState);
+                PlayerState = default;
             }
         }
     }

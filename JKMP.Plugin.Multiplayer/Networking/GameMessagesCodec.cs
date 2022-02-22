@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using Matchmaking.Client;
-using Steamworks;
 
 namespace JKMP.Plugin.Multiplayer.Networking
 {
     internal class GameMessagesCodec : CodecSink<GameMessage>
     {
+        private readonly byte[] compressBuffer = new byte[1024 * 1024];
+        
         private static readonly Dictionary<MessageType, Type> MessageTypes = new()
         {
             { MessageType.HandshakeRequest, typeof(HandshakeRequest) },
@@ -37,7 +39,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             if (clrType == null)
                 throw new FormatException($"Unknown message type received");
 
-            var message = (GameMessage)Activator.CreateInstance(clrType);
+            GameMessage message = Pool.Get<GameMessage>(clrType);
             message.Deserialize(reader);
 
             ulong available = (ulong)(reader.BaseStream.Position - reader.BaseStream.Length);

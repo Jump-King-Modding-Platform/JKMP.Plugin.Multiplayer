@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Player;
@@ -30,6 +31,15 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
             WalkDirection = reader.ReadSByte();
             SurfaceType = (Content.SurfaceType)reader.ReadByte();
             WearingShoes = reader.ReadBoolean();
+        }
+
+        public override void Reset()
+        {
+            State = default;
+            Position = default;
+            WalkDirection = default;
+            SurfaceType = default;
+            WearingShoes = default;
         }
     }
 }

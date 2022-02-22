@@ -180,6 +180,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
                     try
                     {
                         await processor.HandleMessage(message, context);
+                        Pool.Release(message);
                     }
                     catch (Exception ex)
                     {

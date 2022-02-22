@@ -6,6 +6,7 @@ using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Game.Player.Animations;
 using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing;
 using Microsoft.Xna.Framework;
@@ -78,9 +79,12 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             if (lastState != null && nextState != null)
                 PlayStateSounds(lastState, nextState);
+
+            if (lastState != null)
+                Pool.Release(lastState);
             
             lastState = nextState;
-            nextState = newState ?? throw new ArgumentNullException(nameof(newState));
+            nextState = CloneState(newState);
         }
 
         protected override void Update(float delta)
@@ -147,6 +151,17 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                         soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, AudioEmitter, 0.5f);
                 }
             }
+        }
+
+        private PlayerStateChanged CloneState(PlayerStateChanged original)
+        {
+            var clone = Pool.Get<PlayerStateChanged>();
+            clone.Position = original.Position;
+            clone.State = original.State;
+            clone.SurfaceType = original.SurfaceType;
+            clone.WalkDirection = original.WalkDirection;
+
+            return clone;
         }
     }
 }

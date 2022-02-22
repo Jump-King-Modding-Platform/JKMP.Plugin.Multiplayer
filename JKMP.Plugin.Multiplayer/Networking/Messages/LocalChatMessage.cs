@@ -19,5 +19,10 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         {
             Message = reader.ReadString();
         }
+
+        public override void Reset()
+        {
+            Message = default;
+        }
     }
 }
