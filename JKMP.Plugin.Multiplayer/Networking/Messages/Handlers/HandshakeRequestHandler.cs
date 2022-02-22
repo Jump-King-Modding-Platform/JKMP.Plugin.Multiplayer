@@ -44,6 +44,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages.Handlers
                 playerState.Position = plrListener.Position;
                 playerState.State = plrListener.CurrentState;
                 playerState.WalkDirection = (sbyte)plrListener.WalkDirection;
+                playerState.CalculateDelta(null);
             });
 
             var response = Pool.Get<HandshakeResponse>();

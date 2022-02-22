@@ -77,12 +77,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         internal void UpdateState(PlayerStateChanged newState)
         {
-            if (lastState != null && nextState != null)
+            if (lastState?.State != null && nextState?.State != null)
                 PlayStateSounds(lastState, nextState);
+
+            newState.MergeByDelta(nextState);
 
             if (lastState != null)
                 Pool.Release(lastState);
-            
+
             lastState = nextState;
             nextState = CloneState(newState);
         }
@@ -104,10 +106,9 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 FakePlayer.SetPosition(position);
             }
 
-            if (FakePlayer.Sprite is SpriteAnimation)
+            if (FakePlayer.Sprite is SpriteAnimation animation)
             {
-                var spriteAnimation = (SpriteAnimation)FakePlayer.Sprite;
-                spriteAnimation.Update(delta);
+                animation.Update(delta);
             }
 
             lastPosition = plrTransform.Position;
@@ -156,6 +157,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         private PlayerStateChanged CloneState(PlayerStateChanged original)
         {
             var clone = Pool.Get<PlayerStateChanged>();
+            clone.Delta = original.Delta;
             clone.Position = original.Position;
             clone.State = original.State;
             clone.SurfaceType = original.SurfaceType;

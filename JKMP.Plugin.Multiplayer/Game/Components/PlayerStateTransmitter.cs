@@ -23,7 +23,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         
         private BodyComp? body;
         private float timeSinceTransmission;
-        private PlayerState lastState;
+        private PlayerStateChanged? lastState;
         
         private readonly P2PManager p2p;
 
@@ -67,13 +67,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             timeSinceTransmission += delta;
 
-            if (timeSinceTransmission >= TransmissionInterval || listener!.CurrentState != lastState)
+            if (timeSinceTransmission >= TransmissionInterval || listener!.CurrentState != lastState?.State)
             {
                 timeSinceTransmission = 0;
                 SendState();
             }
-
-            lastState = listener!.CurrentState;
         }
 
         private void SendState()
@@ -90,9 +88,14 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             playerState.WalkDirection = (sbyte)listener.WalkDirection;
             playerState.SurfaceType = surfaceType;
             playerState.WearingShoes = wearingShoes;
-            
+            playerState.CalculateDelta(lastState);
+
             p2p.Broadcast(playerState, SendType.Unreliable);
-            Pool.Release(playerState);
+
+            if (lastState != null)
+                Pool.Release(lastState);
+
+            lastState = playerState;
         }
     }
 }
