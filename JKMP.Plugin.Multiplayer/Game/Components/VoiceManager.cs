@@ -7,6 +7,7 @@ using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Native;
 using JKMP.Plugin.Multiplayer.Native.Audio;
 using JKMP.Plugin.Multiplayer.Networking;
@@ -242,10 +243,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 {
                     if (pendingOutgoingVoiceData.Count > 0)
                     {
-                        P2PManager.Instance?.Broadcast(new VoiceTransmission
-                        {
-                            Data = pendingOutgoingVoiceData
-                        });
+                        var voiceTransmission = Pool.Get<VoiceTransmission>();
+                        voiceTransmission.Data = pendingOutgoingVoiceData;
+                        
+                        P2PManager.Instance?.Broadcast(voiceTransmission);
+                        Pool.Release(voiceTransmission);
 
                         pendingOutgoingVoiceData.Clear();
                     }

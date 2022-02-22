@@ -38,7 +38,7 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
 
         public override void Reset()
         {
-            Data?.Clear();
+            Data = default;
         }
     }
 }
