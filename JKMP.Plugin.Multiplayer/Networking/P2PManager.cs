@@ -89,12 +89,12 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             lock (connectLock)
             {
-                if (connections.TryGetValue(identity, out var p2pConnection))
+                if (connections.TryGetValue(identity, out _))
                     return false;
                 
                 Logger.Debug("Client from {identity} connecting...", identity);
                 var messages = new Framed<GameMessagesCodec>(new GameMessagesCodec(), connection, identity, peerManager, this);
-                p2pConnection = new(identity)
+                var p2pConnection = new P2PConnection(identity)
                 {
                     Messages = messages,
                     Connection = connection
