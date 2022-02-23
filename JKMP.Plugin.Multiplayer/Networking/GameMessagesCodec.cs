@@ -10,8 +10,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
 {
     internal class GameMessagesCodec : CodecSink<GameMessage>
     {
-        private readonly byte[] compressBuffer = new byte[1024 * 1024];
-        
         private static readonly Dictionary<MessageType, Type> MessageTypes = new()
         {
             { MessageType.HandshakeRequest, typeof(HandshakeRequest) },
