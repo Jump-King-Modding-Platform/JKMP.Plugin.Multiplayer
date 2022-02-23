@@ -18,6 +18,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Input;
 using Serilog;
 using Steamworks;
+using Steamworks.Data;
 using OpusContext = JKMP.Plugin.Multiplayer.Native.Audio.OpusContext;
 
 namespace JKMP.Plugin.Multiplayer.Game.Components
@@ -245,8 +246,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                     {
                         var voiceTransmission = Pool.Get<VoiceTransmission>();
                         voiceTransmission.Data = pendingOutgoingVoiceData;
-                        
-                        P2PManager.Instance?.Broadcast(voiceTransmission);
+
+                        P2PManager.Instance?.Broadcast(voiceTransmission, SendType.Reliable, lane: 1);
                         Pool.Release(voiceTransmission);
 
                         pendingOutgoingVoiceData.Clear();

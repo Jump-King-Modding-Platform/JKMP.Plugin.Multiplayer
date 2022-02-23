@@ -30,6 +30,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private readonly P2PManager.PeerManager peerManager;
         private readonly P2PManager p2pManager;
         private readonly byte[] sendBuffer = new byte[8192];
+        private bool lanesConfigured;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<Framed<TCodec>>();
 
@@ -75,22 +76,43 @@ namespace JKMP.Plugin.Multiplayer.Networking
         /// <summary>
         /// Sends a message to the target steam id. Returns true if the message was successfully sent.
         /// It does not indicate whether the message was received on the other end.
+        /// By default it sends the message as a reliable message on lane 2.
         /// </summary>
-        public bool Send(GameMessage data, SendType sendType = SendType.Reliable) => Send(Encode(data), sendType);
+        public bool Send(GameMessage data, SendType sendType = SendType.Reliable, ushort lane = 2) => Send(Encode(data), sendType, lane);
 
         /// <summary>
         /// <para>
         /// Sends an array of bytes to the target steam id. Returns true if the message was successfully sent.
         /// It does not indicate whether the message was received on the other end.
+        /// By default it sends the message as a reliable message on lane 2.
         /// </para>
         /// <para>
         /// Note that the bytes are sent as-is, no prefix like message type or length is added.</para>
         /// </summary>
-        public unsafe bool Send(ReadOnlySpan<byte> data, SendType sendType = SendType.Reliable)
+        public unsafe bool Send(ReadOnlySpan<byte> data, SendType sendType = SendType.Reliable, ushort lane = 2)
         {
+            if (!lanesConfigured)
+            {
+                // Configure 3 lanes.
+                // The first lane is for unreliable messages sent on a regular basis, such as player state updates. (uses medium bandwidth)
+                // The second lane is unreliable for voice data. (uses most bandwidth, has 2x bandwidth budget over the first lane)
+                // The third lane is for everything else that is supposed to be reliable (most prioritized, uses least bandwidth)
+                connection.ConfigureConnectionLanes(
+                    new[] { 2, 2, 1 },
+                    new ushort[] { 1, 2, 1 }
+                );
+
+                lanesConfigured = true;
+            }
+
             fixed (byte* dataPtr = &data.GetPinnableReference())
             {
-                return connection.SendMessage((IntPtr)dataPtr, data.Length, sendType, laneIndex: 0) == Result.OK;
+                var sendResult = connection.SendMessage((IntPtr)dataPtr, data.Length, sendType, lane);
+
+                if (sendResult != Result.OK)
+                    Logger.Warning("Send result: {result}", sendResult);
+
+                return sendResult == Result.OK;
             }
         }
 

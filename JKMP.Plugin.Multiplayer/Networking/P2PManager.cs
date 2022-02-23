@@ -306,7 +306,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             }
         }
 
-        internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable)
+        internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable, ushort lane = 2)
         {
             if (playerConnections.Count == 0)
                 return;
@@ -318,7 +318,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
             foreach (var (_, messages) in playerConnections.Values)
             {
-                messages.Send(bytes, sendType);
+                messages.Send(bytes, sendType, lane);
             }
         }
     }

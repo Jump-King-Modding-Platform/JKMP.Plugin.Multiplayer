@@ -90,7 +90,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             playerState.WearingShoes = wearingShoes;
             playerState.CalculateDelta(lastState);
 
-            p2p.Broadcast(playerState, SendType.Unreliable);
+            p2p.Broadcast(playerState, SendType.Unreliable, lane: 0);
 
             if (lastState != null)
                 Pool.Release(lastState);
