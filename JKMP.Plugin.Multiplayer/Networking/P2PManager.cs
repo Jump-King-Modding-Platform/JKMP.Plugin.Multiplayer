@@ -241,6 +241,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
             if (!identity.IsSteamId)
                 throw new NotSupportedException("Only steamid identities are supported right now");
 
+            if (connections.ContainsKey(identity))
+                return;
+
             Logger.Verbose("Connecting to {identity}...", identity);
 
             ConnectionManager connectionManager;
