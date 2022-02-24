@@ -29,16 +29,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 Connection?.Flush();
                 Connection?.Close();
             }
-
-            public void Deconstruct(out NetIdentity identity, out AuthTicket? authTicket, out ConnectionManager? connectionManager, out Connection? connection, out RemotePlayer? player, out Framed<GameMessagesCodec>? messages)
-            {
-                identity = Identity;
-                authTicket = AuthTicket;
-                connectionManager = ConnectionManager;
-                connection = Connection;
-                player = Player;
-                messages = Messages;
-            }
         }
     }
 }
