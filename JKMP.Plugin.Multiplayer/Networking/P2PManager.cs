@@ -170,6 +170,11 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
                     try
                     {
+                        if (player == null && message is not HandshakeRequest && message is not HandshakeResponse)
+                        {
+                            continue;
+                        }
+                        
                         await processor.HandleMessage(message, context);
                         Pool.Release(message);
                     }
