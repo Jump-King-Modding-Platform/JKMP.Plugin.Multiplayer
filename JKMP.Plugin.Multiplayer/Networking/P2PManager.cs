@@ -180,7 +180,8 @@ namespace JKMP.Plugin.Multiplayer.Networking
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(ex, "An unhadled exception was raised when handling message {message}", message);
+                        Logger.Error(ex, "An unhandled exception was raised when handling message {message}", message);
+                        await ExecuteOnGameThread(() => Disconnect(messages.Identity));
                     }
                 }
 
