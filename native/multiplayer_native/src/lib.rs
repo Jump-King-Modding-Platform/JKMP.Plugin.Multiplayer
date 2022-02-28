@@ -2,16 +2,12 @@ extern crate core;
 
 use audio_capture::capture_context::AudioContext;
 use audio_capture::opus_context::OpusContext;
-use compression::{lz4_compress, lz4_decompress, lz4_get_maximum_output_size};
 
-use interoptopus::patterns::slice::FFISlice;
 use interoptopus::{
-    ffi_function, ffi_service, ffi_service_ctor, ffi_type, function, pattern,
-    patterns::result::FFIError, Error, Inventory, InventoryBuilder,
+    ffi_type, pattern, patterns::result::FFIError, Error, Inventory, InventoryBuilder,
 };
 
 pub mod audio_capture;
-pub mod compression;
 
 #[ffi_type(patterns(ffi_error))]
 #[repr(C)]
@@ -82,8 +78,5 @@ pub fn ffi_inventory() -> Inventory {
     InventoryBuilder::new()
         .register(pattern!(AudioContext))
         .register(pattern!(OpusContext))
-        .register(function!(lz4_compress))
-        .register(function!(lz4_decompress))
-        .register(function!(lz4_get_maximum_output_size))
         .inventory()
 }
