@@ -2,6 +2,7 @@ extern crate core;
 
 use audio_capture::capture_context::AudioContext;
 use audio_capture::opus_context::OpusContext;
+
 use interoptopus::{
     ffi_type, pattern, patterns::result::FFIError, Error, Inventory, InventoryBuilder,
 };
@@ -45,6 +46,9 @@ pub enum MyFFIError {
 
     /// Returned when a specified device could not be found.
     DeviceNotFound = 10,
+
+    /// Returned when an input parameter value is not supported
+    Unsupported = 11,
 }
 
 impl FFIError for MyFFIError {
@@ -57,7 +61,7 @@ impl From<Error> for MyFFIError {
     fn from(err: Error) -> Self {
         match err {
             Error::Null => Self::NullPassed,
-            Error::Unsupported => Self::OtherError,
+            Error::Unsupported => Self::Unsupported,
             Error::Ascii => Self::OtherError,
             Error::Format(_) => Self::OtherError,
             Error::IO(_) => Self::OtherError,

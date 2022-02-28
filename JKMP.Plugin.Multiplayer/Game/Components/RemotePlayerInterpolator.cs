@@ -6,6 +6,7 @@ using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Game.Player.Animations;
 using JKMP.Plugin.Multiplayer.Game.Sound;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing;
 using Microsoft.Xna.Framework;
@@ -20,10 +21,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         private AudioEmitter AudioEmitter => audioEmitterComponent.AudioEmitter;
         private AudioEmitterComponent audioEmitterComponent = null!;
-        private Transform plrTransform = null!;
         private SoundManager soundManager = null!;
-
-        private Vector2 lastPosition;
 
         private FakePlayer FakePlayer => (FakePlayer)gameObject;
 
@@ -68,19 +66,22 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         protected override void Init()
         {
-            plrTransform = GetComponent<Transform>() ?? throw new NotSupportedException("Transform component not found");
             soundManager = EntityManager.instance.Find<GameEntity>()?.Sound ?? throw new InvalidOperationException("GameEntity or SoundManager not found");
             audioEmitterComponent = GetComponent<AudioEmitterComponent>() ?? throw new NotSupportedException("AudioEmitterComponent component not found");
-            lastPosition = plrTransform.Position;
         }
 
         internal void UpdateState(PlayerStateChanged newState)
         {
-            if (lastState != null && nextState != null)
+            if (lastState?.State != null && nextState?.State != null)
                 PlayStateSounds(lastState, nextState);
-            
+
+            newState.MergeByDelta(nextState);
+
+            if (lastState != null)
+                Pool.Release(lastState);
+
             lastState = nextState;
-            nextState = newState ?? throw new ArgumentNullException(nameof(newState));
+            nextState = CloneState(newState);
         }
 
         protected override void Update(float delta)
@@ -100,13 +101,10 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 FakePlayer.SetPosition(position);
             }
 
-            if (FakePlayer.Sprite is SpriteAnimation)
+            if (FakePlayer.Sprite is SpriteAnimation animation)
             {
-                var spriteAnimation = (SpriteAnimation)FakePlayer.Sprite;
-                spriteAnimation.Update(delta);
+                animation.Update(delta);
             }
-
-            lastPosition = plrTransform.Position;
         }
 
         private void PlayStateSounds(PlayerStateChanged stateA, PlayerStateChanged stateB)
@@ -147,6 +145,18 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                         soundManager.PlaySound(Content.PlayerSounds[Content.SurfaceType.Iron].Land, AudioEmitter, 0.5f);
                 }
             }
+        }
+
+        private PlayerStateChanged CloneState(PlayerStateChanged original)
+        {
+            var clone = Pool.Get<PlayerStateChanged>();
+            clone.Delta = original.Delta;
+            clone.Position = original.Position;
+            clone.State = original.State;
+            clone.SurfaceType = original.SurfaceType;
+            clone.WalkDirection = original.WalkDirection;
+
+            return clone;
         }
     }
 }

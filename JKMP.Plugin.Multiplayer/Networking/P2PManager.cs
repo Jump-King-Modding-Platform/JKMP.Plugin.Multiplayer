@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JKMP.Core.Logging;
+using JKMP.Plugin.Multiplayer.Collections;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JKMP.Plugin.Multiplayer.Networking.Messages.Handlers;
 using Serilog;
@@ -18,8 +22,6 @@ namespace JKMP.Plugin.Multiplayer.Networking
         
         public static P2PManager? Instance { get; private set; }
 
-        public ConcurrentDictionary<NetIdentity, RemotePlayer> ConnectedPlayers { get; } = new();
-
         public P2PEvents Events { get; private set; }
         
         private readonly GameMessageProcessor processor;
@@ -30,16 +32,19 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private readonly PeerManager peerManager;
         private readonly SocketManager p2pListener;
-        private readonly ConcurrentDictionary<NetIdentity, (Connection connection, Framed<GameMessagesCodec, GameMessage> messages)> playerConnections = new();
-        private readonly ConcurrentDictionary<NetIdentity, Steamworks.ConnectionManager> connectionManagers = new();
-        private readonly ConcurrentDictionary<NetIdentity, AuthTicket> authTickets = new();
+        private readonly GameMessagesCodec codec;
+        private readonly Dictionary<NetIdentity, P2PConnection> connections = new();
+        private readonly FixedQueue<(GameMessage, Framed<GameMessagesCodec>)> pendingMessages = new(maxCount: 300);
         private readonly CancellationTokenSource processIncomingMessagesCts = new();
+        private readonly object connectLock = new();
+        private readonly byte[] sendBuffer = new byte[8192];
 
         public P2PManager()
         {
             processor = new();
             Events = new();
             peerManager = new();
+            codec = new();
 
             peerManager.Connecting += OnPeerConnecting;
             peerManager.Connected += OnPeerConnected;
@@ -66,20 +71,12 @@ namespace JKMP.Plugin.Multiplayer.Networking
         private void OnPeerDisconnected(Connection connection, ConnectionInfo info)
         {
             Logger.Debug("Client from {identity} disconnected", info.Identity);
-
-            if (playerConnections.TryRemove(info.Identity, out var tuple))
-            {
-                tuple.messages.Dispose();
-                if (ConnectedPlayers.TryGetValue(info.Identity, out var player))
-                {
-                    player.Destroy();
-
-                    if (authTickets.TryRemove(info.Identity, out var authTicket))
-                        authTicket.Dispose();
-                }
-            }
             
-            connectionManagers.TryRemove(info.Identity, out _);
+            if (connections.TryGetValue(info.Identity, out var connectionManager))
+            {
+                connectionManager.Dispose();
+                connections.Remove(info.Identity);
+            }
         }
 
         private void OnPeerMessage(Connection connection, NetIdentity identity, IntPtr data, int size, long messageNum, long recvTime, int channel)
@@ -90,46 +87,69 @@ namespace JKMP.Plugin.Multiplayer.Networking
 
         private bool TryConnectPeer(Connection connection, NetIdentity identity)
         {
-            if (!playerConnections.ContainsKey(identity))
+            lock (connectLock)
             {
-                var messages = new Framed<GameMessagesCodec, GameMessage>(new GameMessagesCodec(), connection, identity, peerManager);
-                if (playerConnections.TryAdd(identity, (connection, messages)))
+                if (connections.TryGetValue(identity, out _))
+                    return false;
+                
+                Logger.Debug("Client from {identity} connecting...", identity);
+                var messages = new Framed<GameMessagesCodec>(new GameMessagesCodec(), connection, identity, peerManager, this);
+                var p2pConnection = new P2PConnection(identity)
                 {
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            Logger.Debug("Client from {identity} connected", identity);
-                            AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
+                    Messages = messages,
+                    Connection = connection
+                };
 
-                            if (authTicket == null)
-                            {
-                                Logger.Error("Failed to get auth ticket, aborting connection to {identity}", identity);
-                                Disconnect(identity);
-                                return;
-                            }
+                connections.Add(identity, p2pConnection);
+                SendHandshakeRequest(p2pConnection);
 
-                            authTickets.TryAdd(identity, authTicket);
-
-                            messages.Send(new HandshakeRequest
-                            {
-                                AuthSessionTicket = authTicket.Data
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error(ex, "An unhandled exception was raised when connecting to {identity}", identity);
-                            throw;
-                        }
-                    });
-                    
-                    return true;
-                }
-
-                messages.Dispose();
+                return true;
             }
+        }
 
-            return false;
+        private void SendHandshakeRequest(P2PConnection connection)
+        {
+            NetIdentity identity = connection.Identity;
+            Framed<GameMessagesCodec> messages = connection.Messages ?? throw new InvalidOperationException("P2P connection not properly initialized");
+            
+            Task.Run(async () =>
+            {
+                try
+                {
+                    AuthTicket? authTicket = await SteamUser.GetAuthSessionTicketAsync();
+
+                    if (authTicket == null)
+                    {
+                        await ExecuteOnGameThread(() =>
+                        {
+                            Logger.Error("Failed to get auth ticket, aborting connection to {identity}", identity);
+                            Disconnect(identity);
+
+                            connection.Dispose();
+                            connections.Remove(identity);
+                        });
+
+                        return;
+                    }
+
+                    await ExecuteOnGameThread(() =>
+                    {
+                        connection.AuthTicket = authTicket;
+
+                        messages.Send(new HandshakeRequest
+                        {
+                            AuthSessionTicket = authTicket.Data
+                        });
+
+                        Logger.Debug("Client from {identity} connected", identity);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "An unhandled exception was raised when connecting to {identity}", identity);
+                    throw;
+                }
+            });
         }
 
         private async Task ProcessIncomingMessages()
@@ -139,36 +159,59 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 if (processIncomingMessagesCts.IsCancellationRequested)
                     return;
 
-                foreach (var kv in playerConnections)
+                Context? context = null;
+
+                while (pendingMessages.Count > 0)
                 {
-                    var messages = kv.Value.messages;
-                    Context? context = null;
+                    var (message, messages) = pendingMessages.Dequeue();
+                    RemotePlayer? player = GetPlayer(messages.Identity);
+                    
+                    context ??= new(messages, this, player);
 
-                    while (messages.HasQueuedMessages)
+                    try
                     {
-                        ConnectedPlayers.TryGetValue(kv.Key, out var player);
-                        context ??= new Context(messages, this, player);
-
-                        GameMessage? message = await messages.Next();
-
-                        if (message == null)
-                            break;
-
-                        try
+                        if (player == null && message is not HandshakeRequest && message is not HandshakeResponse)
                         {
-                            await processor.HandleMessage(message, context);
+                            continue;
                         }
-                        catch (Exception ex)
-                        {
-                            Logger.Error(ex, "An unhandled exception was raised when handling message {message}", message);
-                        }
+                        
+                        await processor.HandleMessage(message, context);
+                        Pool.Release(message);
                     }
-
-                    await Task.Delay(1).ConfigureAwait(false);
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "An unhandled exception was raised when handling message {message}", message);
+                        await ExecuteOnGameThread(() => Disconnect(messages.Identity));
+                    }
                 }
+
+                await Task.Delay(1).ConfigureAwait(false);
             }
         }
 
+        public RemotePlayer? GetPlayer(NetIdentity identity)
+        {
+            return connections.TryGetValue(identity, out var connection) ? connection.Player : null;
+        }
+
+        public bool TryGetPlayer(NetIdentity identity, out RemotePlayer? player)
+        {
+            if (connections.TryGetValue(identity, out var connection) && connection.Player != null)
+            {
+                player = connection.Player;
+                return true;
+            }
+
+            player = null;
+            return false;
+        }
+
+        internal void AddPendingMessage(NetIdentity sender, GameMessage message)
+        {
+            if (connections.TryGetValue(sender, out var conn))
+                pendingMessages.Enqueue((message, conn.Messages!));
+        }
+        
         public void Dispose()
         {
             processIncomingMessagesCts.Cancel();
@@ -181,20 +224,12 @@ namespace JKMP.Plugin.Multiplayer.Networking
             
             p2pListener.Close();
 
-            foreach (var manager in playerConnections)
+            foreach (var conn in connections)
             {
-                manager.Value.connection.Close();
-                manager.Value.messages.Dispose();
+                conn.Value.Dispose();
             }
             
-            playerConnections.Clear();
-            
-            foreach (var player in ConnectedPlayers)
-            {
-                player.Value.Destroy();
-            }
-            
-            ConnectedPlayers.Clear();
+            connections.Clear();
 
             Instance = null;
         }
@@ -212,7 +247,7 @@ namespace JKMP.Plugin.Multiplayer.Networking
             if (!identity.IsSteamId)
                 throw new NotSupportedException("Only steamid identities are supported right now");
 
-            if (playerConnections.ContainsKey(identity))
+            if (connections.ContainsKey(identity))
                 return;
 
             Logger.Verbose("Connecting to {identity}...", identity);
@@ -229,19 +264,30 @@ namespace JKMP.Plugin.Multiplayer.Networking
                 return;
             }
 
-            connectionManagers.TryAdd(identity, connectionManager);
+            var conn = new P2PConnection(identity)
+            {
+                ConnectionManager = connectionManager,
+                Connection = connectionManager.Connection,
+                Messages = new Framed<GameMessagesCodec>(new GameMessagesCodec(), connectionManager.Connection, identity, peerManager, this)
+            };
+            
+            connections.Add(identity, conn);
+            SendHandshakeRequest(conn);
         }
         
         public void Disconnect(RemotePlayer player) => Disconnect(player.SteamId);
         public void Disconnect(NetIdentity identity)
         {
-            playerConnections[identity].connection.Flush();
-            playerConnections[identity].connection.Close();
+            if (!connections.TryGetValue(identity, out var conn))
+                return;
+
+            conn.Connection?.Flush();
+            conn.Connection?.Close();
         }
 
         public void DisconnectAll()
         {
-            foreach (var identity in playerConnections.Keys)
+            foreach (var identity in connections.Keys.ToList())
             {
                 Disconnect(identity);
             }
@@ -262,9 +308,9 @@ namespace JKMP.Plugin.Multiplayer.Networking
         {
             p2pListener.Receive();
 
-            foreach (var manager in connectionManagers.Values)
+            foreach (var conn in connections.Values)
             {
-                manager.Receive();
+                conn.ConnectionManager?.Receive();
             }
             
             while (pendingGameThreadActions.Count > 0)
@@ -275,11 +321,30 @@ namespace JKMP.Plugin.Multiplayer.Networking
             }
         }
 
-        internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable)
+        internal void Broadcast(GameMessage message, SendType sendType = SendType.Reliable, ushort lane = 2)
         {
-            foreach (var (_, messages) in playerConnections.Values)
+            if (connections.Count == 0)
+                return;
+            
+            var memStream = new MemoryStream(sendBuffer, 0, sendBuffer.Length, true, true);
+            using var writer = new BinaryWriter(memStream);
+            codec.Encode(message, writer);
+            var bytes = memStream.GetReadOnlySpan();
+
+            foreach (var conn in connections.Values)
             {
-                messages.Send(message, sendType);
+                conn.Messages?.Send(bytes, sendType, lane);
+            }
+        }
+
+        public void AddPlayer(NetIdentity identity, RemotePlayer player)
+        {
+            if (connections.TryGetValue(identity, out var connection))
+            {
+                if (connection.Player != null)
+                    throw new InvalidOperationException("Player already created for this identity: " + identity);
+
+                connection.Player = player;
             }
         }
     }

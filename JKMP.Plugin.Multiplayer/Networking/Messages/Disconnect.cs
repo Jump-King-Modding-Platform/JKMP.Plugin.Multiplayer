@@ -11,5 +11,9 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
         public override void Deserialize(BinaryReader reader)
         {
         }
+
+        public override void Reset()
+        {
+        }
     }
 }

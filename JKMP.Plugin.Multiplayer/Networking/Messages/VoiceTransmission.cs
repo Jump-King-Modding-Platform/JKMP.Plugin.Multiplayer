@@ -35,5 +35,10 @@ namespace JKMP.Plugin.Multiplayer.Networking.Messages
                 Data.Enqueue(data);
             }
         }
+
+        public override void Reset()
+        {
+            Data = default;
+        }
     }
 }

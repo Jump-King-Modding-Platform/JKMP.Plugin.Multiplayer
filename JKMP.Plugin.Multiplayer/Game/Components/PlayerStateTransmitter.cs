@@ -2,6 +2,7 @@ using System;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Player;
+using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
 using JumpKing.Level;
@@ -22,7 +23,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         
         private BodyComp? body;
         private float timeSinceTransmission;
-        private PlayerState lastState;
+        private PlayerStateChanged? lastState;
         
         private readonly P2PManager p2p;
 
@@ -66,13 +67,11 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
         {
             timeSinceTransmission += delta;
 
-            if (timeSinceTransmission >= TransmissionInterval || listener!.CurrentState != lastState)
+            if (timeSinceTransmission >= TransmissionInterval || listener!.CurrentState != lastState?.State)
             {
                 timeSinceTransmission = 0;
                 SendState();
             }
-
-            lastState = listener!.CurrentState;
         }
 
         private void SendState()
@@ -83,14 +82,20 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             var surfaceType = listener.CurrentSurfaceType;
             bool wearingShoes = SkinManager.IsWearingSkin(Items.Shoes);
 
-            p2p.Broadcast(new PlayerStateChanged
-            {
-                Position = body.position,
-                State = listener.CurrentState,
-                WalkDirection = (sbyte)listener.WalkDirection,
-                SurfaceType = surfaceType,
-                WearingShoes = wearingShoes
-            }, SendType.Unreliable);
+            var playerState = Pool.Get<PlayerStateChanged>();
+            playerState.Position = body.position;
+            playerState.State = listener.CurrentState;
+            playerState.WalkDirection = (sbyte)listener.WalkDirection;
+            playerState.SurfaceType = surfaceType;
+            playerState.WearingShoes = wearingShoes;
+            playerState.CalculateDelta(lastState);
+
+            p2p.Broadcast(playerState, SendType.Unreliable, lane: 0);
+
+            if (lastState != null)
+                Pool.Release(lastState);
+
+            lastState = playerState;
         }
     }
 }
