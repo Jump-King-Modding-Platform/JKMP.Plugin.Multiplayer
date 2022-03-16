@@ -14,7 +14,6 @@ using JKMP.Plugin.Multiplayer.Configuration;
 using JKMP.Plugin.Multiplayer.Game;
 using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
-using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Native.Audio;
@@ -61,6 +60,17 @@ namespace JKMP.Plugin.Multiplayer
 
             var voiceConfigMenu = Configs.CreateConfigMenu<VoiceConfig>("Voice", "Voice");
             voiceConfig = voiceConfigMenu.Values;
+        }
+
+        public override void CreateInputActions()
+        {
+            InputKeys.Ptt = Input.RegisterActionWithName("PTT", "Push to talk", onlyGameInput: true, "v");
+            InputKeys.OpenChat = Input.RegisterActionWithName("OpenChat", "Chat", onlyGameInput: false, "enter");
+            InputKeys.NextChatChannel = Input.RegisterActionWithName("NextChatChannel", "Next chat channel", onlyGameInput: false, "tab");
+            InputKeys.PrevChatChannel = Input.RegisterActionWithName("PrevChatChannel", "Previous chat channel", onlyGameInput: false, "leftcontrol + tab");
+            InputKeys.SelectGlobalChat = Input.RegisterActionWithName("SelGlobalChat", "Select global chat", onlyGameInput: false, "leftcontrol + 1");
+            InputKeys.SelectGroupChat = Input.RegisterActionWithName("SelGroupChat", "Select group chat", onlyGameInput: false, "leftcontrol + 2");
+            InputKeys.SelectLocalChat = Input.RegisterActionWithName("SelLocalChat", "Select local chat", onlyGameInput: false, "leftcontrol + 3");
         }
 
         public override void Initialize()
@@ -117,8 +127,6 @@ namespace JKMP.Plugin.Multiplayer
             GameEvents.GameUpdate += gameTime =>
             {
                 SteamClient.RunCallbacks();
-
-                InputManager.Update(gameTime);
             };
 
             GameEvents.GameDraw += gameTime =>

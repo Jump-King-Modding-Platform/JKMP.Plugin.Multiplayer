@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using EntityComponent;
 using HarmonyLib;
+using JKMP.Core.Input;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
-using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Memory;
 using JKMP.Plugin.Multiplayer.Native;
@@ -145,6 +145,8 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
                 captureContext = new AudioCaptureContext();
                 captureContext.SetVolume(Volume);
                 VolumeChanged += OnVolumeChanged;
+
+                MultiplayerPlugin.Instance.Input.BindAction(InputKeys.Ptt, OnPttPressed);
             }
             else
             {
@@ -168,7 +170,13 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
             if (IsLocalPlayer)
             {
                 VolumeChanged -= OnVolumeChanged;
+                MultiplayerPlugin.Instance.Input.UnbindAction(InputKeys.Ptt, OnPttPressed);
             }
+        }
+
+        private void OnPttPressed(bool pressed)
+        {
+            IsSpeaking = pressed;
         }
         
         private void OnVolumeChanged(double volume)
@@ -179,7 +187,6 @@ namespace JKMP.Plugin.Multiplayer.Game.Components
 
         protected override void Update(float delta)
         {
-            IsSpeaking = InputManager.GameInputEnabled && InputManager.KeyDown(Keys.V);
             timeSinceTalked += delta;
 
             if (IsLocalPlayer)

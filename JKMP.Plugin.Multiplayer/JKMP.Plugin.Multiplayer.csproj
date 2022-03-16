@@ -18,7 +18,7 @@
       <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Core" Version="0.9.1" />
+      <PackageReference Include="JKMP.Core" Version="0.10.0-beta.4" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="JKMP.Myra" Version="2.0.1" />
     </ItemGroup>

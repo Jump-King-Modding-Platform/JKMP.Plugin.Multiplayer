@@ -1,6 +1,5 @@
 using HarmonyLib;
-using JKMP.Plugin.Multiplayer.Game.Input;
-using JKMP.Plugin.Multiplayer.Game.UI;
+using JKMP.Core.Input;
 using JumpKing.Controller;
 using JumpKing.PauseMenu;
 using JumpKing.Player;
