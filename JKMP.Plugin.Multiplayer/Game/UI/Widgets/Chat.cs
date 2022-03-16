@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JKMP.Core.Input;
 using JKMP.Core.Logging;
-using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam.Events;
@@ -18,7 +18,7 @@ using SolidBrush = Myra.Graphics2D.Brushes.SolidBrush;
 
 namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 {
-    public class Chat : ResourceWidget<Chat>
+    public class Chat : ResourceWidget<Chat>, IDisposable
     {
         private readonly ScrollViewer outputScrollViewer;
         private readonly VerticalStackPanel chatOutput;
@@ -45,8 +45,30 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
             MatchmakingManager.Instance.Events.ChatMessageReceived += OnChatMessageReceived;
             P2PManager.Instance!.Events.IncomingChatMessage += OnChatMessageReceived;
+            MultiplayerPlugin.Instance.Input.BindAction(InputKeys.OpenChat, OnOpenChatAction);
 
             HideBackground();
+        }
+
+        public void Dispose()
+        {
+            MultiplayerPlugin.Instance.Input.UnbindAction(InputKeys.OpenChat, OnOpenChatAction);
+        }
+
+        private void OnOpenChatAction(bool pressed)
+        {
+            if (pressed && !PauseManager.instance.IsPaused)
+            {
+                // Check if chat input is active
+                if (chatInput.Opacity > 0)
+                {
+                    StopTyping(sendInput: true);
+                }
+                else
+                {
+                    StartTyping();
+                }
+            }
         }
 
         private void OnChatMessageReceived(ChatMessage chatMessage)
@@ -97,27 +119,11 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         internal void Update(float delta)
         {
-            // Toggle chat focus
-            if (!PauseManager.instance.IsPaused && InputManager.KeyJustPressed(Keys.Enter))
+            if (PauseManager.instance.IsPaused && chatInput.Opacity > 0)
             {
-                // Check if chat input is active
-                if (chatInput.Opacity > 0)
-                {
-                    chatInput.SendAndClearInput();
-                    InputManager.EnableGameInput();
-                    UIManager.PopShowCursor();
-                    HideBackground();
-                    ScrollOutputToBottom();
-                }
-                else
-                {
-                    chatInput.FocusInput();
-                    InputManager.DisableGameInput();
-                    UIManager.PushShowCursor();
-                    ShowBackground();
-                }
+                StopTyping(sendInput: false);
             }
-
+            
             lock (accessRowsLock)
             {
                 foreach (var row in GetMessageRows())
@@ -173,6 +179,27 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         private void OnBottomNoticeClicked(object sender, EventArgs e)
         {
+            ScrollOutputToBottom();
+        }
+
+        private void StartTyping()
+        {
+            chatInput.FocusInput();
+            InputManager.DisableGameInput();
+            UIManager.PushShowCursor();
+            ShowBackground();
+        }
+
+        private void StopTyping(bool sendInput)
+        {
+            if (sendInput)
+                chatInput.SendAndClearInput();
+            else
+                chatInput.ClearInput();
+            
+            InputManager.EnableGameInput();
+            UIManager.PopShowCursor();
+            HideBackground();
             ScrollOutputToBottom();
         }
     }

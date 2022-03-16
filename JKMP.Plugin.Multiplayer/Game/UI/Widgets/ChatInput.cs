@@ -1,7 +1,7 @@
 using System;
+using JKMP.Core.Input;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Entities;
-using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Matchmaking;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Networking.Messages;
@@ -68,11 +68,11 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
         private void OnInputKeyDown(object sender, GenericEventArgs<Keys> args)
         {
-            if (args.Data == Keys.Tab)
+            if (InputKeys.NextChatChannel.IsPressed || InputKeys.PrevChatChannel.IsPressed)
             {
                 int direction = 1;
-                
-                if (InputManager.KeyDown(Keys.LeftControl) || InputManager.KeyDown(Keys.RightControl))
+
+                if (InputKeys.PrevChatChannel.IsPressed)
                 {
                     direction = -1;
                 }
@@ -94,19 +94,17 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
 
                 Channel = newChannel;
             }
-            else if (args.Data >= Keys.D1 && args.Data <= Keys.D9)
+            else if (InputKeys.SelectGlobalChat.IsPressed)
             {
-                if (!InputManager.KeyDown(Keys.LeftControl))
-                    return;
-                
-                int channelIndex = args.Data - Keys.D1;
-
-                ChatChannel channel = (ChatChannel)channelIndex;
-
-                if (Enum.IsDefined(typeof(ChatChannel), channel) && channel != ChatChannel.Count)
-                {
-                    Channel = channel;
-                }
+                Channel = ChatChannel.Global;
+            }
+            else if (InputKeys.SelectGroupChat.IsPressed)
+            {
+                Channel = ChatChannel.Group;
+            }
+            else if (InputKeys.SelectLocalChat.IsPressed)
+            {
+                Channel = ChatChannel.Local;
             }
         }
 
@@ -158,6 +156,17 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.Widgets
                     }
                 }
             }
+        }
+
+        public void ClearInput(bool clearFocus = true)
+        {
+            if (clearFocus)
+            {
+                // Unfocus input text widget
+                inputText.Desktop.FocusedKeyboardWidget = null;
+            }
+
+            inputText.Text = string.Empty;
         }
     }
 }

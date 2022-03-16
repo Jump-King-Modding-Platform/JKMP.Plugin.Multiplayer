@@ -4,7 +4,6 @@ using System.Linq;
 using EntityComponent;
 using JKMP.Core.Logging;
 using JKMP.Plugin.Multiplayer.Game.Components;
-using JKMP.Plugin.Multiplayer.Game.Input;
 using JKMP.Plugin.Multiplayer.Game.Player;
 using JKMP.Plugin.Multiplayer.Game.Sound;
 using JKMP.Plugin.Multiplayer.Game.UI;
@@ -57,6 +56,7 @@ namespace JKMP.Plugin.Multiplayer.Game.Entities
             P2P.Dispose();
             UIManager.RemoveWidget(chatWidget);
             UIManager.RemoveWidget(statusPanel);
+            chatWidget.Dispose();
         }
 
         private void OnNearbyClientsReceived(ICollection<ulong> steamIds)
