@@ -29,7 +29,8 @@
     </ItemGroup>
     
     <Message Importance="high" Text="Building native library..." />
-    <Exec Command="cargo run" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" />
+    <Exec Command="cargo run --release" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" Condition="$(Configuration) == 'Release'" />
+    <Exec Command="cargo run" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" Condition="$(Configuration) == 'Debug'" />
     
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(ProjectDir)" />
     <Copy SourceFiles="@(BindingsFiles)" DestinationFolder="$(ProjectDir)" />
