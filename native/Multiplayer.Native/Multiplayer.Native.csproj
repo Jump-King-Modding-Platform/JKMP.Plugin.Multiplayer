@@ -35,5 +35,10 @@
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(ProjectDir)" />
     <Copy SourceFiles="@(BindingsFiles)" DestinationFolder="$(ProjectDir)" />
   </Target>
+  
+  <Target Name="Clean native projects" AfterTargets="Clean">
+    <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native" />
+    <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" />
+  </Target>
 
 </Project>
