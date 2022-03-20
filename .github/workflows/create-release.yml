@@ -19,6 +19,11 @@ jobs:
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup rust
+        uses: actions-rs/toolchain@v1.0.1
+        with:
+          toolchain: stable
+          target: i686-pc-windows-msvc
       - name: Restore packages
         run: dotnet restore
         env:
@@ -43,6 +48,8 @@ jobs:
             JKMP.Plugin.Multiplayer/bin/Release/net462/JKMP.Plugin.Multiplayer.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Resources.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Matchmaking.Client.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/Multiplayer.Native.dll
+            JKMP.Plugin.Multiplayer/bin/Release/net462/multiplayer_native.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/Myra.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/FontStashSharp.MonoGame.dll
             JKMP.Plugin.Multiplayer/bin/Release/net462/StbTrueTypeSharp.dll
