@@ -73,7 +73,6 @@ namespace JKMP.Plugin.Multiplayer.Game.UI.MenuFields
                     if (!playback.IsCapturing)
                     {
                         bool success = playback.StartPlayback();
-                        LogManager.TempLogger.Debug("Start playback of {deviceName} success: {success}", VoiceManager.SelectedDeviceName, success);
 
                         if (success)
                         {
