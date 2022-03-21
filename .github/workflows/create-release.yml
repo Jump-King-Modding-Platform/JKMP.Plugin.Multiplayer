@@ -38,7 +38,11 @@ jobs:
       - name: Write log to output
         if: always()
         shell: powershell
-        run: cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeError.log
+        run: |
+          echo CMakeError:
+          cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeError.log
+          echo CMakeOutput:
+          cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeOutput.log
       - name: Restore packages
         run: dotnet restore
         env:
