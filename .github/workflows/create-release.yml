@@ -29,11 +29,10 @@ jobs:
           toolchain: stable
           target: i686-pc-windows-msvc
           profile: minimal
-      - name: Set CC env var
-        shell: powershell
-        run: $env:CC = "cl.exe"
       - name: Test compiling natives explicitly
         shell: cmd
+        env:
+          CC: cl.exe
         run: |
           cd native/multiplayer_native/bindings_generator/
           cargo run --release
