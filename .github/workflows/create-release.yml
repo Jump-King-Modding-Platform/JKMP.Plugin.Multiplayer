@@ -19,8 +19,6 @@ jobs:
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup msbuild # Adds msbuild to PATH which allows cmake to find the C compiler
-        uses: microsoft/setup-msbuild@v1.1
       - name: Setup msvc
         uses: ilammy/msvc-dev-cmd@v1.10.0
         with:
@@ -35,7 +33,10 @@ jobs:
           toolchain: stable
           target: i686-pc-windows-msvc
           profile: minimal
-          override: true
+      - name: Test compiling natives explicitly
+        run: |
+          cd native/multiplayer_native/bindings_generator/
+          cargo run --release
       - name: Restore packages
         run: dotnet restore
         env:
