@@ -25,6 +25,8 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1.10.0
         with:
           arch: x86
+      - name: Test
+        run: cl.exe
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.12
       - name: Setup rust
