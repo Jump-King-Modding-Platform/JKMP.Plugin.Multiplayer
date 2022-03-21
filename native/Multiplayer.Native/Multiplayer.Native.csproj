@@ -21,16 +21,16 @@
 
   <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild">
     <ItemGroup>
-      <NativeFiles Include="$(SolutionDir)native/multiplayer_native/bindings_generator/target/i686-pc-windows-msvc/$(Configuration.toLower())/deps/multiplayer_native.dll" />
+      <NativeFiles Include="$(SolutionDir)native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/$(Configuration.toLower())/deps/multiplayer_native.dll" />
     </ItemGroup>
     
     <ItemGroup>
-      <BindingsFiles Include="$(SolutionDir)native/multiplayer_native/bindings_generator/bindings/Bindings.cs" />
+      <BindingsFiles Include="$(SolutionDir)native/multiplayer_native/bindings_gen/bindings/Bindings.cs" />
     </ItemGroup>
     
     <Message Importance="high" Text="Building native library..." />
-    <Exec Command="cargo run --release" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" Condition="$(Configuration) == 'Release'" />
-    <Exec Command="cargo run" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" Condition="$(Configuration) == 'Debug'" />
+    <Exec Command="cargo run --release" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_gen" Condition="$(Configuration) == 'Release'" />
+    <Exec Command="cargo run" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_gen" Condition="$(Configuration) == 'Debug'" />
     
     <Copy SourceFiles="@(NativeFiles)" DestinationFolder="$(ProjectDir)" />
     <Copy SourceFiles="@(BindingsFiles)" DestinationFolder="$(ProjectDir)" />
@@ -38,7 +38,7 @@
   
   <Target Name="Clean native projects" AfterTargets="Clean">
     <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native" />
-    <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_generator" />
+    <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_gen" />
   </Target>
 
 </Project>

@@ -35,12 +35,12 @@ jobs:
         env:
           CC: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.31.31103\bin\HostX86\x86\cl.exe
         run: |
-          cd native/multiplayer_native/bindings_generator/
+          cd native/multiplayer_native/bindings_gen/
           cargo run --release
       - name: Write log to output
         if: always()
         shell: powershell
-        run: cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_generator/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeError.log
+        run: cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeError.log
       - name: Restore packages
         run: dotnet restore
         env:
