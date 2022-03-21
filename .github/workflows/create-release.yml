@@ -31,7 +31,7 @@ jobs:
           profile: minimal
       - name: Set CC env var
         shell: powershell
-        run: $env.CC = "cl.exe"
+        run: $env:CC = "cl.exe"
       - name: Test compiling natives explicitly
         shell: cmd
         run: |
