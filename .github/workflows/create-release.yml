@@ -29,6 +29,11 @@ jobs:
           toolchain: stable
           target: i686-pc-windows-msvc
           profile: minimal
+      - name: Set PATH
+        shell: powershell
+        run: |
+          ls "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin"
+          $env:Path += ";C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin"
       - name: Test compiling natives explicitly
         shell: cmd
         run: |
