@@ -33,8 +33,8 @@ jobs:
       - name: Test compiling natives explicitly
         shell: cmd
         run: |
-          cd native/multiplayer_native/bindings_gen/
-          cargo run --release
+          cd native/multiplayer_native
+          cargo build --release
       - name: Write log to output
         if: always()
         shell: powershell
