@@ -30,6 +30,8 @@ jobs:
         with:
           toolchain: stable
           target: i686-pc-windows-msvc
+          profile: minimal
+          override: true
       - name: Restore packages
         run: dotnet restore
         env:
