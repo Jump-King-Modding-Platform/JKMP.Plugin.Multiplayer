@@ -19,7 +19,7 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild">
+  <Target Name="Build natives and generate bindings" BeforeTargets="PrepareForBuild" Condition="$(CI) == ''">
     <ItemGroup>
       <NativeFiles Include="$(SolutionDir)native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/$(Configuration.toLower())/deps/multiplayer_native.dll" />
     </ItemGroup>
@@ -36,7 +36,7 @@
     <Copy SourceFiles="@(BindingsFiles)" DestinationFolder="$(ProjectDir)" />
   </Target>
   
-  <Target Name="Clean native projects" AfterTargets="Clean">
+  <Target Name="Clean native projects" AfterTargets="Clean" Condition="$(CI) == ''">
     <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native" />
     <Exec Command="cargo clean" WorkingDirectory="$(SolutionDir)native/multiplayer_native/bindings_gen" />
   </Target>

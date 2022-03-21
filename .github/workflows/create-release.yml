@@ -19,30 +19,6 @@ jobs:
           source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup msvc
-        uses: ilammy/msvc-dev-cmd@v1.10.0
-        with:
-          arch: x86
-      - name: Setup rust
-        uses: actions-rs/toolchain@v1.0.6
-        with:
-          toolchain: stable
-          target: i686-pc-windows-msvc
-          default: true
-          profile: minimal
-      - name: Test compiling natives explicitly
-        shell: cmd
-        run: |
-          cd native/multiplayer_native
-          cargo build --release
-      - name: Write log to output
-        if: always()
-        shell: powershell
-        run: |
-          echo CMakeError:
-          cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeError.log
-          echo CMakeOutput:
-          cat D:/a/JKMP.Plugin.Multiplayer/JKMP.Plugin.Multiplayer/native/multiplayer_native/bindings_gen/target/i686-pc-windows-msvc/release/build/libsamplerate-sys-2efb203495d31d88/out/build/CMakeFiles/CMakeOutput.log
       - name: Restore packages
         run: dotnet restore
         env:
