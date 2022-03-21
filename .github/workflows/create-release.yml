@@ -30,6 +30,7 @@ jobs:
           target: i686-pc-windows-msvc
           profile: minimal
       - name: Test compiling natives explicitly
+        shell: cmd
         run: |
           cd native/multiplayer_native/bindings_generator/
           cargo run --release
