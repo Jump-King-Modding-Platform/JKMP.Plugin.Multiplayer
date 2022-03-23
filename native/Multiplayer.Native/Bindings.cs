@@ -232,12 +232,26 @@ namespace JKMP.Plugin.Multiplayer.Native
             }
         }
 
+        [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "initialize_logging")]
+        public static extern bool initialize_logging(OnLogCallback on_log);
+
+
     }
 
     public enum CaptureError
     {
         DeviceNotAvailable = 0,
         BackendSpecific = 1,
+    }
+
+    public enum LogLevel
+    {
+        Verbose = 0,
+        Debug = 1,
+        Info = 2,
+        Warning = 3,
+        Error = 4,
+        Fatal = 5,
     }
 
     [Serializable]
@@ -733,6 +747,9 @@ namespace JKMP.Plugin.Multiplayer.Native
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void OnCapturedDataCallback(Slicei16 x0, float x1);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void OnLogCallback(LogLevel x0, Sliceu8 x1);
 
 
     public partial class AudioContext : IDisposable

@@ -16,6 +16,7 @@ using JKMP.Plugin.Multiplayer.Game.Entities;
 using JKMP.Plugin.Multiplayer.Game.Events;
 using JKMP.Plugin.Multiplayer.Game.UI;
 using JKMP.Plugin.Multiplayer.Matchmaking;
+using JKMP.Plugin.Multiplayer.Native;
 using JKMP.Plugin.Multiplayer.Native.Audio;
 using JKMP.Plugin.Multiplayer.Networking;
 using JKMP.Plugin.Multiplayer.Steam;
@@ -48,6 +49,7 @@ namespace JKMP.Plugin.Multiplayer
         public MultiplayerPlugin()
         {
             Instance = this;
+            Logging.Initialize();
         }
 
         public override void OnLoaded()

@@ -16,3 +16,4 @@ audiopus = "0.3.0-rc.0"
 anyhow = "1.0.53"
 samplerate = "0.2.4"
 ringbuffer = "0.8.2"
+log = { version = "0.4.14", features = ["std"] }

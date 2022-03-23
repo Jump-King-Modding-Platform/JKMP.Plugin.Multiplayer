@@ -4,10 +4,11 @@ use audio_capture::capture_context::AudioContext;
 use audio_capture::opus_context::OpusContext;
 
 use interoptopus::{
-    ffi_type, pattern, patterns::result::FFIError, Error, Inventory, InventoryBuilder,
+    ffi_type, function, pattern, patterns::result::FFIError, Error, Inventory, InventoryBuilder,
 };
 
 pub mod audio_capture;
+pub mod logging;
 
 #[ffi_type(patterns(ffi_error))]
 #[repr(C)]
@@ -78,5 +79,6 @@ pub fn ffi_inventory() -> Inventory {
     InventoryBuilder::new()
         .register(pattern!(AudioContext))
         .register(pattern!(OpusContext))
+        .register(function!(logging::initialize_logging))
         .inventory()
 }

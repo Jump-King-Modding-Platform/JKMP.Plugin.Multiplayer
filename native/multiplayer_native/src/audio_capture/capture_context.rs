@@ -353,7 +353,7 @@ impl AudioContext {
 
         self.active_device = device;
 
-        println!("Active device set to {:?}, {:?}", device_name, config);
+        log::trace!("Active device set to {:?}, {:?}", device_name, config);
         Ok(())
     }
 

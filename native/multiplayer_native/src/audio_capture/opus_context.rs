@@ -44,7 +44,7 @@ impl OpusContext {
                 return len as i32;
             }
             Err(err) => {
-                println!("Failed to encode: {:?}", err);
+                log::warn!("Failed to encode: {:?}", err);
             }
         }
 
@@ -79,7 +79,7 @@ impl OpusContext {
                 return len as i32;
             }
             Err(err) => {
-                println!("Failed to decode: {:?}", err);
+                log::warn!("Failed to decode: {:?}", err);
             }
         }
 
