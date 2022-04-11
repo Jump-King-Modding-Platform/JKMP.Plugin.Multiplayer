@@ -21,11 +21,15 @@
       <PackageReference Include="JKMP.Core" Version="0.11.1" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="JKMP.Myra" Version="2.0.1" />
+      <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" />
-      <ProjectReference Include="..\native\Multiplayer.Native\Multiplayer.Native.csproj" />
-      <ProjectReference Include="..\Resources\Resources.csproj" />
+      <ProjectReference Include="..\Matchmaking.Client\Matchmaking.Client.csproj" PrivateAssets="All" />
+      <ProjectReference Include="..\native\Multiplayer.Native\Multiplayer.Native.csproj" PrivateAssets="All" />
+      <ProjectReference Include="..\Resources\Resources.csproj" PrivateAssets="All" />
     </ItemGroup>
     <ItemGroup>
       <None Update="Content\Multiplayer\Fonts\LocalChatFont.xnb">
