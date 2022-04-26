@@ -32,6 +32,13 @@
       <ProjectReference Include="..\Resources\Resources.csproj" PrivateAssets="All" />
     </ItemGroup>
     <ItemGroup>
+        <None Include="../native/Multiplayer.Native/multiplayer_native.dll">
+            <Visible>false</Visible>
+            <Pack>true</Pack>
+            <PackagePath>content/</PackagePath>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
       <None Update="Content\Multiplayer\Fonts\LocalChatFont.xnb">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
