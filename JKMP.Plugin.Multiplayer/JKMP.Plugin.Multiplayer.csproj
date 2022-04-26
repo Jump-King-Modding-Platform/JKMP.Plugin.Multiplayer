@@ -10,12 +10,7 @@
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
         <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Plugin.Multiplayer</RepositoryUrl>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <PlatformTarget>x86</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <PlatformTarget>x86</PlatformTarget>
+        <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="JKMP.Core" Version="0.11.2" />
