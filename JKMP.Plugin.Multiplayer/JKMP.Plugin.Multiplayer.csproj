@@ -4,21 +4,16 @@
         <PackageId>JKMP.Plugin.Multiplayer</PackageId>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
-        <Version>0.3.0</Version>
+        <Version>0.3.1</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
         <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Plugin.Multiplayer</RepositoryUrl>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <PlatformTarget>x86</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <PlatformTarget>x86</PlatformTarget>
+        <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Core" Version="0.11.1" />
+      <PackageReference Include="JKMP.Core" Version="0.11.2" />
       <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="JKMP.Myra" Version="2.0.1" />
       <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0">
@@ -50,27 +45,27 @@
     <ItemGroup>
       <Folder Include="Content" />
     </ItemGroup>
-    <ItemGroup>
-      <Compile Remove="Networking\P2PManager.SocketManager.cs" />
-    </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
 
     <!-- Copy files to game directories if this is not a CI build -->
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Plugin.Multiplayer.dll" />
-            <CoreFiles Include="$(TargetDir)Resources.dll" />
             <CoreFiles Include="$(ProjectDir)plugin.json" />
-            <CoreFiles Include="$(TargetDir)Matchmaking.Client.dll" />
-            <CoreFiles Include="$(TargetDir)Myra.dll" />
-            <CoreFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />
-            <CoreFiles Include="$(TargetDir)StbImageSharp.dll" />
-            <CoreFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
-            <CoreFiles Include="$(TargetDir)info.lundin.math.dll" />
-            <CoreFiles Include="$(TargetDir)System.Memory.dll" />
-            <CoreFiles Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
-            <CoreFiles Include="$(TargetDir)multiplayer_native.dll" />
-            <CoreFiles Include="$(TargetDir)Multiplayer.Native.dll" />
+        </ItemGroup>
+        
+        <ItemGroup>
+            <DependencyFiles Include="$(TargetDir)Resources.dll" />
+            <DependencyFiles Include="$(TargetDir)Matchmaking.Client.dll" />
+            <DependencyFiles Include="$(TargetDir)Myra.dll" />
+            <DependencyFiles Include="$(TargetDir)FontStashSharp.MonoGame.dll" />
+            <DependencyFiles Include="$(TargetDir)StbImageSharp.dll" />
+            <DependencyFiles Include="$(TargetDir)StbTrueTypeSharp.dll" />
+            <DependencyFiles Include="$(TargetDir)info.lundin.math.dll" />
+            <DependencyFiles Include="$(TargetDir)System.Memory.dll" />
+            <DependencyFiles Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" />
+            <DependencyFiles Include="$(TargetDir)multiplayer_native.dll" />
+            <DependencyFiles Include="$(TargetDir)Multiplayer.Native.dll" />
         </ItemGroup>
         
         <ItemGroup>
@@ -83,6 +78,9 @@
 
         <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Plugins/Multiplayer" />
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)/JKMP/Plugins/Multiplayer" SkipUnchangedFiles="true" />
+        
+        <Message Importance="high" Text="Copying @(DependencyFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Plugins/Multiplayer/Dependencies" />
+        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Plugins/Multiplayer/Dependencies" SkipUnchangedFiles="true" />
 
         <Message Importance="high" Text="Copying @(ContentFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Plugins/Multiplayer/Content" />
         <Copy SourceFiles="@(ContentFiles)" DestinationFolder="$(Destination)/JKMP/Plugins/Multiplayer/Content/%(RecursiveDir)" SkipUnchangedFiles="true" />

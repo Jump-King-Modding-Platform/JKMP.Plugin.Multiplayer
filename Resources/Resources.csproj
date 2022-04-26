@@ -9,6 +9,6 @@
       <EmbeddedResource Include="Fonts\**\*.*" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Myra" Version="2.0.0" />
+      <PackageReference Include="JKMP.Myra" Version="2.0.1" />
     </ItemGroup>
 </Project>
