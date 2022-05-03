@@ -18,12 +18,10 @@ jobs:
           dotnet-version: 5.0.x
       - name: Restore packages
         run: dotnet restore
-      - name: Build project
-        run: dotnet build --no-restore -c Release
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test --verbosity normal
       - name: Package project
-        run: dotnet pack --no-build -c Release
+        run: dotnet pack -c Release
       - name: Publish package
         run: dotnet nuget push JKMP.Plugin.Multiplayer/bin/Release/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
       - name: Copy content files to temporary directory
