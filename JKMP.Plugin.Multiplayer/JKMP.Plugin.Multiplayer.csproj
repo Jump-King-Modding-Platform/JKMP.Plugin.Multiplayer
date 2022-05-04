@@ -8,7 +8,7 @@
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The plugin that implements multiplayer</PackageDescription>
-        <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Plugin.Multiplayer</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Jump-King-Modding-Platform/JKMP.Plugin.Multiplayer</RepositoryUrl>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
